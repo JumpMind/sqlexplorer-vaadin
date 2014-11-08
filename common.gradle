@@ -3,19 +3,10 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 group = 'org.jumpmind.symmetric'
 
-apply plugin: 'eclipse-wtp'
 apply plugin: 'java'
+apply plugin: 'eclipse-wtp'
 apply plugin: 'maven'
 
-buildscript {
-
-    repositories {
-        mavenCentral()
-        maven { url "http://mvn.jasoft.fi/maven2" }
-    }
-
-    dependencies { classpath "org.apache.maven.wagon:wagon-ssh:2.2" }
-}
 
 sourceCompatibility=1.7
 targetCompatibility=1.7
@@ -49,9 +40,7 @@ ext {
     mavenUploadUrl = 'scp://maven.jumpmind.com/home/jumpmind/www/repo'
 }
 
-configurations {
-    deployerJars
-}
+configurations { deployerJars }
 
 repositories {
     mavenCentral()
@@ -78,7 +67,7 @@ dependencies {
     testCompile "org.hamcrest:hamcrest-all:1.3"
     testCompile "org.mockito:mockito-all:1.9.5"
     testCompile "org.springframework:spring-test:$springVersion"
-    deployerJars "org.apache.maven.wagon:wagon-ssh:2.2"    
+    deployerJars "org.apache.maven.wagon:wagon-ssh:2.2"
 }
 
 task develop {
