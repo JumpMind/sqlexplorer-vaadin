@@ -1,1 +1,1 @@
-include 'symmetric-app-commoon', 'symmetric-ui-common'
+include 'symmetric-app-common', 'symmetric-ui-common'
