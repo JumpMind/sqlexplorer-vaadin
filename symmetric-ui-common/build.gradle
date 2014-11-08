@@ -1,0 +1,6 @@
+apply from: '../common.gradle'
+
+dependencies {
+    compile project(":symmetric-app-common")
+    compile "com.vaadin:vaadin-server:$vaadinVersion"
+}

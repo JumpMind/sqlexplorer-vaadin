@@ -1,80 +1,96 @@
 import org.apache.tools.ant.filters.FixCrLfFilter
 import org.apache.tools.ant.filters.ReplaceTokens
 
-    group = 'org.jumpmind.symmetric'
-        
-    apply plugin: 'eclipse-wtp'
-    apply plugin: 'java'
+group = 'org.jumpmind.symmetric'
 
-    sourceCompatibility=1.7
-    targetCompatibility=1.7
+apply plugin: 'eclipse-wtp'
+apply plugin: 'java'
+apply plugin: 'maven'
 
-    compileJava {
-        options.bootClasspath = "${System.getProperty('java.home')}/lib/rt.jar"
-    }    
-    
-    ext {
-        log4jVersion = '1.2.17'
-        slf4jVersion = '1.7.7'
-        springVersion = '4.0.5.RELEASE'
-        vaadinVersion = '7.3.3'
-        jettyVersion = '9.2.1.v20140609'
-        commonsLangVersion = '2.6'
-        commonsDbcpVersion = '1.4'
-        commonsIoVersion = '2.4'
-        commonsBeanUtils = '1.9.2'
-        httpComponentsVersion = '4.3.2'
-        jaxenVersion = '1.1.4'
-        javaMailVersion = '1.4.7'
-        jdomVersion = '2.0.5'
-        springVersion = '4.0.2.RELEASE'
-        symmetricVersion = '3.7.0-SNAPSHOT'
-        servletVersion = '3.0.1'
-        h2Version = '1.3.175'        
-        mysqlVersion = '5.1.29'
-        jtdsVersion = '1.3.1'
-                
-        env = System.getenv()                
-    }
+buildscript {
 
     repositories {
-        mavenCentral()        
-        maven { url "http://repository.codehaus.org" }
-        maven { url "http://snapshots.repository.codehaus.org" }
-        maven { url "http://maven.vaadin.com/vaadin-addons" }
-//        maven { url "https://github.com/santhosh-tekuri/maven-repository/raw/master" }
-//        maven { url "http://repo.reficio.org/maven" } 
-//        maven { url "https://repository.jboss.org/nexus/content/repositories/deprecated" }       
-//        maven { url "http://www.soapui.org/repository/maven2" }
+        mavenCentral()
+        maven { url "http://mvn.jasoft.fi/maven2" }
     }
-    
-    eclipse {
-        classpath {
-            downloadSources = true
-            downloadJavadoc = false
+
+    dependencies { classpath "org.apache.maven.wagon:wagon-ssh:2.2" }
+}
+
+sourceCompatibility=1.7
+targetCompatibility=1.7
+
+compileJava { options.bootClasspath = "${System.getProperty('java.home')}/lib/rt.jar" }
+
+ext {
+
+    log4jVersion = '1.2.17'
+    slf4jVersion = '1.7.7'
+    springVersion = '4.0.5.RELEASE'
+    vaadinVersion = '7.3.4'
+    jettyVersion = '9.2.1.v20140609'
+    commonsLangVersion = '2.6'
+    commonsDbcpVersion = '1.4'
+    commonsIoVersion = '2.4'
+    commonsBeanUtils = '1.9.2'
+    httpComponentsVersion = '4.3.2'
+    jaxenVersion = '1.1.4'
+    javaMailVersion = '1.4.7'
+    jdomVersion = '2.0.5'
+    springVersion = '4.0.2.RELEASE'
+    symmetricVersion = '3.7.0-SNAPSHOT'
+    servletVersion = '3.0.1'
+    h2Version = '1.3.175'
+    mysqlVersion = '5.1.29'
+    jtdsVersion = '1.3.1'
+
+    env = System.getenv()
+
+    mavenUploadUrl = 'scp://maven.jumpmind.com/home/jumpmind/www/repo'
+}
+
+configurations {
+    deployerJars
+}
+
+repositories {
+    mavenCentral()
+    maven { url "http://repository.codehaus.org" }
+    maven { url "http://snapshots.repository.codehaus.org" }
+    maven { url "http://maven.vaadin.com/vaadin-addons" }
+}
+
+eclipse {
+    classpath {
+        downloadSources = true
+        downloadJavadoc = false
+    }
+}
+
+dependencies {
+    compile "org.slf4j:slf4j-api:$slf4jVersion"
+    compile "org.slf4j:jul-to-slf4j:$slf4jVersion"
+    compile "org.slf4j:slf4j-log4j12:$slf4jVersion"
+    compile "org.slf4j:jcl-over-slf4j:$slf4jVersion"
+    compile "log4j:log4j:$log4jVersion"
+    testCompile "com.h2database:h2:1.3.175"
+    testCompile "junit:junit:4.11"
+    testCompile "org.hamcrest:hamcrest-all:1.3"
+    testCompile "org.mockito:mockito-all:1.9.5"
+    testCompile "org.springframework:spring-test:$springVersion"
+    deployerJars "org.apache.maven.wagon:wagon-ssh:2.2"    
+}
+
+task develop {
+    description 'Generates Eclipse artifacts and sets up your development environment'
+    dependsOn tasks.cleanEclipse, tasks.cleanEclipseWtp, tasks.eclipse, tasks.eclipseWtp
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        configuration = configurations.deployerJars
+        repository(url: mavenUploadUrl) {
+            authentication(userName: mavenUser, password: mavenPassword)
         }
     }
-    
-    dependencies {
-        compile "org.slf4j:slf4j-api:$slf4jVersion"
-        compile "org.slf4j:jul-to-slf4j:$slf4jVersion"
-        compile "org.slf4j:slf4j-log4j12:$slf4jVersion"
-        compile "org.slf4j:jcl-over-slf4j:$slf4jVersion"
-        compile "log4j:log4j:$log4jVersion"
-        
-        //testCompile "org.vaadin.addons:mockupcontainer:2.0"
-        testCompile "com.h2database:h2:1.3.175"
-        testCompile "junit:junit:4.11"
-        testCompile "org.hamcrest:hamcrest-all:1.3"
-        testCompile "org.mockito:mockito-all:1.9.5"
-        testCompile "org.springframework:spring-test:$springVersion"
-    }
-    
-    task develop {
-        description 'Generates Eclipse artifacts and sets up your development environment'
-        dependsOn tasks.cleanEclipse, tasks.cleanEclipseWtp, tasks.eclipse, tasks.eclipseWtp
-    }
-    
-    task wrapper(type: Wrapper) {
-        gradleVersion = '2.1'
-    }
+}
