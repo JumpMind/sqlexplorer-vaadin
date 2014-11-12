@@ -1,8 +1,10 @@
 package org.jumpmind.symmetric.ui.sqlexplorer;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.jumpmind.symmetric.ui.common.TreeNode;
+import org.jumpmind.symmetric.ui.common.UiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,11 +29,13 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
     final Logger log = LoggerFactory.getLogger(getClass());
 
+    final static FontAwesome QUERY_ICON = FontAwesome.BOLT;
+
     final static float DEFAULT_SPLIT_POS = 225;
 
-    IDatabaseProvider databaseProvider;
+    IDbProvider databaseProvider;
 
-    String configDir;
+    ISettingsProvider settingsProvider;
 
     MenuItem showButton;
 
@@ -40,29 +44,27 @@ public class SqlExplorer extends HorizontalSplitPanel {
     TabSheet contentTabs;
 
     MenuBar contentMenuBar;
-    
+
+    IContentTab selected;
+
     float savedSplitPosition = DEFAULT_SPLIT_POS;
 
-    public SqlExplorer(String configDir, IDatabaseProvider databaseProvider) {
+    String user;
+
+    public SqlExplorer(String configDir, IDbProvider databaseProvider, String user) {
+        this(databaseProvider, new DefaultSettingsProvider(configDir), user);
+    }
+
+    public SqlExplorer(IDbProvider databaseProvider, ISettingsProvider settingsProvider, String user) {
+        this.databaseProvider = databaseProvider;
+        this.settingsProvider = settingsProvider;
+
         setSizeFull();
         addStyleName("sqlexplorer");
 
-        addSplitterClickListener(new SplitterClickListener() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void splitterClick(SplitterClickEvent event) {
-                log.info("splitter click");
-            }
-        });
-
-        this.configDir = configDir;
-        this.databaseProvider = databaseProvider;
-
         VerticalLayout leftLayout = new VerticalLayout();
         leftLayout.setSizeFull();
-        leftLayout.addStyleName("valo-menu");
+        leftLayout.addStyleName(ValoTheme.MENU_ROOT);
 
         leftLayout.addComponent(buildLeftMenu());
 
@@ -90,11 +92,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
         rightMenuWrapper.addComponent(contentMenuBar);
         rightLayout.addComponent(rightMenuWrapper);
 
-        contentTabs = new TabSheet();
-        contentTabs.setSizeFull();
-        contentTabs.addStyleName(ValoTheme.TABSHEET_FRAMED);
-        contentTabs.addStyleName(ValoTheme.TABSHEET_COMPACT_TABBAR);
-        contentTabs.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
+        contentTabs = UiUtils.createTabSheet();
         contentTabs.addSelectedTabChangeListener(new SelectedTabChangeListener() {
             private static final long serialVersionUID = 1L;
 
@@ -120,7 +118,8 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                savedSplitPosition = getSplitPosition() > 10 ? getSplitPosition() : DEFAULT_SPLIT_POS;
+                savedSplitPosition = getSplitPosition() > 10 ? getSplitPosition()
+                        : DEFAULT_SPLIT_POS;
                 setSplitPosition(0);
                 showButton.setVisible(true);
             }
@@ -138,21 +137,23 @@ public class SqlExplorer extends HorizontalSplitPanel {
         });
         refreshButton.setIcon(FontAwesome.REFRESH);
 
-        MenuItem filterButton = leftMenu.addItem("", new Command() {
+        MenuItem queryWindow = leftMenu.addItem("", new Command() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
+                openQueryWindow(dbTree.getSelected());
             }
         });
-        filterButton.setIcon(FontAwesome.FILTER);
-        filterButton.setDescription("Filter the database artifacts that are being shown");
-        
+        queryWindow.setIcon(QUERY_ICON);
+
         MenuItem settings = leftMenu.addItem("", new Command() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
+                SettingsDialog dialog = new SettingsDialog(settingsProvider);
+                dialog.showAtSize(.5);
             }
         });
         settings.setIcon(FontAwesome.GEARS);
@@ -176,28 +177,41 @@ public class SqlExplorer extends HorizontalSplitPanel {
     }
 
     protected void selectContentTab(IContentTab tab) {
+        if (selected != null) {
+            selected.unselected();
+        }
         contentTabs.setSelectedTab(tab);
         contentMenuBar.removeItems();
         addShowButton(contentMenuBar);
-        tab.select(contentMenuBar);
+        tab.selected(contentMenuBar);
+        selected = tab;
+    }
+
+    protected void openQueryWindow(Set<TreeNode> nodes) {
+        Set<String> dbNames = new HashSet<String>();
+        for (TreeNode node : nodes) {
+            IDb db = dbTree.getDbForNode(node);
+            String dbName = db.getName();
+            if (!dbNames.contains(dbName)) {
+                dbNames.add(dbName);
+                QueryPanel panel = new QueryPanel(db, settingsProvider, user);
+                Tab tab = contentTabs.addTab(panel, getTabName(dbName));
+                tab.setClosable(true);
+                tab.setIcon(QUERY_ICON);
+                selectContentTab(panel);
+            }
+        }
     }
 
     protected DbTree buildDbTree() {
-        final FontAwesome QUERY_ICON = FontAwesome.BOLT;
-        final DbTree tree = new DbTree(databaseProvider);
+
+        final DbTree tree = new DbTree(databaseProvider, settingsProvider);
         tree.registerAction(new DbTreeAction("Query", QUERY_ICON) {
             private static final long serialVersionUID = 1L;
 
             @Override
             public void handle(Set<TreeNode> nodes) {
-                for (TreeNode node : nodes) {
-                    IDb db = tree.getDbForNode(node);
-                    QueryPanel panel = new QueryPanel(db);
-                    Tab tab = contentTabs.addTab(panel, getTabName(db.getName()));
-                    tab.setClosable(true);
-                    tab.setIcon(QUERY_ICON);
-                    selectContentTab(panel);
-                }
+                openQueryWindow(nodes);
             }
         }, DbTree.NODE_TYPE_DATABASE);
         return tree;

@@ -37,7 +37,9 @@ public class DbTree extends Tree {
     public static final String NODE_TYPE_SCHEMA = "Schema";
     public static final String NODE_TYPE_TABLE = "Table";
 
-    IDatabaseProvider databaseProvider;
+    IDbProvider databaseProvider;
+
+    ISettingsProvider settingsProvider;
 
     Set<TreeNode> expanded = new HashSet<TreeNode>();
 
@@ -45,8 +47,9 @@ public class DbTree extends Tree {
 
     Map<String, List<DbTreeAction>> actionsByNodeType = new HashMap<String, List<DbTreeAction>>();
 
-    public DbTree(IDatabaseProvider databaseProvider) {
+    public DbTree(IDbProvider databaseProvider, ISettingsProvider settingsProvider) {
         this.databaseProvider = databaseProvider;
+        this.settingsProvider = settingsProvider;
         setWidth(100, Unit.PERCENTAGE);
         setImmediate(true);
         setMultiSelect(true);
@@ -69,9 +72,9 @@ public class DbTree extends Tree {
         }
     }
 
- // TODO delete once we decide to not use this context menu
+    // TODO delete once we decide to not use this context menu
     protected void configureContextMenu() {
-        
+
         ContextMenu treeContextMenu = new ContextMenu();
         treeContextMenu.addContextMenuTreeListener(new TreeListener() {
 
@@ -238,14 +241,22 @@ public class DbTree extends Tree {
         List<TreeNode> list = new ArrayList<TreeNode>();
         List<String> tables = reader.getTableNames(catalogName, schemaName, TABLE_TYPES);
         for (String tableName : tables) {
-            TreeNode treeNode = new TreeNode(tableName, NODE_TYPE_TABLE, FontAwesome.TABLE, parent);
-            if (catalogName != null) {
-                treeNode.getProperties().setProperty("catalogName", catalogName);
+            String excludeRegex = settingsProvider.get().getProperties()
+                    .get(Settings.SQL_EXPLORER_EXCLUDE_TABLES_REGEX);
+            if (!tableName.matches(excludeRegex) && !tableName.toUpperCase().matches(excludeRegex)
+                    && !tableName.toLowerCase().matches(excludeRegex)) {
+
+                TreeNode treeNode = new TreeNode(tableName, NODE_TYPE_TABLE, FontAwesome.TABLE,
+                        parent);
+                if (catalogName != null) {
+                    treeNode.getProperties().setProperty("catalogName", catalogName);
+                }
+                if (schemaName != null) {
+                    treeNode.getProperties().setProperty("schemaName", schemaName);
+                }
+
+                list.add(treeNode);
             }
-            if (schemaName != null) {
-                treeNode.getProperties().setProperty("schemaName", schemaName);
-            }
-            list.add(treeNode);
         }
         return list;
     }

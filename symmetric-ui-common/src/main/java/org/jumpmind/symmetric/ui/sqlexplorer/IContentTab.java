@@ -4,5 +4,8 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.MenuBar;
 
 public interface IContentTab extends Component {
-    public void select(MenuBar menuBar);
+    
+    public void selected(MenuBar menuBar);
+    
+    public void unselected();
 }

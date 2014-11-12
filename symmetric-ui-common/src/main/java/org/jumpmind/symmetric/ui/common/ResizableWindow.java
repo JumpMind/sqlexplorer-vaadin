@@ -11,6 +11,7 @@ import com.vaadin.shared.ui.window.WindowMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
@@ -27,6 +28,11 @@ public class ResizableWindow extends Window {
     protected VerticalLayout content;
 
     public ResizableWindow() {
+        this("");
+    }
+    
+    public ResizableWindow(String caption) {
+        setCaption(caption);
         setModal(true);
         setResizable(true);
         
@@ -48,6 +54,7 @@ public class ResizableWindow extends Window {
                 }
             }
         });
+        
         addShortcutListener(new ShortcutListener("Close", KeyCode.ESCAPE, null) {
 
             private static final long serialVersionUID = 1L;
@@ -57,6 +64,21 @@ public class ResizableWindow extends Window {
                 close();
             }
         });
+    }
+    
+    protected void addComponent(Component component, int expandRatio) {
+        content.addComponent(component);
+        content.setExpandRatio(component, expandRatio);
+    }
+    
+    protected void addComponent(Component component) {
+        content.addComponent(component);
+    }
+    
+    protected void addComponents(Component... components) {
+        for (Component component : components) {
+            content.addComponent(component);    
+        }        
     }
 
     protected Button buildCloseButton() {
