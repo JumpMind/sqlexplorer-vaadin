@@ -27,7 +27,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
     final Logger log = LoggerFactory.getLogger(getClass());
 
-    final static int DEFAULT_SPLIT_POS = 225;
+    final static float DEFAULT_SPLIT_POS = 225;
 
     IDatabaseProvider databaseProvider;
 
@@ -40,6 +40,8 @@ public class SqlExplorer extends HorizontalSplitPanel {
     TabSheet contentTabs;
 
     MenuBar contentMenuBar;
+    
+    float savedSplitPosition = DEFAULT_SPLIT_POS;
 
     public SqlExplorer(String configDir, IDatabaseProvider databaseProvider) {
         setSizeFull();
@@ -62,41 +64,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
         leftLayout.setSizeFull();
         leftLayout.addStyleName("valo-menu");
 
-        MenuBar leftMenu = new MenuBar();
-        leftMenu.addStyleName(ValoTheme.MENUBAR_BORDERLESS);
-        leftMenu.setWidth(100, Unit.PERCENTAGE);
-        MenuItem hideButton = leftMenu.addItem("", new Command() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                setSplitPosition(0);
-                showButton.setVisible(true);
-            }
-        });
-        hideButton.setDescription("Hide Database Explorer");
-        hideButton.setIcon(FontAwesome.BARS);
-
-        MenuItem refreshButton = leftMenu.addItem("", new Command() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                dbTree.refresh();
-            }
-        });
-        refreshButton.setIcon(FontAwesome.REFRESH);
-
-        MenuItem settings = leftMenu.addItem("", new Command() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-            }
-        });
-        settings.setIcon(FontAwesome.GEARS);
-
-        leftLayout.addComponent(leftMenu);
+        leftLayout.addComponent(buildLeftMenu());
 
         Panel scrollable = new Panel();
         scrollable.setSizeFull();
@@ -113,7 +81,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
         VerticalLayout rightMenuWrapper = new VerticalLayout();
         rightMenuWrapper.setWidth(100, Unit.PERCENTAGE);
-        rightMenuWrapper.addStyleName("valo-menu");
+        rightMenuWrapper.addStyleName(ValoTheme.MENU_ROOT);
         contentMenuBar = new MenuBar();
         contentMenuBar.addStyleName(ValoTheme.MENUBAR_BORDERLESS);
         contentMenuBar.setWidth(100, Unit.PERCENTAGE);
@@ -143,6 +111,54 @@ public class SqlExplorer extends HorizontalSplitPanel {
         setSplitPosition(DEFAULT_SPLIT_POS, Unit.PIXELS);
     }
 
+    protected MenuBar buildLeftMenu() {
+        MenuBar leftMenu = new MenuBar();
+        leftMenu.addStyleName(ValoTheme.MENUBAR_BORDERLESS);
+        leftMenu.setWidth(100, Unit.PERCENTAGE);
+        MenuItem hideButton = leftMenu.addItem("", new Command() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                savedSplitPosition = getSplitPosition() > 10 ? getSplitPosition() : DEFAULT_SPLIT_POS;
+                setSplitPosition(0);
+                showButton.setVisible(true);
+            }
+        });
+        hideButton.setDescription("Hide Database Explorer");
+        hideButton.setIcon(FontAwesome.BARS);
+
+        MenuItem refreshButton = leftMenu.addItem("", new Command() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                dbTree.refresh();
+            }
+        });
+        refreshButton.setIcon(FontAwesome.REFRESH);
+
+        MenuItem filterButton = leftMenu.addItem("", new Command() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+            }
+        });
+        filterButton.setIcon(FontAwesome.FILTER);
+        filterButton.setDescription("Filter the database artifacts that are being shown");
+        
+        MenuItem settings = leftMenu.addItem("", new Command() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+            }
+        });
+        settings.setIcon(FontAwesome.GEARS);
+        return leftMenu;
+    }
+
     protected void addShowButton(MenuBar contentMenuBar) {
         boolean visible = showButton != null ? showButton.isVisible() : false;
         showButton = contentMenuBar.addItem("", new Command() {
@@ -150,7 +166,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                setSplitPosition(DEFAULT_SPLIT_POS, Unit.PIXELS);
+                setSplitPosition(savedSplitPosition, Unit.PIXELS);
                 showButton.setVisible(false);
             }
         });
@@ -219,7 +235,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
     public void refresh() {
         dbTree.refresh();
     }
-    
+
     public void focus() {
         dbTree.focus();
     }
