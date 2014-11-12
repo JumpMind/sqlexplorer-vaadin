@@ -13,6 +13,7 @@ apply plugin: 'propdeps-eclipse'
 dependencies {
     compile project(":symmetric-app-common")
     compile "org.vaadin.addons:aceeditor:0.8.12"
+    compile "org.vaadin.addons:contextmenu:4.5"
     compile "com.vaadin:vaadin-server:$vaadinVersion"
     provided "javax.servlet:javax.servlet-api:$servletVersion"
 }

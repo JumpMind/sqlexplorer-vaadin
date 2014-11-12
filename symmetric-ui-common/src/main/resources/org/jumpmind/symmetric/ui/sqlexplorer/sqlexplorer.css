@@ -1,0 +1,7 @@
+.sqlexplorer .v-tree-node-selected::after {
+	border-radius: 0px;
+}
+
+.sqlexplorer .v-tree-node-caption-bold {
+	font-weight: bold;
+}
