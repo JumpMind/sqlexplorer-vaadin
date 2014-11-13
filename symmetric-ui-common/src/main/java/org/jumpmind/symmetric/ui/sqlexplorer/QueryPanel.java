@@ -171,7 +171,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         executeAtCursorButton.setEnabled(executeAtCursorButtonValue);
         executeAtCursorButton.setDescription("Run sql under cursor (CTRL+ENTER)");
 
-        executeScriptButton = menuBar.addItem("", FontAwesome.FILE_TEXT_O, new Command() {
+        executeScriptButton = menuBar.addItem("", FontAwesome.FORWARD, new Command() {
 
             private static final long serialVersionUID = 1L;
 
@@ -206,7 +206,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         rollbackButton.setDescription("Rollback");
         rollbackButton.setEnabled(false);
 
-        historyButton = menuBar.addItem("", FontAwesome.CLOCK_O, new Command() {
+        historyButton = menuBar.addItem("", FontAwesome.SEARCH, new Command() {
 
             private static final long serialVersionUID = 1L;
 
@@ -220,7 +220,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         historyButton.setDescription("Sql History");
         historyButton.setEnabled(true);
 
-        MenuItem optionsButton = menuBar.addItem("", FontAwesome.COG, null);
+        MenuItem optionsButton = menuBar.addItem("", FontAwesome.TASKS, null);
         optionsButton.setDescription("Options");
 
         importButton = optionsButton.addItem("DB Import", FontAwesome.DOWNLOAD, new Command() {

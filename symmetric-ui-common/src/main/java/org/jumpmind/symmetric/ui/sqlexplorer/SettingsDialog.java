@@ -15,7 +15,6 @@ import org.jumpmind.symmetric.ui.common.UiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.AbstractLayout;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -46,8 +45,7 @@ public class SettingsDialog extends ResizableWindow {
     ISettingsProvider settingsProvider;
 
     public SettingsDialog(ISettingsProvider settingsProvider) {
-        super("Sql Explorer Settings");
-        setIcon(FontAwesome.GEARS);
+        super("Settings");
         this.settingsProvider = settingsProvider;
         setWidth(400, Unit.PIXELS);
         addComponent(createSettingsLayout(), 1);

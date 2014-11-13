@@ -80,7 +80,7 @@ public class TabularResultLayout extends VerticalLayout {
         this.settings = settings;
         createTabularResultLayout();
     }
-    
+
     public String getSql() {
         return sql;
     }
@@ -112,6 +112,7 @@ public class TabularResultLayout extends VerticalLayout {
 
         MenuItem refreshButton = rightBar.addItem("", new Command() {
             private static final long serialVersionUID = 1L;
+
             @Override
             public void menuSelected(MenuItem selectedItem) {
                 listener.reExecute(sql);
@@ -121,6 +122,7 @@ public class TabularResultLayout extends VerticalLayout {
 
         MenuItem exportButton = rightBar.addItem("", new Command() {
             private static final long serialVersionUID = 1L;
+
             @Override
             public void menuSelected(MenuItem selectedItem) {
                 // ExportDialog window = new ExportDialog(resultsPanel);
@@ -137,123 +139,172 @@ public class TabularResultLayout extends VerticalLayout {
         try {
             table = putResultsInTable(stmt,
                     settings.getProperties().getInt(SQL_EXPLORER_MAX_RESULTS));
-        } catch (SQLException ex) {
-            log.error(ex.getMessage(), ex);
-            Notification.show(ex.getMessage());
-        }
-        table.setSizeFull();
+            table.setSizeFull();
 
-        final String ACTION_SELECT = "Select From";
+            final String ACTION_SELECT = "Select From";
 
-        final String ACTION_INSERT = "Insert";
+            final String ACTION_INSERT = "Insert";
 
-        final String ACTION_UPDATE = "Update";
+            final String ACTION_UPDATE = "Update";
 
-        final String ACTION_DELETE = "Delete";
+            final String ACTION_DELETE = "Delete";
 
-        // TODO use dml statement
-        table.addActionHandler(new Handler() {
+            // TODO use dml statement
+            table.addActionHandler(new Handler() {
 
-            private static final long serialVersionUID = 1L;
+                private static final long serialVersionUID = 1L;
 
-            @SuppressWarnings("unchecked")
-            @Override
-            public void handleAction(Action action, Object sender, Object target) {
-                try {
-                    Set<Integer> selectedRowsSet = (Set<Integer>) table.getValue();
-                    Iterator<Integer> setIterator = selectedRowsSet.iterator();
-                    if (action.getCaption().equals(ACTION_SELECT)) {
+                @SuppressWarnings("unchecked")
+                @Override
+                public void handleAction(Action action, Object sender, Object target) {
+                    try {
+                        Set<Integer> selectedRowsSet = (Set<Integer>) table.getValue();
+                        Iterator<Integer> setIterator = selectedRowsSet.iterator();
+                        if (action.getCaption().equals(ACTION_SELECT)) {
 
-                        while (setIterator.hasNext()) {
-                            StringBuilder sql = new StringBuilder("SELECT ");
+                            while (setIterator.hasNext()) {
+                                StringBuilder sql = new StringBuilder("SELECT ");
 
-                            String[] columnHeaders = table.getColumnHeaders();
-                            for (int i = 1; i < columnHeaders.length; i++) {
-                                if (i == 1) {
-                                    sql.append(columnHeaders[i]);
-                                } else {
-                                    sql.append(", " + columnHeaders[i]);
-                                }
-                            }
-
-                            sql.append(" FROM "
-                                    + org.jumpmind.db.model.Table.getFullyQualifiedTableName(
-                                            catalogName, schemaName, tableName, db.getPlatform()
-                                                    .getDatabaseInfo().getDelimiterToken()));
-
-                            int row = (Integer) setIterator.next();
-                            Collection<?> c = table.getItem(row).getItemPropertyIds();
-                            Iterator<?> iterator = c.iterator();
-                            iterator.next();
-
-                            List<Object> typeValueList = new ArrayList<Object>();
-
-                            for (int i = 1; i < columnHeaders.length; i++) {
-
-                                Object typeValue = table.getItem(row)
-                                        .getItemProperty(iterator.next()).getValue();
-                                if (typeValue instanceof String) {
-                                    typeValue = "'" + typeValue + "'";
-                                } else if (typeValue instanceof java.util.Date) {
-                                    typeValue = "{ts " + "'"
-                                            + FormatUtils.TIMESTAMP_FORMATTER.format(typeValue)
-                                            + "'" + "}";
-                                }
-                                typeValueList.add(typeValue);
-                            }
-
-                            sql.append(" WHERE ");
-
-                            int track = 0;
-                            for (int i = 0; i < resultTable.getColumnCount(); i++) {
-                                Column col = resultTable.getColumn(i);
-                                if (col.isPrimaryKey()) {
-                                    if (track == 0) {
-                                        sql.append(col.getName() + "=" + typeValueList.get(i));
+                                String[] columnHeaders = table.getColumnHeaders();
+                                for (int i = 1; i < columnHeaders.length; i++) {
+                                    if (i == 1) {
+                                        sql.append(columnHeaders[i]);
                                     } else {
-                                        sql.append(" and " + col.getName() + "="
-                                                + typeValueList.get(i));
-
+                                        sql.append(", " + columnHeaders[i]);
                                     }
-                                    track++;
                                 }
-                            }
-                            sql.append(";");
-                            listener.writeSql(sql.toString());
-                        }
-                    } else if (action.getCaption().equals(ACTION_INSERT)) {
-                        while (setIterator.hasNext()) {
-                            StringBuilder sql = new StringBuilder();
 
-                            sql.append("INSERT INTO "
-                                    + org.jumpmind.db.model.Table.getFullyQualifiedTableName(
-                                            catalogName, schemaName, tableName, db.getPlatform()
-                                                    .getDatabaseInfo().getDelimiterToken()) + " (");
+                                sql.append(" FROM "
+                                        + org.jumpmind.db.model.Table.getFullyQualifiedTableName(
+                                                catalogName, schemaName, tableName, db
+                                                        .getPlatform().getDatabaseInfo()
+                                                        .getDelimiterToken()));
 
-                            String[] columnHeaders = table.getColumnHeaders();
-                            for (int i = 1; i < columnHeaders.length; i++) {
-                                if (i == 1) {
-                                    sql.append(columnHeaders[i]);
-                                } else {
-                                    sql.append(", " + columnHeaders[i]);
+                                int row = (Integer) setIterator.next();
+                                Collection<?> c = table.getItem(row).getItemPropertyIds();
+                                Iterator<?> iterator = c.iterator();
+                                iterator.next();
+
+                                List<Object> typeValueList = new ArrayList<Object>();
+
+                                for (int i = 1; i < columnHeaders.length; i++) {
+
+                                    Object typeValue = table.getItem(row)
+                                            .getItemProperty(iterator.next()).getValue();
+                                    if (typeValue instanceof String) {
+                                        typeValue = "'" + typeValue + "'";
+                                    } else if (typeValue instanceof java.util.Date) {
+                                        typeValue = "{ts " + "'"
+                                                + FormatUtils.TIMESTAMP_FORMATTER.format(typeValue)
+                                                + "'" + "}";
+                                    }
+                                    typeValueList.add(typeValue);
                                 }
+
+                                sql.append(" WHERE ");
+
+                                int track = 0;
+                                for (int i = 0; i < resultTable.getColumnCount(); i++) {
+                                    Column col = resultTable.getColumn(i);
+                                    if (col.isPrimaryKey()) {
+                                        if (track == 0) {
+                                            sql.append(col.getName() + "=" + typeValueList.get(i));
+                                        } else {
+                                            sql.append(" and " + col.getName() + "="
+                                                    + typeValueList.get(i));
+
+                                        }
+                                        track++;
+                                    }
+                                }
+                                sql.append(";");
+                                listener.writeSql(sql.toString());
                             }
-                            sql.append(") VALUES (");
-                            int row = (Integer) setIterator.next();
-                            Collection<?> c = table.getItem(row).getItemPropertyIds();
-                            Iterator<?> iterator = c.iterator();
-                            iterator.next();
-                            boolean first = true;
-                            int colNum = 0;
-                            while (iterator.hasNext()) {
-                                if (first) {
-                                    first = false;
-                                } else {
-                                    sql.append(", ");
+                        } else if (action.getCaption().equals(ACTION_INSERT)) {
+                            while (setIterator.hasNext()) {
+                                StringBuilder sql = new StringBuilder();
+
+                                sql.append("INSERT INTO "
+                                        + org.jumpmind.db.model.Table.getFullyQualifiedTableName(
+                                                catalogName, schemaName, tableName, db
+                                                        .getPlatform().getDatabaseInfo()
+                                                        .getDelimiterToken()) + " (");
+
+                                String[] columnHeaders = table.getColumnHeaders();
+                                for (int i = 1; i < columnHeaders.length; i++) {
+                                    if (i == 1) {
+                                        sql.append(columnHeaders[i]);
+                                    } else {
+                                        sql.append(", " + columnHeaders[i]);
+                                    }
                                 }
-                                Object typeValue = table.getItem(row)
-                                        .getItemProperty(iterator.next()).getValue();
-                                if (!typeValue.toString().equals("")) {
+                                sql.append(") VALUES (");
+                                int row = (Integer) setIterator.next();
+                                Collection<?> c = table.getItem(row).getItemPropertyIds();
+                                Iterator<?> iterator = c.iterator();
+                                iterator.next();
+                                boolean first = true;
+                                int colNum = 0;
+                                while (iterator.hasNext()) {
+                                    if (first) {
+                                        first = false;
+                                    } else {
+                                        sql.append(", ");
+                                    }
+                                    Object typeValue = table.getItem(row)
+                                            .getItemProperty(iterator.next()).getValue();
+                                    if (!typeValue.toString().equals("")) {
+                                        if (typeValue instanceof String) {
+                                            typeValue = "'" + typeValue + "'";
+                                            sql.append(typeValue);
+                                        } else if (typeValue instanceof java.util.Date) {
+                                            typeValue = "{ts "
+                                                    + "'"
+                                                    + FormatUtils.TIMESTAMP_FORMATTER
+                                                            .format(typeValue) + "'" + "}";
+                                            sql.append(typeValue);
+                                        } else {
+                                            sql.append(typeValue);
+                                        }
+                                    } else {
+                                        Column col = resultTable.getColumn(colNum);
+                                        typeValue = getTypeValue(col.getJdbcTypeName());
+                                        sql.append(typeValue);
+                                    }
+                                    colNum++;
+                                }
+
+                                sql.append(");");
+                                listener.writeSql(sql.toString());
+                            }
+
+                        } else if (action.getCaption().equals(ACTION_UPDATE)) {
+
+                            while (setIterator.hasNext()) {
+                                StringBuilder sql = new StringBuilder("UPDATE ");
+
+                                sql.append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(
+                                        catalogName, schemaName, tableName, db.getPlatform()
+                                                .getDatabaseInfo().getDelimiterToken())
+                                        + " SET ");
+
+                                String[] columnHeaders = table.getColumnHeaders();
+                                int row = (Integer) setIterator.next();
+                                Collection<?> c = table.getItem(row).getItemPropertyIds();
+                                Iterator<?> iterator = c.iterator();
+                                iterator.next();
+
+                                List<Object> typeValueList = new ArrayList<Object>();
+
+                                for (int i = 1; i < columnHeaders.length; i++) {
+                                    if (i == 1) {
+                                        sql.append(columnHeaders[i] + "=");
+                                    } else {
+                                        sql.append(", " + columnHeaders[i] + "=");
+                                    }
+
+                                    Object typeValue = table.getItem(row)
+                                            .getItemProperty(iterator.next()).getValue();
                                     if (typeValue instanceof String) {
                                         typeValue = "'" + typeValue + "'";
                                         sql.append(typeValue);
@@ -265,187 +316,143 @@ public class TabularResultLayout extends VerticalLayout {
                                     } else {
                                         sql.append(typeValue);
                                     }
-                                } else {
-                                    Column col = resultTable.getColumn(colNum);
-                                    typeValue = getTypeValue(col.getJdbcTypeName());
-                                    sql.append(typeValue);
-                                }
-                                colNum++;
-                            }
-
-                            sql.append(");");
-                            listener.writeSql(sql.toString());
-                        }
-
-                    } else if (action.getCaption().equals(ACTION_UPDATE)) {
-
-                        while (setIterator.hasNext()) {
-                            StringBuilder sql = new StringBuilder("UPDATE ");
-
-                            sql.append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(
-                                    catalogName, schemaName, tableName, db.getPlatform()
-                                            .getDatabaseInfo().getDelimiterToken())
-                                    + " SET ");
-
-                            String[] columnHeaders = table.getColumnHeaders();
-                            int row = (Integer) setIterator.next();
-                            Collection<?> c = table.getItem(row).getItemPropertyIds();
-                            Iterator<?> iterator = c.iterator();
-                            iterator.next();
-
-                            List<Object> typeValueList = new ArrayList<Object>();
-
-                            for (int i = 1; i < columnHeaders.length; i++) {
-                                if (i == 1) {
-                                    sql.append(columnHeaders[i] + "=");
-                                } else {
-                                    sql.append(", " + columnHeaders[i] + "=");
+                                    typeValueList.add(typeValue);
                                 }
 
-                                Object typeValue = table.getItem(row)
-                                        .getItemProperty(iterator.next()).getValue();
-                                if (typeValue instanceof String) {
-                                    typeValue = "'" + typeValue + "'";
-                                    sql.append(typeValue);
-                                } else if (typeValue instanceof java.util.Date) {
-                                    typeValue = "{ts " + "'"
-                                            + FormatUtils.TIMESTAMP_FORMATTER.format(typeValue)
-                                            + "'" + "}";
-                                    sql.append(typeValue);
-                                } else {
-                                    sql.append(typeValue);
-                                }
-                                typeValueList.add(typeValue);
-                            }
+                                sql.append(" WHERE ");
 
-                            sql.append(" WHERE ");
-
-                            int track = 0;
-                            for (int i = 0; i < resultTable.getColumnCount(); i++) {
-                                Column col = resultTable.getColumn(i);
-                                if (col.isPrimaryKey()) {
-                                    if (track == 0) {
-                                        sql.append(col.getName() + "=" + typeValueList.get(i));
-                                    } else {
-                                        sql.append(" and " + col.getName() + "="
-                                                + typeValueList.get(i));
+                                int track = 0;
+                                for (int i = 0; i < resultTable.getColumnCount(); i++) {
+                                    Column col = resultTable.getColumn(i);
+                                    if (col.isPrimaryKey()) {
+                                        if (track == 0) {
+                                            sql.append(col.getName() + "=" + typeValueList.get(i));
+                                        } else {
+                                            sql.append(" and " + col.getName() + "="
+                                                    + typeValueList.get(i));
+                                        }
+                                        track++;
                                     }
-                                    track++;
                                 }
+                                sql.append(";");
+                                listener.writeSql(sql.toString());
                             }
-                            sql.append(";");
-                            listener.writeSql(sql.toString());
-                        }
-                    } else if (action.getCaption().equals(ACTION_DELETE)) {
+                        } else if (action.getCaption().equals(ACTION_DELETE)) {
 
-                        while (setIterator.hasNext()) {
-                            StringBuilder sql = new StringBuilder("DELETE FROM ");
+                            while (setIterator.hasNext()) {
+                                StringBuilder sql = new StringBuilder("DELETE FROM ");
 
-                            sql.append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(
-                                    catalogName, schemaName, tableName, db.getPlatform()
-                                            .getDatabaseInfo().getDelimiterToken()));
+                                sql.append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(
+                                        catalogName, schemaName, tableName, db.getPlatform()
+                                                .getDatabaseInfo().getDelimiterToken()));
 
-                            String[] columnHeaders = table.getColumnHeaders();
-                            int row = (Integer) setIterator.next();
-                            Collection<?> c = table.getItem(row).getItemPropertyIds();
-                            Iterator<?> iterator = c.iterator();
-                            iterator.next();
+                                String[] columnHeaders = table.getColumnHeaders();
+                                int row = (Integer) setIterator.next();
+                                Collection<?> c = table.getItem(row).getItemPropertyIds();
+                                Iterator<?> iterator = c.iterator();
+                                iterator.next();
 
-                            List<Object> typeValueList = new ArrayList<Object>();
+                                List<Object> typeValueList = new ArrayList<Object>();
 
-                            for (int i = 1; i < columnHeaders.length; i++) {
+                                for (int i = 1; i < columnHeaders.length; i++) {
 
-                                Object typeValue = table.getItem(row)
-                                        .getItemProperty(iterator.next()).getValue();
-                                if (typeValue instanceof String) {
-                                    typeValue = "'" + typeValue + "'";
-                                } else if (typeValue instanceof java.util.Date) {
-                                    typeValue = "{ts " + "'"
-                                            + FormatUtils.TIMESTAMP_FORMATTER.format(typeValue)
-                                            + "'" + "}";
-                                }
-                                typeValueList.add(typeValue);
-                            }
-
-                            sql.append(" WHERE ");
-
-                            int track = 0;
-                            for (int i = 0; i < resultTable.getColumnCount(); i++) {
-                                Column col = resultTable.getColumn(i);
-                                if (col.isPrimaryKey()) {
-                                    if (track == 0) {
-                                        sql.append(col.getName() + "=" + typeValueList.get(i));
-                                    } else {
-                                        sql.append(" and " + col.getName() + "="
-                                                + typeValueList.get(i));
-
+                                    Object typeValue = table.getItem(row)
+                                            .getItemProperty(iterator.next()).getValue();
+                                    if (typeValue instanceof String) {
+                                        typeValue = "'" + typeValue + "'";
+                                    } else if (typeValue instanceof java.util.Date) {
+                                        typeValue = "{ts " + "'"
+                                                + FormatUtils.TIMESTAMP_FORMATTER.format(typeValue)
+                                                + "'" + "}";
                                     }
-                                    track++;
+                                    typeValueList.add(typeValue);
                                 }
+
+                                sql.append(" WHERE ");
+
+                                int track = 0;
+                                for (int i = 0; i < resultTable.getColumnCount(); i++) {
+                                    Column col = resultTable.getColumn(i);
+                                    if (col.isPrimaryKey()) {
+                                        if (track == 0) {
+                                            sql.append(col.getName() + "=" + typeValueList.get(i));
+                                        } else {
+                                            sql.append(" and " + col.getName() + "="
+                                                    + typeValueList.get(i));
+
+                                        }
+                                        track++;
+                                    }
+                                }
+                                sql.append(";");
+                                listener.writeSql(sql.toString());
                             }
-                            sql.append(";");
-                            listener.writeSql(sql.toString());
                         }
+                    } catch (Exception ex) {
+                        log.error(ex.getMessage(), ex);
+                        Notification
+                                .show("There are an error while attempting to perform the action.  Please check the log file for further details.");
                     }
-                } catch (Exception ex) {
-                    log.error(ex.getMessage(), ex);
-                    Notification
-                            .show("There are an error while attempting to perform the action.  Please check the log file for further details.");
-                }
-            }
-
-            @Override
-            public Action[] getActions(Object target, Object sender) {
-                List<Action> actions = new ArrayList<Action>();
-
-                if (resultTable != null) {
-                    actions.add(new Action(ACTION_SELECT));
-                    actions.add(new Action(ACTION_INSERT));
-                    actions.add(new Action(ACTION_UPDATE));
-                    actions.add(new Action(ACTION_DELETE));
                 }
 
-                return actions.toArray(new Action[actions.size()]);
-            }
-        });
+                @Override
+                public Action[] getActions(Object target, Object sender) {
+                    List<Action> actions = new ArrayList<Action>();
 
-        table.addItemClickListener(new ItemClickListener() {
+                    if (resultTable != null) {
+                        actions.add(new Action(ACTION_SELECT));
+                        actions.add(new Action(ACTION_INSERT));
+                        actions.add(new Action(ACTION_UPDATE));
+                        actions.add(new Action(ACTION_DELETE));
+                    }
 
-            private static final long serialVersionUID = 1L;
+                    return actions.toArray(new Action[actions.size()]);
+                }
+            });
 
-            @Override
-            public void itemClick(ItemClickEvent event) {
-                if (event.isDoubleClick()) {
-                    Object object = event.getPropertyId();
-                    if (!object.toString().equals("")) {
-                        int column = (Integer) event.getPropertyId();
-                        String header = table.getColumnHeader(column);
-                        Property<?> p = event.getItem().getItemProperty(column);
-                        String data = String.valueOf(p.getValue());
-                        boolean binary = resultTable != null ? resultTable.getColumn(column - 1)
-                                .isOfBinaryType() : false;
-                        if (binary) {
-                            ReadOnlyTextAreaDialog.show(header, data.toUpperCase(), binary);
-                        } else {
-                            ReadOnlyTextAreaDialog.show(header, data, binary);
+            table.addItemClickListener(new ItemClickListener() {
+
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void itemClick(ItemClickEvent event) {
+                    if (event.isDoubleClick()) {
+                        Object object = event.getPropertyId();
+                        if (!object.toString().equals("")) {
+                            int column = (Integer) event.getPropertyId();
+                            String header = table.getColumnHeader(column);
+                            Property<?> p = event.getItem().getItemProperty(column);
+                            String data = String.valueOf(p.getValue());
+                            boolean binary = resultTable != null ? resultTable
+                                    .getColumn(column - 1).isOfBinaryType() : false;
+                            if (binary) {
+                                ReadOnlyTextAreaDialog.show(header, data.toUpperCase(), binary);
+                            } else {
+                                ReadOnlyTextAreaDialog.show(header, data, binary);
+                            }
                         }
                     }
                 }
+            });
+
+            this.addComponent(table);
+            this.setExpandRatio(table, 1);
+
+            int count = (table.getItemIds().size());
+            int maxResultsSize = settings.getProperties().getInt(SQL_EXPLORER_MAX_RESULTS);
+            if (count >= maxResultsSize) {
+                resultLabel.setValue("Limited to <span style='color: red'>" + maxResultsSize
+                        + "</span> rows;");
+            } else {
+                resultLabel.setValue(count + " rows returned;");
             }
-        });
-
-        this.addComponent(table);
-        this.setExpandRatio(table, 1);
-
-        int count = (table.getItemIds().size());
-        int maxResultsSize = settings.getProperties().getInt(SQL_EXPLORER_MAX_RESULTS);
-        if (count >= maxResultsSize) {
-            resultLabel.setValue("Limited to <span style='color: red'>" + maxResultsSize
-                    + "</span> rows;");
-        } else {
-            resultLabel.setValue(count + " rows returned;");
+        } catch (SQLException ex) {
+            log.error(ex.getMessage(), ex);
+            Notification.show(ex.getMessage());
         }
+
         sqlLabel.setValue(StringUtils.abbreviate(sql, 200));
+
     }
 
     protected static String getTypeValue(String type) {

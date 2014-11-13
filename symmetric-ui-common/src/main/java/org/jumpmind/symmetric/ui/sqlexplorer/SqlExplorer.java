@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.annotations.StyleSheet;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.MenuBar;
@@ -29,7 +31,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
     final Logger log = LoggerFactory.getLogger(getClass());
 
-    final static FontAwesome QUERY_ICON = FontAwesome.BOLT;
+    final static FontAwesome QUERY_ICON = FontAwesome.FILE_O;
 
     final static float DEFAULT_SPLIT_POS = 225;
 
@@ -50,6 +52,8 @@ public class SqlExplorer extends HorizontalSplitPanel {
     float savedSplitPosition = DEFAULT_SPLIT_POS;
 
     String user;
+
+    Set<TableInfoPanel> tableInfoTabs = new HashSet<TableInfoPanel>();
 
     public SqlExplorer(String configDir, IDbProvider databaseProvider, String user) {
         this(databaseProvider, new DefaultSettingsProvider(configDir), user);
@@ -124,7 +128,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
                 showButton.setVisible(true);
             }
         });
-        hideButton.setDescription("Hide Database Explorer");
+        hideButton.setDescription("Hide the database explorer");
         hideButton.setIcon(FontAwesome.BARS);
 
         MenuItem refreshButton = leftMenu.addItem("", new Command() {
@@ -136,8 +140,9 @@ public class SqlExplorer extends HorizontalSplitPanel {
             }
         });
         refreshButton.setIcon(FontAwesome.REFRESH);
+        refreshButton.setDescription("Refresh the database explorer");
 
-        MenuItem queryWindow = leftMenu.addItem("", new Command() {
+        MenuItem openQueryTab = leftMenu.addItem("", new Command() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -145,7 +150,8 @@ public class SqlExplorer extends HorizontalSplitPanel {
                 openQueryWindow(dbTree.getSelected());
             }
         });
-        queryWindow.setIcon(QUERY_ICON);
+        openQueryTab.setIcon(QUERY_ICON);
+        openQueryTab.setDescription("Open a query tab");
 
         MenuItem settings = leftMenu.addItem("", new Command() {
             private static final long serialVersionUID = 1L;
@@ -156,7 +162,8 @@ public class SqlExplorer extends HorizontalSplitPanel {
                 dialog.showAtSize(.5);
             }
         });
-        settings.setIcon(FontAwesome.GEARS);
+        settings.setIcon(FontAwesome.GEAR);
+        settings.setDescription("Modify sql explorer settings");
         return leftMenu;
     }
 
@@ -172,7 +179,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             }
         });
         showButton.setIcon(FontAwesome.BARS);
-        showButton.setDescription("Show Database Explorer");
+        showButton.setDescription("Show database explorer");
         showButton.setVisible(visible);
     }
 
@@ -183,7 +190,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
         contentTabs.setSelectedTab(tab);
         contentMenuBar.removeItems();
         addShowButton(contentMenuBar);
-        tab.selected(contentMenuBar);        
+        tab.selected(contentMenuBar);
         selected = tab;
     }
 
@@ -206,6 +213,31 @@ public class SqlExplorer extends HorizontalSplitPanel {
     protected DbTree buildDbTree() {
 
         final DbTree tree = new DbTree(databaseProvider, settingsProvider);
+        tree.addValueChangeListener(new ValueChangeListener() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void valueChange(ValueChangeEvent event) {
+                Set<TreeNode> nodes = dbTree.getSelected();
+                for (TableInfoPanel panel : tableInfoTabs) {
+                    contentTabs.removeComponent(panel);
+                }
+                for (TreeNode treeNode : nodes) {
+                    if (DbTree.NODE_TYPE_TABLE.equals(treeNode.getType())) {
+                        TableName tableName = new TableName(treeNode.getProperties().get(
+                                "catalogName"), treeNode.getProperties().get("schemaName"),
+                                treeNode.getName());
+                        IDb db = dbTree.getDbForNode(treeNode);
+                        TableInfoPanel tableInfoTab = new TableInfoPanel(tableName, db.getPlatform(),
+                                settingsProvider.get());
+                        Tab tab = contentTabs.addTab(tableInfoTab, tableName.getFullyQualifiedTableName(), FontAwesome.TABLE, 0);
+                        tab.setClosable(true);
+                        selectContentTab(tableInfoTab);
+                        tableInfoTabs.add(tableInfoTab);
+                    }
+                }
+            }
+        });
         tree.registerAction(new DbTreeAction("Query", QUERY_ICON) {
             private static final long serialVersionUID = 1L;
 
