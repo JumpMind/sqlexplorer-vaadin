@@ -1,6 +1,7 @@
 package org.jumpmind.symmetric.ui.sqlexplorer;
 
-import static org.jumpmind.symmetric.ui.sqlexplorer.Settings.*;
+import static org.jumpmind.symmetric.ui.sqlexplorer.Settings.SQL_EXPLORER_AUTO_COMMIT;
+import static org.jumpmind.symmetric.ui.sqlexplorer.Settings.SQL_EXPLORER_DELIMITER;
 
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
@@ -28,7 +29,6 @@ import com.vaadin.event.ShortcutAction.ModifierKey;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.VaadinSession;
-import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractLayout;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
@@ -114,14 +114,13 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         resultsTabs = UiUtils.createTabSheet();
 
         HorizontalLayout statusBar = new HorizontalLayout();
-        statusBar.setMargin(new MarginInfo(false, true, false, true));
+        statusBar.setMargin(true);
         statusBar.setWidth(100, Unit.PERCENTAGE);
 
-        status = new Label((String) null);
-        status.setValue("No Results");
+        status = new Label("No Results");
         statusBar.addComponent(status);
 
-        resultsLayout.addComponents(resultsTabs, status);
+        resultsLayout.addComponents(resultsTabs, statusBar);
         resultsLayout.setExpandRatio(resultsTabs, 1);
 
         addComponents(sqlArea, resultsLayout);
@@ -264,6 +263,8 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
             sqlArea.addShortcutListener(l);
         }
         setButtonsEnabled();
+        
+        sqlArea.focus();
     }
 
     @Override
@@ -291,7 +292,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                 if (target instanceof Table) {
                     Table table = (Table) target;
                     TabularResultLayout layout = (TabularResultLayout) table.getParent();
-                    layout.refreshButton.click();
+                    reExecute(layout.getSql());
                 } else if (target instanceof AceEditor) {
                     if (executeAtCursorButtonValue) {
                         if (execute(false)
@@ -572,5 +573,5 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         }
         return sql;
     }
-
+    
 }

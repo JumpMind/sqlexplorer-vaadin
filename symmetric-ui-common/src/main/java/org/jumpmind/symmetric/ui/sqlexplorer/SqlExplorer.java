@@ -183,7 +183,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
         contentTabs.setSelectedTab(tab);
         contentMenuBar.removeItems();
         addShowButton(contentMenuBar);
-        tab.selected(contentMenuBar);
+        tab.selected(contentMenuBar);        
         selected = tab;
     }
 

@@ -35,11 +35,11 @@ import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.MenuBar;
+import com.vaadin.ui.MenuBar.Command;
+import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
@@ -63,8 +63,6 @@ public class TabularResultLayout extends VerticalLayout {
 
     String sql;
 
-    Button refreshButton;
-
     Statement stmt;
 
     IDb db;
@@ -81,6 +79,10 @@ public class TabularResultLayout extends VerticalLayout {
         this.listener = listener;
         this.settings = settings;
         createTabularResultLayout();
+    }
+    
+    public String getSql() {
+        return sql;
     }
 
     protected void createTabularResultLayout() {
@@ -104,38 +106,28 @@ public class TabularResultLayout extends VerticalLayout {
         resultBar.setComponentAlignment(leftBar, Alignment.MIDDLE_LEFT);
         resultBar.setExpandRatio(leftBar, 1);
 
-        HorizontalLayout rightBar = new HorizontalLayout();
-        rightBar.setSpacing(true);
+        MenuBar rightBar = new MenuBar();
+        rightBar.addStyleName(ValoTheme.MENUBAR_BORDERLESS);
+        rightBar.addStyleName(ValoTheme.MENUBAR_SMALL);
 
-        refreshButton = new Button("", FontAwesome.REFRESH);
-        refreshButton.addStyleName(ValoTheme.BUTTON_LINK);
-        refreshButton.addStyleName(ValoTheme.BUTTON_SMALL);
-        refreshButton.addClickListener(new ClickListener() {
-
+        MenuItem refreshButton = rightBar.addItem("", new Command() {
             private static final long serialVersionUID = 1L;
-
             @Override
-            public void buttonClick(ClickEvent event) {
+            public void menuSelected(MenuItem selectedItem) {
                 listener.reExecute(sql);
             }
         });
-        rightBar.addComponent(refreshButton);
+        refreshButton.setIcon(FontAwesome.REFRESH);
 
-        final Button exportButton = new Button(FontAwesome.FILE);
-        exportButton.addStyleName(ValoTheme.BUTTON_LINK);
-        exportButton.addStyleName(ValoTheme.BUTTON_SMALL);
-
-        exportButton.addClickListener(new ClickListener() {
-
+        MenuItem exportButton = rightBar.addItem("", new Command() {
             private static final long serialVersionUID = 1L;
-
             @Override
-            public void buttonClick(ClickEvent event) {
+            public void menuSelected(MenuItem selectedItem) {
                 // ExportDialog window = new ExportDialog(resultsPanel);
                 // SqlExplorerUiUtils.addWindow(window);
             }
         });
-        rightBar.addComponent(exportButton);
+        exportButton.setIcon(FontAwesome.UPLOAD);
 
         resultBar.addComponent(rightBar);
         resultBar.setComponentAlignment(rightBar, Alignment.MIDDLE_RIGHT);
