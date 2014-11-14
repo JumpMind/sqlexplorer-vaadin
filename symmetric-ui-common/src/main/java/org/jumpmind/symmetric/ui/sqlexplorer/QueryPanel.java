@@ -209,9 +209,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                // SqlExplorerUiUtils.addWindow(new SqlHistoryWindow(folder,
-                // Sqlthis,
-                // explorerPanel));
+                new SqlHistoryWindow(settingsProvider, QueryPanel.this).showAtSize(.6);
             }
         });
         historyButton.setDescription("Sql History");
@@ -333,7 +331,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
     }
 
     protected void writeSql(String sql) {
-        sqlArea.setValue((isNotBlank(sqlArea.getValue()) ? sqlArea.getValue() : "") + "\n" + sql);
+        sqlArea.setValue((isNotBlank(sqlArea.getValue()) ? sqlArea.getValue()+ "\n" : "")  + sql);
     }
 
     protected boolean execute(final boolean runAsScript, String sqlText, final int tabPosition) {

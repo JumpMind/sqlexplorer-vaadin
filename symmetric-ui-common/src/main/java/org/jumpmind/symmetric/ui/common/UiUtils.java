@@ -291,6 +291,19 @@ public final class UiUtils {
             return value;
         }
     }
+    
+    public static String formatDuration(long timeInMs) {
+        if (timeInMs > 60000) {
+            long minutes = timeInMs / 60000;
+            long seconds = (timeInMs - (minutes * 60000)) / 1000;
+            return minutes + " m " + seconds + " s";
+        } else if (timeInMs > 1000) {
+            long seconds = timeInMs / 1000;
+            return seconds + " s";
+        } else {
+            return timeInMs + " ms";
+        }
+    }
 
     public static String formatDateTime(Date dateTime) {
         if (dateTime != null) {

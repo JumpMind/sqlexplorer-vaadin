@@ -37,6 +37,10 @@ import com.vaadin.ui.themes.ValoTheme;
 
 public class DbExportDialog extends ResizableWindow {
 
+    private static final String EXPORT_TO_THE_SQL_EDITOR = "Export to the SQL Editor";
+
+    private static final String EXPORT_AS_A_FILE = "Export as a File";
+
     private static final long serialVersionUID = 1L;
 
     final Logger log = LoggerFactory.getLogger(getClass());
@@ -295,9 +299,9 @@ public class DbExportDialog extends ResizableWindow {
 
         oGroup = new OptionGroup("Export Format");
         oGroup.setImmediate(true);
-        oGroup.addItem("Export as a File");
-        oGroup.addItem("Export to the SQL Editor");
-        oGroup.setValue("Export as a File");
+        oGroup.addItem(EXPORT_AS_A_FILE);
+        oGroup.addItem(EXPORT_TO_THE_SQL_EDITOR);
+        oGroup.setValue(EXPORT_AS_A_FILE);
         oGroup.addValueChangeListener(new Property.ValueChangeListener() {
 
             private static final long serialVersionUID = 1L;
@@ -321,7 +325,7 @@ public class DbExportDialog extends ResizableWindow {
     }
 
     protected void setExportButtonsEnabled() {
-        if (oGroup.getValue().equals("Export as a File")) {
+        if (oGroup.getValue().equals(EXPORT_AS_A_FILE)) {
             exportEditorButton.setVisible(false);
             exportFileButton.setVisible(true);
         } else {

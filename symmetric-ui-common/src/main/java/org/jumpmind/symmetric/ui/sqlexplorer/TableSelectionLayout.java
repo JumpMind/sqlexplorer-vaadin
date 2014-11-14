@@ -18,6 +18,8 @@ import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
+import com.vaadin.event.ItemClickEvent;
+import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Alignment;
@@ -26,7 +28,6 @@ import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Table;
-import com.vaadin.ui.Table.ColumnHeaderMode;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
@@ -66,7 +67,7 @@ public class TableSelectionLayout extends VerticalLayout {
         this.databasePlatform = databasePlatform;
 
         createTableSelectionLayout();
-    }   
+    }
 
     protected void createTableSelectionLayout() {
 
@@ -76,7 +77,7 @@ public class TableSelectionLayout extends VerticalLayout {
         schemaChooserLayout.setWidth(100, Unit.PERCENTAGE);
         schemaChooserLayout.setSpacing(true);
         this.addComponent(schemaChooserLayout);
-        
+
         catalogSelect = new ComboBox("Catalog");
         catalogSelect.setImmediate(true);
         UiUtils.addItems(getCatalogs(), catalogSelect);
@@ -99,7 +100,7 @@ public class TableSelectionLayout extends VerticalLayout {
         Label spacer = new Label();
         schemaChooserLayout.addComponent(spacer);
         schemaChooserLayout.setExpandRatio(spacer, 1);
-        
+
         filterField = new TextField();
         filterField.addStyleName(ValoTheme.TEXTFIELD_INLINE_ICON);
         filterField.setIcon(FontAwesome.SEARCH);
@@ -121,10 +122,20 @@ public class TableSelectionLayout extends VerticalLayout {
         schemaChooserLayout.setComponentAlignment(filterField, Alignment.BOTTOM_RIGHT);
 
         listOfTablesTable = UiUtils.createTable();
-        listOfTablesTable.setColumnHeaderMode(ColumnHeaderMode.EXPLICIT);
+        listOfTablesTable.setImmediate(true);
+        listOfTablesTable.addItemClickListener(new ItemClickListener() {            
+            private static final long serialVersionUID = 1L;
+            @Override
+            public void itemClick(ItemClickEvent event) {
+                CheckBox checkBox = (CheckBox)event.getItem().getItemProperty("selected").getValue();
+                checkBox.setValue(!checkBox.getValue());
+            }
+        });
         listOfTablesTable.addContainerProperty("selected", CheckBox.class, null);
         listOfTablesTable.setColumnWidth("selected", UiConstants.TABLE_SELECTED_COLUMN_WIDTH);
+        listOfTablesTable.setColumnHeader("selected", "");
         listOfTablesTable.addContainerProperty("table", String.class, null);
+        listOfTablesTable.setColumnHeader("table", "");
         listOfTablesTable.setSizeFull();
         this.addComponent(listOfTablesTable);
         this.setExpandRatio(listOfTablesTable, 1);
@@ -166,10 +177,8 @@ public class TableSelectionLayout extends VerticalLayout {
     }
 
     protected void refreshTableOfTables() {
-
         listOfTablesTable.removeAllItems();
         List<String> tables = getTables();
-
         String filter = filterField.getValue();
 
         for (String table : tables) {
@@ -183,14 +192,12 @@ public class TableSelectionLayout extends VerticalLayout {
                 }
             }
         }
-
     }
 
     private void populateTable(final String table) {
         final CheckBox checkBox = new CheckBox();
         checkBox.setValue(select(getSelectedCatalog(), getSelectedSchema(), table));
         listOfTablesTable.addItem(new Object[] { checkBox, table }, table);
-
         checkBox.addValueChangeListener(new Property.ValueChangeListener() {
 
             private static final long serialVersionUID = 1L;
@@ -213,21 +220,18 @@ public class TableSelectionLayout extends VerticalLayout {
                 }
                 selectionChanged();
             }
-            
         });
-
-    }    
-    
-    protected void selectionChanged() {
-        
     }
-    
+
+    protected void selectionChanged() {
+
+    }
+
     @SuppressWarnings("unchecked")
     public List<String> getSelectedTables() {
         listOfTablesTable.commit();
         List<String> select = new ArrayList<String>();
-        Collection<Object> itemIds = (Collection<Object>) listOfTablesTable
-                .getItemIds();
+        Collection<Object> itemIds = (Collection<Object>) listOfTablesTable.getItemIds();
         for (Object itemId : itemIds) {
             Item item = listOfTablesTable.getItem(itemId);
             CheckBox checkBox = (CheckBox) item.getItemProperty("selected").getValue();
@@ -237,7 +241,6 @@ public class TableSelectionLayout extends VerticalLayout {
         }
         return select;
     }
-
 
     public void selectAll() {
         @SuppressWarnings("unchecked")
@@ -250,7 +253,7 @@ public class TableSelectionLayout extends VerticalLayout {
             }
         }
     }
-    
+
     public void selectNone() {
         @SuppressWarnings("unchecked")
         Collection<Object> itemIds = (Collection<Object>) listOfTablesTable.getItemIds();
