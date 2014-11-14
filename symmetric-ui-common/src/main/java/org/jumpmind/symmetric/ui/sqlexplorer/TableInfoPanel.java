@@ -18,7 +18,8 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
 
     private static final long serialVersionUID = 1L;
 
-    public TableInfoPanel(TableName table, IDatabasePlatform databasePlatform, Settings settings) {
+    public TableInfoPanel(org.jumpmind.db.model.Table table, IDatabasePlatform databasePlatform,
+            Settings settings) {
 
         setSizeFull();
 
@@ -27,26 +28,22 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
 
         JdbcSqlTemplate sqlTemplate = (JdbcSqlTemplate) databasePlatform.getSqlTemplate();
 
-        tabSheet.addTab(
-                create(new ColumnMetaDataTableCreator(sqlTemplate, table, settings), table),
+        tabSheet.addTab(create(new ColumnMetaDataTableCreator(sqlTemplate, table, settings)),
                 "Columns");
-        tabSheet.addTab(
-                create(new PrimaryKeyMetaDataTableCreator(sqlTemplate, table, settings), table),
+        tabSheet.addTab(create(new PrimaryKeyMetaDataTableCreator(sqlTemplate, table, settings)),
                 "Primary Keys");
-        tabSheet.addTab(create(new IndexMetaDataTableCreator(sqlTemplate, table, settings), table),
+        tabSheet.addTab(create(new IndexMetaDataTableCreator(sqlTemplate, table, settings)),
                 "Indexes");
         if (databasePlatform.getDatabaseInfo().isForeignKeysSupported()) {
-            tabSheet.addTab(
-                    create(new ImportedKeysMetaDataTableCreator(sqlTemplate, table, settings),
-                            table), "Imported Keys");
-            tabSheet.addTab(
-                    create(new ExportedKeysMetaDataTableCreator(sqlTemplate, table, settings),
-                            table), "Exported Keys");
+            tabSheet.addTab(create(new ImportedKeysMetaDataTableCreator(sqlTemplate, table,
+                    settings)), "Imported Keys");
+            tabSheet.addTab(create(new ExportedKeysMetaDataTableCreator(sqlTemplate, table,
+                    settings)), "Exported Keys");
         }
     }
 
-    protected AbstractLayout create(AbstractMetaDataTableCreator creator, TableName tableName) {
-        Table table = creator.create(tableName);
+    protected AbstractLayout create(AbstractMetaDataTableCreator creator) {
+        Table table = creator.create();
         VerticalLayout layout = new VerticalLayout();
         layout.setMargin(true);
         layout.setSizeFull();

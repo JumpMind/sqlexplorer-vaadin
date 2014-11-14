@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -325,5 +326,69 @@ public final class UiUtils {
         for (Object item : items) {
             container.addItem(item);
         }
+    }
+    
+    public static String getJdbcTypeValue(String type) {
+        String value = null;
+        if (type.equalsIgnoreCase("CHAR")) {
+            value = "";
+        } else if (type.equalsIgnoreCase("VARCHAR")) {
+            value = "";
+        } else if (type.equalsIgnoreCase("LONGVARCHAR")) {
+            value = "";
+        } else if (type.equalsIgnoreCase("NUMERIC")) {
+            value = "0";
+        } else if (type.equalsIgnoreCase("DECIMAL")) {
+            value = "0.00";
+        } else if (type.equalsIgnoreCase("BIT")) {
+            value = "0";
+        } else if (type.equalsIgnoreCase("BOOLEAN")) {
+            value = "0";
+        } else if (type.equalsIgnoreCase("TINYINT")) {
+            value = "0";
+        } else if (type.equalsIgnoreCase("SMALLINT")) {
+            value = "0";
+        } else if (type.equalsIgnoreCase("INTEGER")) {
+            value = "0";
+        } else if (type.equalsIgnoreCase("BIGINT")) {
+            value = "0";
+        } else if (type.equalsIgnoreCase("REAL")) {
+            value = "0";
+        } else if (type.equalsIgnoreCase("DOUBLE")) {
+            value = "0.0";
+        } else if (type.equalsIgnoreCase("BINARY")) {
+            value = null;
+        } else if (type.equalsIgnoreCase("VARBINARY")) {
+            value = null;
+        } else if (type.equalsIgnoreCase("LONGBINARY")) {
+            value = null;
+        } else if (type.equalsIgnoreCase("DATE")) {
+            value = "'2014-07-08'";
+        } else if (type.equalsIgnoreCase("TIME")) {
+            value = "'12:00:00'";
+        } else if (type.equalsIgnoreCase("TIMESTAMP")) {
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date = new Date();
+            value = dateFormat.format(date);
+        } else if (type.equalsIgnoreCase("CLOB")) {
+            value = "''";
+        } else if (type.equalsIgnoreCase("BLOB")) {
+            value = "''";
+        } else if (type.equalsIgnoreCase("ARRAY")) {
+            value = "[]";
+        } else if (type.equalsIgnoreCase("DISTINCT")) {
+            value = null;
+        } else if (type.equalsIgnoreCase("STRUCT")) {
+            value = null;
+        } else if (type.equalsIgnoreCase("REF")) {
+            value = null;
+        } else if (type.equalsIgnoreCase("DATALINK")) {
+            value = null;
+        } else if (type.equalsIgnoreCase("JAVA_OBJECT")) {
+            value = null;
+        } else {
+            value = null;
+        }
+        return value;
     }
 }

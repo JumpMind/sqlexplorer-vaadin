@@ -19,7 +19,7 @@ abstract public class AbstractMetaDataTableCreator {
 
     JdbcSqlTemplate sqlTemplate;
 
-    TableName table;
+    org.jumpmind.db.model.Table table;
 
     String folder;
 
@@ -29,14 +29,14 @@ abstract public class AbstractMetaDataTableCreator {
             "TABLE_CATALOG", "TABLE_SCHEMA", "PKTABLE_NAME", "PKTABLE_CATALOG", "PKTABLE_SCHEMA",
             "TABLE_CAT", "TABLE_SCHEM" };
 
-    public AbstractMetaDataTableCreator(JdbcSqlTemplate sqlTemplate, TableName table,
+    public AbstractMetaDataTableCreator(JdbcSqlTemplate sqlTemplate, org.jumpmind.db.model.Table table,
             Settings settings) {
         this.sqlTemplate = sqlTemplate;
         this.table = table;
         this.settings = settings;
     }
 
-    public Table create(final TableName tableName) {
+    public Table create() {
         return sqlTemplate.execute(new IConnectionCallback<com.vaadin.ui.Table>() {
 
             public com.vaadin.ui.Table execute(Connection con) throws SQLException {

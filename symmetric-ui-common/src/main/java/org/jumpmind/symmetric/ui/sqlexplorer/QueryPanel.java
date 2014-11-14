@@ -122,6 +122,12 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
         addComponents(sqlArea, resultsLayout);
 
+        setSplitPosition(400, Unit.PIXELS);
+
+    }
+    
+    public IDb getDb() {
+        return db;
     }
 
     protected AceEditor buildSqlEditor() {
@@ -209,7 +215,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                new SqlHistoryWindow(settingsProvider, QueryPanel.this).showAtSize(.6);
+                new SqlHistoryDialog(settingsProvider, QueryPanel.this).showAtSize(0.6);
             }
         });
         historyButton.setDescription("Sql History");
@@ -224,8 +230,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                // SqlExplorerUiUtils.addWindow(new DbImportDialog(platform,
-                // new HashSet<org.jumpmind.db.model.Table>(), template));
+                new DbImportDialog(db.getPlatform()).showAtSize(0.6);
             }
         });
 
@@ -235,9 +240,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                new DbExportDialog(db.getPlatform(), new HashSet<org.jumpmind.db.model.Table>(),
-                        QueryPanel.this).showAtSize(.6);
-                ;
+                new DbExportDialog(db.getPlatform(), QueryPanel.this).showAtSize(0.6);
             }
         });
 
@@ -247,9 +250,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                // SqlExplorerUiUtils.addWindow(new DbFillDialog(platform,
-                // new HashSet<org.jumpmind.db.model.Table>(), Sqlthis,
-                // explorerPanel, template));
+                new DbFillDialog(db.getPlatform(), QueryPanel.this).showAtSize(0.6);
             }
         });
 
@@ -331,7 +332,14 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
     }
 
     protected void writeSql(String sql) {
-        sqlArea.setValue((isNotBlank(sqlArea.getValue()) ? sqlArea.getValue()+ "\n" : "")  + sql);
+        sqlArea.setValue((isNotBlank(sqlArea.getValue()) ? sqlArea.getValue() + "\n" : "") + sql);
+    }
+
+    protected void executeSql(String sql, boolean writeToQueryWindow) {
+        if (writeToQueryWindow) {
+            writeSql(sql);
+        }
+        execute(false, sql, 0);
     }
 
     protected boolean execute(final boolean runAsScript, String sqlText, final int tabPosition) {

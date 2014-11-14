@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -91,18 +92,16 @@ public class DbExportDialog extends ResizableWindow {
 
     private IDatabasePlatform databasePlatform;
 
-    public DbExportDialog(IDatabasePlatform databasePlatform, Set<Table> selectedTableSet,
-            QueryPanel queryPanel) {
-        this(databasePlatform, "Database Export", "Please select from the following tables",
-                selectedTableSet, queryPanel);
+    public DbExportDialog(IDatabasePlatform databasePlatform, QueryPanel queryPanel) {
+        this(databasePlatform, new HashSet<Table>(), queryPanel);
     }
 
-    public DbExportDialog(IDatabasePlatform databasePlatform, String titleKey,
-            String descriptionKey, Set<Table> selectedTableSet, QueryPanel panel) {
-        super(titleKey);
+    public DbExportDialog(IDatabasePlatform databasePlatform, Set<Table> selectedTableSet,
+            QueryPanel queryPanel) {
+        super("Database Export");
 
         this.databasePlatform = databasePlatform;
-        this.queryPanel = panel;
+        this.queryPanel = queryPanel;
 
         tableSelectionLayout = new TableSelectionLayout(databasePlatform, selectedTableSet) {
             private static final long serialVersionUID = 1L;

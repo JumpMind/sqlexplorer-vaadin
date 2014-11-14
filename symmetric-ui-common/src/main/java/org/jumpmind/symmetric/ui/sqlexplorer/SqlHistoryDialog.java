@@ -26,7 +26,7 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 
-public class SqlHistoryWindow extends ResizableWindow {
+public class SqlHistoryDialog extends ResizableWindow {
 
     private static final long serialVersionUID = 1L;
 
@@ -38,7 +38,7 @@ public class SqlHistoryWindow extends ResizableWindow {
 
     private ISettingsProvider settingsProvider;
 
-    public SqlHistoryWindow(ISettingsProvider settingsProvider, QueryPanel queryPanel) {
+    public SqlHistoryDialog(ISettingsProvider settingsProvider, QueryPanel queryPanel) {
         super("Sql History");
         this.settingsProvider = settingsProvider;
         this.queryPanel = queryPanel;

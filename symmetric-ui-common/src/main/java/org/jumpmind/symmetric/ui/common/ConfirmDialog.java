@@ -22,20 +22,25 @@ public class ConfirmDialog extends Window {
     public ConfirmDialog(String caption, String text, final IConfirmListener confirmListener) {
         setCaption(caption);
         setModal(true);
-        setResizable(false);
-        setSizeUndefined();
+        setResizable(true);
+        setWidth(300, Unit.PIXELS);
+        setHeight(200, Unit.PIXELS);
         setClosable(false);
 
         VerticalLayout layout = new VerticalLayout();
+        layout.setSizeFull();
         layout.setSpacing(true);
         layout.setMargin(true);
         setContent(layout);
 
         if (isNotBlank(text)) {
-            layout.addComponent(new Label(text));
+            Label textLabel = new Label(text);
+            layout.addComponent(textLabel);
+            layout.setExpandRatio(textLabel, 1);
         }
 
         HorizontalLayout buttonLayout = new HorizontalLayout();
+        buttonLayout.setStyleName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
         buttonLayout.setSpacing(true);
         buttonLayout.setWidth(100, Unit.PERCENTAGE);
 
