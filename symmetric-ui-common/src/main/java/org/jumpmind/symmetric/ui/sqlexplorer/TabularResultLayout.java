@@ -73,9 +73,12 @@ public class TabularResultLayout extends VerticalLayout {
 
     Settings settings;
 
+    boolean showSql = true;
+
     public TabularResultLayout(IDb db, String sql, Statement stmt, ISqlRunnerListener listener,
-            Settings settings) throws SQLException {
+            Settings settings, boolean showSql) throws SQLException {
         this.sql = sql;
+        this.showSql = showSql;
         this.db = db;
         this.stmt = stmt;
         this.listener = listener;
@@ -85,6 +88,10 @@ public class TabularResultLayout extends VerticalLayout {
 
     public String getSql() {
         return sql;
+    }
+
+    public void setShowSql(boolean showSql) {
+        this.showSql = showSql;
     }
 
     protected void createTabularResultLayout() {
@@ -452,7 +459,9 @@ public class TabularResultLayout extends VerticalLayout {
             Notification.show(ex.getMessage());
         }
 
-        sqlLabel.setValue(StringUtils.abbreviate(sql, 200));
+        if (showSql) {
+            sqlLabel.setValue(StringUtils.abbreviate(sql, 200));
+        }
 
     }
 
@@ -585,7 +594,7 @@ public class TabularResultLayout extends VerticalLayout {
     protected String[] getColumnsToExclude() {
         return new String[0];
     }
-    
+
     public void csvExport() {
         if (table != null) {
             CsvExport csvExport = new CsvExport(table);

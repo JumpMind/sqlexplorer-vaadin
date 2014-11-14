@@ -387,16 +387,17 @@ public class SqlExplorer extends HorizontalSplitPanel {
             public void valueChange(ValueChangeEvent event) {
                 Set<TreeNode> nodes = dbTree.getSelected();
                 if (nodes != null) {
+                    String selectedTabCaption = null;
                     for (TableInfoPanel panel : tableInfoTabs) {
-                        contentTabs.removeComponent(panel);
+                        selectedTabCaption = panel.getSelectedTabCaption();
+                        contentTabs.removeComponent(panel);                        
                     }
                     for (TreeNode treeNode : nodes) {
                         if (treeNode != null && DbTree.NODE_TYPE_TABLE.equals(treeNode.getType())) {
                             Table table = getTableFor(treeNode);
                             if (table != null) {
                                 IDb db = dbTree.getDbForNode(treeNode);
-                                TableInfoPanel tableInfoTab = new TableInfoPanel(table, db
-                                        .getPlatform(), settingsProvider.get());
+                                TableInfoPanel tableInfoTab = new TableInfoPanel(table, user, db, settingsProvider.get(), selectedTabCaption);
                                 Tab tab = contentTabs.addTab(tableInfoTab,
                                         table.getFullyQualifiedTableName(), FontAwesome.TABLE, 0);
                                 tab.setClosable(true);

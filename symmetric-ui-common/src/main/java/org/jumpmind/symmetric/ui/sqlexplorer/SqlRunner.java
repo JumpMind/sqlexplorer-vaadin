@@ -58,11 +58,15 @@ public class SqlRunner extends Thread {
 
     private boolean createdConnection = true;
 
+    private boolean showSqlOnResults = true;
+
     private IDb db;
 
     private String user;
 
     private boolean autoCommit;
+    
+    private boolean logAtDebug;
 
     private static final String COMMIT_COMMAND = "commit";
 
@@ -73,14 +77,28 @@ public class SqlRunner extends Thread {
     }
 
     public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings) {
+        this(sqlText, runAsScript, user, db, settings, null);
+    }
+
+    public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings,
+            ISqlRunnerListener listener) {
         this.setName("sql-runner-" + getId());
         this.sqlText = sqlText;
         this.runAsScript = runAsScript;
         this.db = db;
+        this.listener = listener;
         this.settings = settings;
         this.autoCommit = settings.getProperties().is(SQL_EXPLORER_AUTO_COMMIT);
         this.user = user;
         sqlRunners.add(0, this);
+    }
+    
+    public void setLogAtDebug(boolean logAtDebug) {
+        this.logAtDebug = logAtDebug;
+    }
+
+    public void setShowSqlOnResults(boolean showSqlOnResults) {
+        this.showSqlOnResults = showSqlOnResults;
     }
 
     public static void commit(Connection connection) throws SQLException {
@@ -156,7 +174,11 @@ public class SqlRunner extends Thread {
                     sqlReader.setDelimiter(delimiter);
                     String sql = sqlReader.readSqlStatement();
                     while (sql != null) {
-                        log.info("Executing: {}", sql.trim());
+                        if (logAtDebug) {
+                            log.debug("Executing: {}", sql.trim());
+                        } else {
+                            log.info("Executing: {}", sql.trim());
+                        }
                         if (sql.replaceAll("\\s", "").equalsIgnoreCase(COMMIT_COMMAND)) {
                             committed = true;
                         } else {
@@ -166,7 +188,7 @@ public class SqlRunner extends Thread {
                             if (!runAsScript) {
                                 if (!resultsAsText) {
                                     resultComponent = new TabularResultLayout(db, sql, stmt,
-                                            listener, settings);
+                                            listener, settings, showSqlOnResults);
                                 } else {
                                     resultComponent = putResultsInArea(stmt, maxResultsSize);
                                 }

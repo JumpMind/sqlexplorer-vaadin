@@ -363,6 +363,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
             HorizontalLayout executingLayout = new HorizontalLayout();
             final ProgressBar p = new ProgressBar();
             p.setIndeterminate(true);
+            final int oldPollInterval = UI.getCurrent().getPollInterval();
             UI.getCurrent().setPollInterval(100);
             executingLayout.addComponent(p);
 
@@ -445,7 +446,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                                 resultsTabs.removeTab(executingTab);
                                 runnersInProgress.remove(runner);
                                 runner.setListener(null);
-                                UI.getCurrent().setPollInterval(0);
+                                UI.getCurrent().setPollInterval(oldPollInterval);
                             }
                         }
                     });
