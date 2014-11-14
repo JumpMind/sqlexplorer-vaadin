@@ -87,6 +87,10 @@ public class ResizableWindow extends Window {
         closeButton.addClickListener(new CloseButtonListener());
         return closeButton;
     }
+    
+    protected HorizontalLayout buildButtonFooter(Button... toTheRightButtons) {
+        return buildButtonFooter((Button[])null, toTheRightButtons);
+    }
 
     protected HorizontalLayout buildButtonFooter(Button[] toTheLeftButtons, Button... toTheRightButtons) {
         HorizontalLayout footer = new HorizontalLayout();
@@ -119,6 +123,15 @@ public class ResizableWindow extends Window {
     
     protected boolean onClose() { return true;}
 
+    public void show() {
+        if (!UI.getCurrent().getWindows().contains(this)) {
+            UI.getCurrent().addWindow(this);
+            grabFocus();
+        }
+        
+        center();
+    }
+    
     public void showAtSize(double percentOfBrowserSize) {
         Page page = Page.getCurrent();
 
@@ -130,17 +143,8 @@ public class ResizableWindow extends Window {
         setHeight((int) (pageHeight * percentOfBrowserSize), Unit.PIXELS);
         setWidth((int) (pageWidth * percentOfBrowserSize), Unit.PIXELS);
 
-        int y = pageHeight / 2 - (int) getHeight() / 2;
-        int x = pageWidth / 2 - (int) getWidth() / 2;
-
-        setPositionX(x);
-        setPositionY(y);
-
-        if (!UI.getCurrent().getWindows().contains(this)) {
-            UI.getCurrent().addWindow(this);
-            grabFocus();
-        }
-        center();
+        show();
+       
     }
 
     public class CloseButtonListener implements ClickListener {

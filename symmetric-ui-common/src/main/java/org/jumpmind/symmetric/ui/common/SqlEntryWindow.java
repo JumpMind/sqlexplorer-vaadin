@@ -15,7 +15,7 @@ public class SqlEntryWindow extends ResizableWindow {
         editor.setMode(AceMode.sql);
         editor.setValue(sql);
         editor.setSizeFull();
-        content.addComponents(editor, buildButtonFooter(null, buildCloseButton()));
+        content.addComponents(editor, buildButtonFooter(buildCloseButton()));
         content.setExpandRatio(editor, 1);
     }
     

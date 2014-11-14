@@ -14,10 +14,6 @@ import org.jumpmind.symmetric.ui.common.TreeNode;
 import org.jumpmind.symmetric.ui.common.UiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vaadin.peter.contextmenu.ContextMenu;
-import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItem;
-import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuOpenedListener.TreeListener;
-import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuOpenedOnTreeItemEvent;
 
 import com.vaadin.event.Action;
 import com.vaadin.server.FontAwesome;
@@ -70,24 +66,6 @@ public class DbTree extends Tree {
             }
             actions.add(action);
         }
-    }
-
-    // TODO delete once we decide to not use this context menu
-    protected void configureContextMenu() {
-
-        ContextMenu treeContextMenu = new ContextMenu();
-        treeContextMenu.addContextMenuTreeListener(new TreeListener() {
-
-            @Override
-            public void onContextMenuOpenFromTreeItem(ContextMenuOpenedOnTreeItemEvent event) {
-                log.info("Opened at " + event.getItemId());
-            }
-        });
-        ContextMenuItem treeItem1 = treeContextMenu.addItem("Tree test item #1");
-        treeItem1.setSeparatorVisible(true);
-        treeItem1.addStyleName("treeStyle1");
-        treeContextMenu.addItem("Tree test item #2").setEnabled(false);
-        treeContextMenu.setAsTreeContextMenu(this);
     }
 
     public void refresh() {
@@ -293,18 +271,23 @@ public class DbTree extends Tree {
 
         public String getStyle(Tree source, Object itemId) {
             if (itemId instanceof TreeNode) {
-                TreeNode node = (TreeNode) itemId;
-                IDatabasePlatform platform = getDbForNode(node).getPlatform();
-                if (node.getType().equals(NODE_TYPE_CATALOG)) {
-                    String catalog = platform.getDefaultCatalog();
-                    if (catalog != null && catalog.equals(node.getName())) {
-                        return "bold";
+                try {
+                    TreeNode node = (TreeNode) itemId;
+                    if (node.getType().equals(NODE_TYPE_CATALOG)) {
+                        IDatabasePlatform platform = getDbForNode(node).getPlatform();
+                        String catalog = platform.getDefaultCatalog();
+                        if (catalog != null && catalog.equals(node.getName())) {
+                            return "bold";
+                        }
+                    } else if (node.getType().equals(NODE_TYPE_SCHEMA)) {
+                        IDatabasePlatform platform = getDbForNode(node).getPlatform();
+                        String schema = platform.getDefaultSchema();
+                        if (schema != null && schema.equals(node.getName())) {
+                            return "bold";
+                        }
                     }
-                } else if (node.getType().equals(NODE_TYPE_SCHEMA)) {
-                    String schema = platform.getDefaultSchema();
-                    if (schema != null && schema.equals(node.getName())) {
-                        return "bold";
-                    }
+                } catch (Exception e) {
+                    log.error("Failed to see if this node is the default catalog and/or schema", e);
                 }
             }
             return null;

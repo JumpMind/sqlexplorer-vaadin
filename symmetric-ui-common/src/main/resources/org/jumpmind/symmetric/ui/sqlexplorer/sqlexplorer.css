@@ -5,3 +5,7 @@
 .sqlexplorer .v-tree-node-caption-bold {
 	font-weight: bold;
 }
+
+.sqlexplorer .v-tabsheet-deco {
+    visibility: hidden;
+}

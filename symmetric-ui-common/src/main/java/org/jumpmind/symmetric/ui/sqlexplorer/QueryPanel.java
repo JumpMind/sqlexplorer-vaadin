@@ -1,5 +1,6 @@
 package org.jumpmind.symmetric.ui.sqlexplorer;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.jumpmind.symmetric.ui.sqlexplorer.Settings.SQL_EXPLORER_AUTO_COMMIT;
 import static org.jumpmind.symmetric.ui.sqlexplorer.Settings.SQL_EXPLORER_DELIMITER;
 
@@ -8,7 +9,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -20,8 +20,6 @@ import org.vaadin.aceeditor.AceEditor.SelectionChangeListener;
 import org.vaadin.aceeditor.AceMode;
 import org.vaadin.aceeditor.TextRange;
 
-import com.vaadin.addon.tableexport.CsvExport;
-import com.vaadin.addon.tableexport.ExcelExport;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.event.ShortcutAction.KeyCode;
@@ -29,7 +27,6 @@ import com.vaadin.event.ShortcutAction.ModifierKey;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.VaadinSession;
-import com.vaadin.ui.AbstractLayout;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -240,9 +237,9 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                // SqlExplorerUiUtils.addWindow(new DbExportDialog(platform,
-                // new HashSet<org.jumpmind.db.model.Table>(), Sqlthis,
-                // explorerPanel, template));
+                new DbExportDialog(db.getPlatform(), new HashSet<org.jumpmind.db.model.Table>(),
+                        QueryPanel.this).showAtSize(.6);
+                ;
             }
         });
 
@@ -263,7 +260,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
             sqlArea.addShortcutListener(l);
         }
         setButtonsEnabled();
-        
+
         sqlArea.focus();
     }
 
@@ -306,7 +303,8 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         };
     }
 
-    protected void add(String sqlStatement, Date executeTime, long executeDuration, String userId) {
+    protected void addToSqlHistory(String sqlStatement, Date executeTime, long executeDuration,
+            String userId) {
         sqlStatement = sqlStatement.trim();
         Settings settings = settingsProvider.load();
         SqlHistory history = settings.getSqlHistory(sqlStatement);
@@ -332,6 +330,10 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
     protected boolean execute(final boolean runAsScript) {
         return execute(runAsScript, null, 0);
+    }
+
+    protected void writeSql(String sql) {
+        sqlArea.setValue((isNotBlank(sqlArea.getValue()) ? sqlArea.getValue() : "") + "\n" + sql);
     }
 
     protected boolean execute(final boolean runAsScript, String sqlText, final int tabPosition) {
@@ -375,7 +377,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
                 @Override
                 public void writeSql(String sql) {
-                    sqlArea.setValue(sqlArea.getValue() + "\n" + sql);
+                    QueryPanel.this.writeSql(sql);
                 }
 
                 @Override
@@ -401,7 +403,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                                     connection = runner.getConnection();
                                 }
 
-                                add(sql, runner.getStartTime(), executionTimeInMs, user);
+                                addToSqlHistory(sql, runner.getStartTime(), executionTimeInMs, user);
 
                                 if (resultComponent != null) {
                                     resultComponent.setSizeFull();
@@ -486,49 +488,6 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         }
     }
 
-    public void csvExport() {
-        Table table = getTableFromResults();
-        if (table != null) {
-            CsvExport csvExport = new CsvExport(table);
-            csvExport.excludeCollapsedColumns();
-            csvExport.setDisplayTotals(false);
-            csvExport.setExportFileName(db.getName() + "-export.csv");
-            csvExport.setReportTitle(resultsTabs.getTab(resultsTabs.getSelectedTab())
-                    .getDescription());
-            csvExport.export();
-        }
-    }
-
-    public void excelExport() {
-        Table table = getTableFromResults();
-        if (table != null) {
-            ExcelExport excelExport = new ExcelExport(table);
-            excelExport.excludeCollapsedColumns();
-            excelExport.setDisplayTotals(false);
-            excelExport.setExportFileName(db.getName() + "-export.xls");
-            excelExport.setReportTitle(resultsTabs.getTab(resultsTabs.getSelectedTab())
-                    .getDescription());
-            excelExport.export();
-        }
-    }
-
-    public Table getTableFromResults() {
-        Component comp = resultsTabs.getSelectedTab();
-        if (comp instanceof Table) {
-            return (Table) comp;
-        } else if (comp instanceof AbstractLayout) {
-            AbstractLayout layout = (AbstractLayout) comp;
-            Iterator<Component> i = layout.iterator();
-            while (i.hasNext()) {
-                Component component = i.next();
-                if (component instanceof Table) {
-                    return (Table) component;
-                }
-            }
-        }
-        return null;
-    }
-
     protected String selectSqlToRun() {
         String delimiter = settingsProvider.get().getProperties().get(SQL_EXPLORER_DELIMITER);
         String sql = sqlArea.getValue();
@@ -573,5 +532,5 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         }
         return sql;
     }
-    
+
 }

@@ -2,7 +2,6 @@ package org.jumpmind.symmetric.ui.common;
 
 import static org.apache.commons.lang.StringUtils.abbreviate;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -13,6 +12,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vaadin.aceeditor.AceEditor;
 
+import com.vaadin.data.Container;
 import com.vaadin.data.Property;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
@@ -100,8 +101,7 @@ public final class UiUtils {
         editor.setSizeFull();
         editor.setImmediate(true);
         ServletContext context = VaadinServlet.getCurrent().getServletContext();
-        File aceDir = new File(context.getRealPath("ace"));
-        if (aceDir.exists()) {
+        if (context.getRealPath("ace") != null) {
             String acePath = context.getContextPath() + "/ace";
             editor.setThemePath(acePath);
             editor.setModePath(acePath);
@@ -109,7 +109,7 @@ public final class UiUtils {
         } else {
             log.warn("Could not find a local version of the ace editor.  "
                     + "You might want to consider installing the ace web artifacts at "
-                    + aceDir.getAbsolutePath());
+                    + context.getRealPath(""));
         }
         editor.setTextChangeEventMode(TextChangeEventMode.EAGER);
         editor.setHighlightActiveLine(true);
@@ -138,6 +138,11 @@ public final class UiUtils {
             notification.setIcon(FontAwesome.WARNING);
         }
         notification.show(Page.getCurrent());
+    }
+    
+    public static void notify(String message, Throwable ex) {
+        notify("An unexpected error occurred", "The message was: " + message
+                + ".  See the log file for additional details", Type.ERROR_MESSAGE);
     }
 
     public static void notify(Throwable ex) {
@@ -303,4 +308,9 @@ public final class UiUtils {
         }
     }
 
+    public static void addItems(List<?> items, Container container) {
+        for (Object item : items) {
+            container.addItem(item);
+        }
+    }
 }

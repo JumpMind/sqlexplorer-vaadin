@@ -15,6 +15,7 @@ dependencies {
     compile "org.vaadin.addons:aceeditor:0.8.12"
     compile "org.vaadin.addons:tableexport:1.4.0"
     compile "org.vaadin.addons:contextmenu:4.5"
+    compile "org.springframework:spring-webmvc:$springVersion"
     compile "com.vaadin:vaadin-server:$vaadinVersion"
     provided "javax.servlet:javax.servlet-api:$servletVersion"
 }

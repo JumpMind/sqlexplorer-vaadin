@@ -117,7 +117,7 @@ public class SettingsDialog extends ResizableWindow {
             }
         });
 
-        return buildButtonFooter(null, new Button("Cancel", new CloseButtonListener()), saveButton);
+        return buildButtonFooter(new Button("Cancel", new CloseButtonListener()), saveButton);
     }
 
     protected void save() {

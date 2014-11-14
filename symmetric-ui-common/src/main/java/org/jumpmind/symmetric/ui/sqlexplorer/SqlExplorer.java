@@ -179,7 +179,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             }
         });
         showButton.setIcon(FontAwesome.BARS);
-        showButton.setDescription("Show database explorer");
+        showButton.setDescription("Show the database explorer");
         showButton.setVisible(visible);
     }
 
@@ -219,21 +219,24 @@ public class SqlExplorer extends HorizontalSplitPanel {
             @Override
             public void valueChange(ValueChangeEvent event) {
                 Set<TreeNode> nodes = dbTree.getSelected();
-                for (TableInfoPanel panel : tableInfoTabs) {
-                    contentTabs.removeComponent(panel);
-                }
-                for (TreeNode treeNode : nodes) {
-                    if (DbTree.NODE_TYPE_TABLE.equals(treeNode.getType())) {
-                        TableName tableName = new TableName(treeNode.getProperties().get(
-                                "catalogName"), treeNode.getProperties().get("schemaName"),
-                                treeNode.getName());
-                        IDb db = dbTree.getDbForNode(treeNode);
-                        TableInfoPanel tableInfoTab = new TableInfoPanel(tableName, db.getPlatform(),
-                                settingsProvider.get());
-                        Tab tab = contentTabs.addTab(tableInfoTab, tableName.getFullyQualifiedTableName(), FontAwesome.TABLE, 0);
-                        tab.setClosable(true);
-                        selectContentTab(tableInfoTab);
-                        tableInfoTabs.add(tableInfoTab);
+                if (nodes != null) {
+                    for (TableInfoPanel panel : tableInfoTabs) {
+                        contentTabs.removeComponent(panel);
+                    }
+                    for (TreeNode treeNode : nodes) {
+                        if (treeNode != null && DbTree.NODE_TYPE_TABLE.equals(treeNode.getType())) {
+                            TableName tableName = new TableName(treeNode.getProperties().get(
+                                    "catalogName"), treeNode.getProperties().get("schemaName"),
+                                    treeNode.getName());
+                            IDb db = dbTree.getDbForNode(treeNode);
+                            TableInfoPanel tableInfoTab = new TableInfoPanel(tableName, db
+                                    .getPlatform(), settingsProvider.get());
+                            Tab tab = contentTabs.addTab(tableInfoTab,
+                                    tableName.getFullyQualifiedTableName(), FontAwesome.TABLE, 0);
+                            tab.setClosable(true);
+                            selectContentTab(tableInfoTab);
+                            tableInfoTabs.add(tableInfoTab);
+                        }
                     }
                 }
             }

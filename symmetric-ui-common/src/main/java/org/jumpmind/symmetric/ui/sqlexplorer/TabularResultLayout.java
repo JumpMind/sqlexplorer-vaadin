@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.support.JdbcUtils;
 
+import com.vaadin.addon.tableexport.CsvExport;
+import com.vaadin.addon.tableexport.ExcelExport;
 import com.vaadin.data.Property;
 import com.vaadin.event.Action;
 import com.vaadin.event.Action.Handler;
@@ -125,8 +127,7 @@ public class TabularResultLayout extends VerticalLayout {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                // ExportDialog window = new ExportDialog(resultsPanel);
-                // SqlExplorerUiUtils.addWindow(window);
+                new ExportDialog(TabularResultLayout.this).show();
             }
         });
         exportButton.setIcon(FontAwesome.UPLOAD);
@@ -583,5 +584,27 @@ public class TabularResultLayout extends VerticalLayout {
 
     protected String[] getColumnsToExclude() {
         return new String[0];
+    }
+    
+    public void csvExport() {
+        if (table != null) {
+            CsvExport csvExport = new CsvExport(table);
+            csvExport.excludeCollapsedColumns();
+            csvExport.setDisplayTotals(false);
+            csvExport.setExportFileName(db.getName() + "-export.csv");
+            csvExport.setReportTitle(sql);
+            csvExport.export();
+        }
+    }
+
+    public void excelExport() {
+        if (table != null) {
+            ExcelExport excelExport = new ExcelExport(table);
+            excelExport.excludeCollapsedColumns();
+            excelExport.setDisplayTotals(false);
+            excelExport.setExportFileName(db.getName() + "-export.xls");
+            excelExport.setReportTitle(sql);
+            excelExport.export();
+        }
     }
 }
