@@ -118,6 +118,7 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
         UI.getCurrent().setPollInterval(100);
         executingLayout.addComponent(p);
         tabSheet.addTab(executingLayout, "Data", FontAwesome.SPINNER, 0);
+        tabSheet.setSelectedTab(executingLayout);
 
         SqlRunner runner = new SqlRunner(dml.getSql(), false, user, db, settings,
                 new ISqlRunnerListener() {
@@ -130,6 +131,7 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
 
                     @Override
                     public void reExecute(String sql) {
+                        tabSheet.removeTab(tabSheet.getTab(0));
                         refreshData(table, user, db, settings);
                     }
 
