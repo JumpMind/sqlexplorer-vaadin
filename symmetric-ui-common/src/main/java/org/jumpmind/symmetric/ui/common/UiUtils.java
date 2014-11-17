@@ -102,7 +102,7 @@ public final class UiUtils {
         editor.setSizeFull();
         editor.setImmediate(true);
         ServletContext context = VaadinServlet.getCurrent().getServletContext();
-        if (context.getRealPath("ace") != null) {
+        if (context.getRealPath("/ace") != null) {
             String acePath = context.getContextPath() + "/ace";
             editor.setThemePath(acePath);
             editor.setModePath(acePath);
