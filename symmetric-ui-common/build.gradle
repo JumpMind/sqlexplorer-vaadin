@@ -11,7 +11,11 @@ apply plugin: 'propdeps-eclipse'
 
 
 dependencies {
-    compile project(":symmetric-app-common")
+    compile "org.jumpmind.symmetric:symmetric-jdbc:$symmetricVersion"
+    compile "org.jumpmind.symmetric:symmetric-io:$symmetricVersion"
+    compile "commons-lang:commons-lang:$commonsLangVersion"
+    compile "commons-dbcp:commons-dbcp:$commonsDbcpVersion"
+    compile "commons-io:commons-io:$commonsIoVersion"
     compile "org.vaadin.addons:aceeditor:0.8.12"
     compile "org.vaadin.addons:tableexport:1.4.0"
     compile "org.vaadin.addons:contextmenu:4.5"
