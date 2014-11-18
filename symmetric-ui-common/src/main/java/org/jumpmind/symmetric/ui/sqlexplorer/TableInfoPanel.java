@@ -145,11 +145,14 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
                             public void run() {
                                 boolean select = tabSheet.getSelectedTab().equals(executingLayout);
                                 tabSheet.removeComponent(executingLayout);
-                                results.setSizeFull();
-                                tabSheet.addTab(results, "Data", null, 0);
+                                VerticalLayout layout = new VerticalLayout();
+                                layout.setMargin(true);
+                                layout.setSizeFull();
+                                layout.addComponent(results);
+                                tabSheet.addTab(layout, "Data", null, 0);
                                 UI.getCurrent().setPollInterval(oldPollInterval);
                                 if (select) {
-                                    tabSheet.setSelectedTab(results);
+                                    tabSheet.setSelectedTab(layout);
                                 }
                             }
                         });

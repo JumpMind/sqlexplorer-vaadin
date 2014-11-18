@@ -95,7 +95,7 @@ public class TabularResultLayout extends VerticalLayout {
     }
 
     protected void createTabularResultLayout() {
-
+        this.setSizeFull();
         this.setSpacing(false);
 
         HorizontalLayout resultBar = new HorizontalLayout();
@@ -456,7 +456,7 @@ public class TabularResultLayout extends VerticalLayout {
             }
         } catch (SQLException ex) {
             log.error(ex.getMessage(), ex);
-            Notification.show(ex.getMessage());
+            UiUtils.notify(ex);
         }
 
         if (showSql) {
