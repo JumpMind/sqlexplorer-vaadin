@@ -18,7 +18,7 @@ ext {
     log4jVersion = '1.2.17'
     slf4jVersion = '1.7.7'
     springVersion = '4.0.5.RELEASE'
-    vaadinVersion = '7.3.4'
+    vaadinVersion = '7.3.5'
     jettyVersion = '9.2.1.v20140609'
     commonsLangVersion = '2.6'
     commonsDbcpVersion = '1.4'
