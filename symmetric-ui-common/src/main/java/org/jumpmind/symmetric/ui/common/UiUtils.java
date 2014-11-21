@@ -52,13 +52,17 @@ public final class UiUtils {
 
     private UiUtils() {
     }
-
-    public static TabSheet createTabSheet() {
-        TabSheet tabSheet = new TabSheet();
+    
+    public static void styleTabSheet(TabSheet tabSheet) {
         tabSheet.setSizeFull();
         tabSheet.addStyleName(ValoTheme.TABSHEET_FRAMED);
         tabSheet.addStyleName(ValoTheme.TABSHEET_COMPACT_TABBAR);
-        tabSheet.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
+        tabSheet.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);        
+    }
+
+    public static TabSheet createTabSheet() {
+        TabSheet tabSheet = new TabSheet();
+        styleTabSheet(tabSheet);
         return tabSheet;
     }
 
