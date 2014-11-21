@@ -144,6 +144,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
                 savedSplitPosition = getSplitPosition() > 10 ? getSplitPosition()
                         : DEFAULT_SPLIT_POS;
                 setSplitPosition(0);
+                setLocked(true);
                 showButton.setVisible(true);
             }
         });
@@ -194,6 +195,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             @Override
             public void menuSelected(MenuItem selectedItem) {
                 setSplitPosition(savedSplitPosition, Unit.PIXELS);
+                setLocked(false);
                 showButton.setVisible(false);
             }
         });
