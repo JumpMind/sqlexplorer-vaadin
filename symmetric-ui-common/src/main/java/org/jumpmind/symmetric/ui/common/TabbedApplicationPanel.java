@@ -1,5 +1,7 @@
 package org.jumpmind.symmetric.ui.common;
 
+import java.util.Iterator;
+
 import com.vaadin.server.Resource;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.TabSheet;
@@ -48,6 +50,15 @@ public class TabbedApplicationPanel extends TabSheet {
     }
 
     public void addCloseableTab(String caption, Resource icon, Component component) {
+        Iterator<Component> i = iterator();
+        while (i.hasNext()) {
+            Component c = i.next();
+            if (getTab(c).getCaption().equals(caption)) {
+                setSelectedTab(c);
+                return;
+            }
+        } 
+        
         component.setSizeFull();
         Tab tab = addTab(component, caption, icon, 1);
         tab.setClosable(true);
