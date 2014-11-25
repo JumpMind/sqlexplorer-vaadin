@@ -394,7 +394,8 @@ public class SqlExplorer extends HorizontalSplitPanel {
                         selectedTabCaption = panel.getSelectedTabCaption();
                         contentTabs.removeComponent(panel);                        
                     }
-                    for (TreeNode treeNode : nodes) {
+                    if (nodes.size() > 0) {
+                        TreeNode treeNode = nodes.iterator().next();
                         if (treeNode != null && DbTree.NODE_TYPE_TABLE.equals(treeNode.getType())) {
                             Table table = getTableFor(treeNode);
                             if (table != null) {
@@ -406,6 +407,14 @@ public class SqlExplorer extends HorizontalSplitPanel {
                                 selectContentTab(tableInfoTab);
                                 tableInfoTabs.add(tableInfoTab);
                             }
+                        }                        
+                    }
+                    
+                    for (TreeNode treeNode : nodes) {
+                        IDb db = dbTree.getDbForNode(treeNode);
+                        QueryPanel panel = getQueryPanelForDb(db);
+                        if (panel == null) {
+                            openQueryWindow(db);
                         }
                     }
                 }
@@ -525,6 +534,22 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
         return tree;
 
+    }
+    
+    protected QueryPanel getQueryPanelForDb(IDb db) {
+        if (db != null) {
+            Iterator<Component> i = contentTabs.iterator();
+            while (i.hasNext()) {
+                Component c = i.next();
+                if (c instanceof QueryPanel) {
+                    QueryPanel panel = (QueryPanel)c;
+                    if (panel.getDb().getName().equals(db.getName())) {
+                        return panel;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     protected String getTabName(String name) {
