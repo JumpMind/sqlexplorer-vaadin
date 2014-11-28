@@ -8,6 +8,7 @@ import static org.jumpmind.symmetric.ui.sqlexplorer.Settings.SQL_EXPLORER_RESULT
 import java.io.Serializable;
 import java.io.StringReader;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -65,7 +66,7 @@ public class SqlRunner extends Thread {
     private String user;
 
     private boolean autoCommit;
-    
+
     private boolean logAtDebug;
 
     private static final String COMMIT_COMMAND = "commit";
@@ -92,7 +93,7 @@ public class SqlRunner extends Thread {
         this.user = user;
         sqlRunners.add(0, this);
     }
-    
+
     public void setLogAtDebug(boolean logAtDebug) {
         this.logAtDebug = logAtDebug;
     }
@@ -152,28 +153,31 @@ public class SqlRunner extends Thread {
         int maxResultsSize = properties.getInt(SQL_EXPLORER_MAX_RESULTS);
         String delimiter = properties.get(SQL_EXPLORER_DELIMITER);
 
-        Component resultComponent = null;
+        List<Component> resultComponents = new ArrayList<Component>();
         FontAwesome icon = FontAwesome.CHECK_CIRCLE;
         rowsUpdated = false;
         boolean committed = false;
         try {
             DataSource dataSource = db.getPlatform().getDataSource();
             ResultSet rs = null;
-            Statement stmt = null;
+            PreparedStatement stmt = null;
             StringBuilder results = new StringBuilder();
             try {
                 if (connection == null) {
                     connection = dataSource.getConnection();
                     connection.setAutoCommit(autoCommit);
                 }
-                stmt = connection.createStatement();
-                stmt.setFetchSize(maxResultsSize < 100 ? maxResultsSize : 100);
                 SqlScriptReader sqlReader = null;
                 try {
                     sqlReader = new SqlScriptReader(new StringReader(sqlText));
                     sqlReader.setDelimiter(delimiter);
                     String sql = sqlReader.readSqlStatement();
                     while (sql != null) {
+                        JdbcUtils.closeStatement(stmt);
+                        stmt = connection.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
+                                ResultSet.CONCUR_READ_ONLY);
+                        stmt.setFetchSize(maxResultsSize < 100 ? maxResultsSize : 100);
+
                         if (logAtDebug) {
                             log.debug("Executing: {}", sql.trim());
                         } else {
@@ -184,52 +188,58 @@ public class SqlRunner extends Thread {
                         } else {
                             committed = false;
                         }
-                        if (stmt.execute(sql)) {
-                            if (!runAsScript) {
-                                if (!resultsAsText) {
-                                    resultComponent = new TabularResultLayout(db, sql, stmt,
-                                            listener, settings, showSqlOnResults);
-                                } else {
-                                    resultComponent = putResultsInArea(stmt, maxResultsSize);
-                                }
-                            } else {
-                                int rowsRetrieved = 0;
-                                rs = stmt.getResultSet();
-                                while (rs.next()) {
-                                    rowsRetrieved++;
-                                }
-                                results.append(sql);
-                                results.append("\n");
-                                results.append("Rows Retrieved: ");
-                                results.append(rowsRetrieved);
-                                results.append("\n");
-                                results.append("\n");
-                            }
-                        } else {
-                            int updateCount = stmt.getUpdateCount();
-                            rowsUpdated = updateCount > 0 ? true : false;
-                            if (!runAsScript) {
-                                resultComponent = wrapTextInComponent(String.format(
-                                        "%d rows affected", updateCount));
-                            } else {
-                                results.append(sql);
-                                results.append("\n");
-                                results.append("Rows Affected: ");
-                                results.append(updateCount);
-                                results.append("\n");
-                                results.append("\n");
-                            }
-                        }
 
+                        boolean hasResults = stmt.execute();
+                        int updateCount = stmt.getUpdateCount();
+                        while (hasResults || updateCount != -1) {
+                            if (hasResults) {
+                                rs = stmt.getResultSet();
+                                if (!runAsScript) {
+                                    if (!resultsAsText) {
+                                        resultComponents.add(new TabularResultLayout(db, sql, stmt,
+                                                listener, settings, showSqlOnResults));
+                                    } else {
+                                        resultComponents.add(putResultsInArea(stmt, maxResultsSize));
+                                    }
+                                } else {
+                                    int rowsRetrieved = 0;
+                                    while (rs.next()) {
+                                        rowsRetrieved++;
+                                    }
+                                    results.append(sql);
+                                    results.append("\n");
+                                    results.append("Rows Retrieved: ");
+                                    results.append(rowsRetrieved);
+                                    results.append("\n");
+                                    results.append("\n");
+                                }
+                            } else {
+                                rowsUpdated = updateCount > 0 ? true : false;
+                                if (!runAsScript) {
+                                    resultComponents.add(wrapTextInComponent(String.format(
+                                            "%d rows affected", updateCount)));
+                                } else {
+                                    results.append(sql);
+                                    results.append("\n");
+                                    results.append("Rows Affected: ");
+                                    results.append(updateCount);
+                                    results.append("\n");
+                                    results.append("\n");
+                                }
+                            }
+                            hasResults = stmt.getMoreResults();
+                            updateCount = stmt.getUpdateCount();
+                        }
                         sql = sqlReader.readSqlStatement();
                     }
+
                 } finally {
                     IOUtils.closeQuietly(sqlReader);
                 }
 
             } catch (Throwable ex) {
                 icon = FontAwesome.BAN;
-                resultComponent = wrapTextInComponent(buildErrorMessage(ex), "marked");
+                resultComponents.add(wrapTextInComponent(buildErrorMessage(ex), "marked"));
             } finally {
                 JdbcUtils.closeResultSet(rs);
                 JdbcUtils.closeStatement(stmt);
@@ -240,15 +250,15 @@ public class SqlRunner extends Thread {
 
             }
 
-            if (resultComponent == null && StringUtils.isNotBlank(results.toString())) {
-                resultComponent = wrapTextInComponent(results.toString(),
-                        icon == FontAwesome.BAN ? "marked" : null);
+            if (resultComponents.size() == 0 && StringUtils.isNotBlank(results.toString())) {
+                resultComponents.add(wrapTextInComponent(results.toString(),
+                        icon == FontAwesome.BAN ? "marked" : null));
             }
 
         } finally {
             endTime = new Date();
             if (listener != null) {
-                listener.finished(icon, resultComponent, endTime.getTime() - startTime.getTime(),
+                listener.finished(icon, resultComponents, endTime.getTime() - startTime.getTime(),
                         !autoCommit && rowsUpdated, committed);
             } else if (!autoCommit) {
                 rollback(connection);
@@ -409,7 +419,7 @@ public class SqlRunner extends Thread {
 
         public void reExecute(String sql);
 
-        public void finished(FontAwesome icon, Component results, long executionTimeInMs,
+        public void finished(FontAwesome icon, List<Component> results, long executionTimeInMs,
                 boolean transactionStarted, boolean transactionEnded);
     }
 

@@ -496,11 +496,11 @@ public class TabularResultLayout extends VerticalLayout {
         try {
             rs = stmt.getResultSet();
 
-            String parsedSql = sql.toUpperCase();
+            String parsedSql = sql;
             String first = "";
             String second = "";
             String third = "";
-            parsedSql = parsedSql.substring(parsedSql.indexOf("FROM ") + 5, parsedSql.length());
+            parsedSql = parsedSql.substring(parsedSql.toUpperCase().indexOf("FROM ") + 5, parsedSql.length());
             parsedSql = parsedSql.trim();
             String separator = ".";
             if (parsedSql.contains(separator)) {

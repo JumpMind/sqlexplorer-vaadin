@@ -2,6 +2,7 @@ package org.jumpmind.symmetric.ui.sqlexplorer;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 import org.jumpmind.db.platform.IDatabasePlatform;
 import org.jumpmind.db.sql.DmlStatement;
@@ -136,7 +137,7 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
                     }
 
                     @Override
-                    public void finished(final FontAwesome icon, final Component results,
+                    public void finished(final FontAwesome icon, final List<Component> results,
                             long executionTimeInMs, boolean transactionStarted,
                             boolean transactionEnded) {
                         VaadinSession.getCurrent().access(new Runnable() {
@@ -148,7 +149,9 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
                                 VerticalLayout layout = new VerticalLayout();
                                 layout.setMargin(true);
                                 layout.setSizeFull();
-                                layout.addComponent(results);
+                                if (results.size() > 0) {
+                                    layout.addComponent(results.get(0));
+                                }
                                 tabSheet.addTab(layout, "Data", null, 0);
                                 UI.getCurrent().setPollInterval(oldPollInterval);
                                 if (select) {

@@ -392,7 +392,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                     QueryPanel.this.reExecute(sql);
                 }
 
-                public void finished(final FontAwesome icon, final Component resultComponent,
+                public void finished(final FontAwesome icon, final List<Component> results,
                         final long executionTimeInMs, final boolean transactionStarted,
                         final boolean transactionEnded) {
                     VaadinSession.getCurrent().access(new Runnable() {
@@ -412,7 +412,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
                                 addToSqlHistory(sql, runner.getStartTime(), executionTimeInMs, user);
 
-                                if (resultComponent != null) {
+                                for (Component resultComponent : results) {
                                     resultComponent.setSizeFull();
                                     Tab tab = resultsTabs.addTab(resultComponent,
                                             StringUtils.abbreviate(sql, 20), icon, tabPosition);
