@@ -138,7 +138,7 @@ public class DbFillDialog extends ResizableWindow {
                                 tableSelectionLayout.catalogSelect.getValue() != null ? tableSelectionLayout.catalogSelect
                                         .getValue().toString() : null,
                                 tableSelectionLayout.schemaSelect.getValue() != null ? tableSelectionLayout.schemaSelect
-                                        .getValue().toString() : null, tableName, true);
+                                        .getValue().toString() : null, tableName, false);
                         if (table != null) {
                             for (int i = 0; i < dbFill.getRecordCount(); i++) {
                                 for (int j = 0; j < dbFill.getInsertWeight(); j++) {

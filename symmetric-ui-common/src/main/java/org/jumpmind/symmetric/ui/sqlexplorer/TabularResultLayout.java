@@ -579,7 +579,7 @@ public class TabularResultLayout extends VerticalLayout {
                     tableName = tableName.trim();
                 }
                 resultTable = db.getPlatform().getTableFromCache(catalogName, schemaName,
-                        tableName, true);
+                        tableName, false);
             }
 
             TypedProperties properties = settings.getProperties();

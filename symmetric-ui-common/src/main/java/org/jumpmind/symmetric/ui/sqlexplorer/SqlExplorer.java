@@ -293,7 +293,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
         IDatabasePlatform platform = db.getPlatform();
         TypedProperties nodeProperties = treeNode.getProperties();
         return platform.getTableFromCache(nodeProperties.get("catalogName"),
-                nodeProperties.get("schemaName"), treeNode.getName(), true);
+                nodeProperties.get("schemaName"), treeNode.getName(), false);
     }
 
     protected Set<Table> getTablesFor(Set<TreeNode> nodes) {
