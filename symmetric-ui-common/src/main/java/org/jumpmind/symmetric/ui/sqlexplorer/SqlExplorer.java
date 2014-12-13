@@ -12,6 +12,7 @@ import java.util.Set;
 import org.jumpmind.db.model.Column;
 import org.jumpmind.db.model.Database;
 import org.jumpmind.db.model.Table;
+import org.jumpmind.db.platform.DatabaseInfo;
 import org.jumpmind.db.platform.IDatabasePlatform;
 import org.jumpmind.db.sql.DmlStatement;
 import org.jumpmind.db.sql.DmlStatement.DmlType;
@@ -519,13 +520,18 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
             @Override
             public void handle(Set<TreeNode> nodes) {
+                
                 for (TreeNode treeNode : nodes) {
                     IDb db = dbTree.getDbForNode(nodes.iterator().next());
+                    DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
+                    final String quote = dbInfo.getDelimiterToken();
+                    final String catalogSeparator = dbInfo.getCatalogSeparator();
+                    final String schemaSeparator = dbInfo.getSchemaSeparator();
+
                     Table table = getTableFor(treeNode);
                     if (table != null) {
                         QueryPanel panel = findQueryPanelForDb(db);
-                        panel.writeSql(table.getFullyQualifiedTableName(db.getPlatform()
-                                .getDatabaseInfo().getDelimiterToken()));
+                        panel.writeSql(table.getQualifiedTableName(quote, catalogSeparator, schemaSeparator));
                         contentTabs.setSelectedTab(panel);
                     }
                 }

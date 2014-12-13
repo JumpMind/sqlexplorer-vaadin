@@ -16,6 +16,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.jumpmind.db.model.Column;
+import org.jumpmind.db.platform.DatabaseInfo;
 import org.jumpmind.db.platform.IDdlReader;
 import org.jumpmind.properties.TypedProperties;
 import org.jumpmind.symmetric.ui.common.ReadOnlyTextAreaDialog;
@@ -166,6 +167,11 @@ public class TabularResultLayout extends VerticalLayout {
                 @Override
                 public void handleAction(Action action, Object sender, Object target) {
                     try {
+                        DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
+                        final String quote = dbInfo.getDelimiterToken();
+                        final String catalogSeparator = dbInfo.getCatalogSeparator();
+                        final String schemaSeparator = dbInfo.getSchemaSeparator();
+
                         Set<Integer> selectedRowsSet = (Set<Integer>) table.getValue();
                         Iterator<Integer> setIterator = selectedRowsSet.iterator();
                         if (action.getCaption().equals(ACTION_SELECT)) {
@@ -184,9 +190,7 @@ public class TabularResultLayout extends VerticalLayout {
 
                                 sql.append(" FROM "
                                         + org.jumpmind.db.model.Table.getFullyQualifiedTableName(
-                                                catalogName, schemaName, tableName, db
-                                                        .getPlatform().getDatabaseInfo()
-                                                        .getDelimiterToken()));
+                                                catalogName, schemaName, tableName, quote, catalogSeparator, schemaSeparator));
 
                                 int row = (Integer) setIterator.next();
                                 Collection<?> c = table.getItem(row).getItemPropertyIds();
@@ -234,9 +238,7 @@ public class TabularResultLayout extends VerticalLayout {
 
                                 sql.append("INSERT INTO "
                                         + org.jumpmind.db.model.Table.getFullyQualifiedTableName(
-                                                catalogName, schemaName, tableName, db
-                                                        .getPlatform().getDatabaseInfo()
-                                                        .getDelimiterToken()) + " (");
+                                                catalogName, schemaName, tableName, quote, catalogSeparator, schemaSeparator) + " (");
 
                                 String[] columnHeaders = table.getColumnHeaders();
                                 for (int i = 1; i < columnHeaders.length; i++) {
@@ -292,8 +294,7 @@ public class TabularResultLayout extends VerticalLayout {
                                 StringBuilder sql = new StringBuilder("UPDATE ");
 
                                 sql.append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(
-                                        catalogName, schemaName, tableName, db.getPlatform()
-                                                .getDatabaseInfo().getDelimiterToken())
+                                        catalogName, schemaName, tableName, quote, catalogSeparator, schemaSeparator)
                                         + " SET ");
 
                                 String[] columnHeaders = table.getColumnHeaders();
@@ -351,8 +352,7 @@ public class TabularResultLayout extends VerticalLayout {
                                 StringBuilder sql = new StringBuilder("DELETE FROM ");
 
                                 sql.append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(
-                                        catalogName, schemaName, tableName, db.getPlatform()
-                                                .getDatabaseInfo().getDelimiterToken()));
+                                        catalogName, schemaName, tableName, quote, catalogSeparator, schemaSeparator));
 
                                 String[] columnHeaders = table.getColumnHeaders();
                                 int row = (Integer) setIterator.next();
