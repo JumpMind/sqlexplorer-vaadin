@@ -21,13 +21,13 @@ import javax.servlet.ServletContext;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.jumpmind.db.sql.JdbcSqlTemplate;
+import org.jumpmind.util.FormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vaadin.aceeditor.AceEditor;
 
 import com.vaadin.data.Container;
 import com.vaadin.data.Property;
-import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.Position;
@@ -52,12 +52,12 @@ public final class UiUtils {
 
     private UiUtils() {
     }
-    
+
     public static void styleTabSheet(TabSheet tabSheet) {
         tabSheet.setSizeFull();
         tabSheet.addStyleName(ValoTheme.TABSHEET_FRAMED);
         tabSheet.addStyleName(ValoTheme.TABSHEET_COMPACT_TABBAR);
-        tabSheet.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);        
+        tabSheet.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
     }
 
     public static TabSheet createTabSheet() {
@@ -135,24 +135,35 @@ public final class UiUtils {
     }
 
     public static void notify(String caption, String message, Type type) {
-        Notification notification = new Notification(caption, message, type);
-        notification.setPosition(Position.TOP_CENTER);
-        notification.setStyleName(notification.getStyleName() + " " + ValoTheme.NOTIFICATION_BAR
-                + " " + ValoTheme.NOTIFICATION_CLOSABLE);
-        if (type == Type.ERROR_MESSAGE) {
-            notification.setIcon(FontAwesome.WARNING);
-        }
+        notify(caption, message, null, type);
+    }
+
+    public static void notify(String caption, String message, Throwable ex, Type type) {
+        Notification notification = new Notification(caption, contactWithLineFeed(FormatUtils.wordWrap(message, 150)), Type.HUMANIZED_MESSAGE);
+        notification.setPosition(Position.MIDDLE_CENTER);
+        notification.setDelayMsec(-1);
+        String errorStyle = type == Type.ERROR_MESSAGE ? ValoTheme.NOTIFICATION_FAILURE : "";
+        notification.setStyleName(notification.getStyleName() + " "
+                + ValoTheme.NOTIFICATION_CLOSABLE + " " + errorStyle);
         notification.show(Page.getCurrent());
     }
     
+    private static String contactWithLineFeed(String[] lines) {
+        StringBuilder line = new StringBuilder();
+        for (String l : lines) {
+            line.append(l).append("\n");
+        }
+        return line.toString();
+    }
+
     public static void notify(String message, Throwable ex) {
-        notify("An unexpected error occurred", "The message was: " + message
-                + ".  See the log file for additional details", Type.ERROR_MESSAGE);
+        notify("An error occurred", message, ex, Type.ERROR_MESSAGE);
     }
 
     public static void notify(Throwable ex) {
-        notify("An unexpected error occurred", "The message was: " + ex.getMessage()
-                + ".  See the log file for additional details", Type.ERROR_MESSAGE);
+        notify("An unexpected error occurred",
+                "See the log file for additional details", ex,
+                Type.ERROR_MESSAGE);
     }
 
     public static Object getObject(ResultSet rs, int i) throws SQLException {
@@ -296,7 +307,7 @@ public final class UiUtils {
             return value;
         }
     }
-    
+
     public static String formatDuration(long timeInMs) {
         if (timeInMs > 60000) {
             long minutes = timeInMs / 60000;
@@ -331,7 +342,7 @@ public final class UiUtils {
             container.addItem(item);
         }
     }
-    
+
     public static String getJdbcTypeValue(String type) {
         String value = null;
         if (type.equalsIgnoreCase("CHAR")) {

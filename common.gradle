@@ -49,6 +49,13 @@ repositories {
     maven { url "http://maven.vaadin.com/vaadin-addons" }
 }
 
+task sourcesJar(type: Jar, dependsOn:classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts { archives sourcesJar }
+
 uploadArchives {
     repositories.mavenDeployer {
         configuration = configurations.deployerJars

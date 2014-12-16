@@ -85,6 +85,7 @@ public class ResizableWindow extends Window {
         Button closeButton = new Button("Close");
         closeButton.addStyleName(ValoTheme.BUTTON_PRIMARY);
         closeButton.addClickListener(new CloseButtonListener());
+        closeButton.focus();
         return closeButton;
     }
     

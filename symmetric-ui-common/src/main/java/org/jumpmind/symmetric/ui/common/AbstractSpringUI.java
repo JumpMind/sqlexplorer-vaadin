@@ -9,7 +9,6 @@ import com.vaadin.server.DefaultErrorHandler;
 import com.vaadin.server.Responsive;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
-import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 
 abstract public class AbstractSpringUI extends UI {
@@ -27,9 +26,7 @@ abstract public class AbstractSpringUI extends UI {
             @Override
             public void error(com.vaadin.server.ErrorEvent event) {
                 Throwable ex = event.getThrowable();
-                UiUtils.notify("Error",
-                        "An unexpected error occurred.  Please check the log file for details.",
-                        Type.ERROR_MESSAGE);
+                UiUtils.notify(ex);
                 if (ex != null) {
                     log.error(ex.getMessage(), ex);
                 } else {
