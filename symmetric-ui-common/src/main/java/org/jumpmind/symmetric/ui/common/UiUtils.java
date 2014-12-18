@@ -123,7 +123,7 @@ public final class UiUtils {
     }
 
     public static void notify(String message) {
-        notify(null, message, Type.HUMANIZED_MESSAGE);
+        notify("", message, Type.HUMANIZED_MESSAGE);
     }
 
     public static void notify(String caption, String message) {
@@ -131,7 +131,7 @@ public final class UiUtils {
     }
 
     public static void notify(String message, Type type) {
-        notify(null, message, type);
+        notify("", message, type);
     }
 
     public static void notify(String caption, String message, Type type) {
