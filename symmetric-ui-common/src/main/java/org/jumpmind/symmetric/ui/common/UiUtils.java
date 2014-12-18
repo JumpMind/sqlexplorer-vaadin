@@ -142,9 +142,15 @@ public final class UiUtils {
         Notification notification = new Notification(caption, contactWithLineFeed(FormatUtils.wordWrap(message, 150)), Type.HUMANIZED_MESSAGE);
         notification.setPosition(Position.MIDDLE_CENTER);
         notification.setDelayMsec(-1);
-        String errorStyle = type == Type.ERROR_MESSAGE ? ValoTheme.NOTIFICATION_FAILURE : "";
+        
+        String style = ValoTheme.NOTIFICATION_SUCCESS;
+        if (type == Type.ERROR_MESSAGE) {
+            style = ValoTheme.NOTIFICATION_FAILURE;
+        } else if (type == Type.WARNING_MESSAGE) {
+            style = ValoTheme.NOTIFICATION_WARNING;
+        }
         notification.setStyleName(notification.getStyleName() + " "
-                + ValoTheme.NOTIFICATION_CLOSABLE + " " + errorStyle);
+                + ValoTheme.NOTIFICATION_CLOSABLE + " " + style);
         notification.show(Page.getCurrent());
     }
     
