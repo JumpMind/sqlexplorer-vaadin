@@ -27,6 +27,7 @@ import com.vaadin.event.ShortcutAction.ModifierKey;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.VaadinSession;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -361,11 +362,14 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         if (StringUtils.isNotBlank(sqlText)) {
 
             HorizontalLayout executingLayout = new HorizontalLayout();
+            executingLayout.setMargin(true);
+            executingLayout.setSizeFull();
             final ProgressBar p = new ProgressBar();
             p.setIndeterminate(true);
             final int oldPollInterval = UI.getCurrent().getPollInterval();
             UI.getCurrent().setPollInterval(100);
             executingLayout.addComponent(p);
+            executingLayout.setComponentAlignment(p, Alignment.MIDDLE_CENTER);
 
             final String sql = sqlText;
             final Tab executingTab = resultsTabs.addTab(executingLayout,
