@@ -55,7 +55,8 @@ abstract public class AbstractMetaDataTableCreator {
                     t.setSizeFull();
                     return t;
                 } catch (Exception ex) {
-                    log.warn("Failed to retrieve meta data", ex);
+                    log.info("Failed to retrieve meta data.  It might be that this driver doesn't support it.  Turn on debug logging to see the resulting stacktrace");
+                    log.debug("", ex);
                     return UiUtils.createTable();
                 } finally {
                     JdbcSqlTemplate.close(rs);
