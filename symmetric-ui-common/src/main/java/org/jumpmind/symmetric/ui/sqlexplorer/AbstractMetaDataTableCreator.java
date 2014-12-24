@@ -12,11 +12,15 @@ import org.jumpmind.db.sql.IConnectionCallback;
 import org.jumpmind.db.sql.JdbcSqlTemplate;
 import org.jumpmind.properties.TypedProperties;
 import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.ui.Table;
 
 abstract public class AbstractMetaDataTableCreator {
 
+    final Logger log = LoggerFactory.getLogger(getClass());
+    
     JdbcSqlTemplate sqlTemplate;
 
     org.jumpmind.db.model.Table table;
@@ -41,15 +45,18 @@ abstract public class AbstractMetaDataTableCreator {
 
             public com.vaadin.ui.Table execute(Connection con) throws SQLException {
                 TypedProperties properties = settings.getProperties();
-                DatabaseMetaData metadata = con.getMetaData();
                 ResultSet rs = null;
                 Table t = null;
                 try {
+                    DatabaseMetaData metadata = con.getMetaData();
                     rs = getMetaDataResultSet(metadata);
                     t = UiUtils.putResultsInTable(rs, properties.getInt(SQL_EXPLORER_MAX_RESULTS),
                             properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS), getColumnsToExclude());
                     t.setSizeFull();
                     return t;
+                } catch (Exception ex) {
+                    log.warn("Failed to retrieve meta data", ex);
+                    return UiUtils.createTable();
                 } finally {
                     JdbcSqlTemplate.close(rs);
                 }
