@@ -159,7 +159,6 @@ public class SqlRunner extends Thread {
         boolean committed = false;
         try {
             DataSource dataSource = db.getPlatform().getDataSource();
-            ResultSet rs = null;
             PreparedStatement stmt = null;
             StringBuilder results = new StringBuilder();
             try {
@@ -192,45 +191,53 @@ public class SqlRunner extends Thread {
                         boolean hasResults = stmt.execute();
                         int updateCount = stmt.getUpdateCount();
                         while (hasResults || updateCount != -1) {
-                            if (hasResults) {
-                                rs = stmt.getResultSet();
-                                if (!runAsScript) {
-                                    if (!resultsAsText) {
-                                        resultComponents.add(new TabularResultLayout(db, sql, stmt,
-                                                listener, settings, showSqlOnResults));
+                            ResultSet rs = null;
+                            try {
+                                if (hasResults) {
+                                    rs = stmt.getResultSet();
+                                    if (!runAsScript) {
+                                        if (!resultsAsText) {
+                                            resultComponents.add(new TabularResultLayout(db, sql,
+                                                    rs, listener, settings, showSqlOnResults));
+                                        } else {
+                                            resultComponents.add(putResultsInArea(stmt,
+                                                    maxResultsSize));
+                                        }
                                     } else {
-                                        resultComponents.add(putResultsInArea(stmt, maxResultsSize));
+                                        int rowsRetrieved = 0;
+                                        while (rs.next()) {
+                                            rowsRetrieved++;
+                                        }
+                                        results.append(sql);
+                                        results.append("\n");
+                                        results.append("Rows Retrieved: ");
+                                        results.append(rowsRetrieved);
+                                        results.append("\n");
+                                        results.append("\n");
                                     }
                                 } else {
-                                    int rowsRetrieved = 0;
-                                    while (rs.next()) {
-                                        rowsRetrieved++;
+                                    rowsUpdated = updateCount > 0 ? true : false;
+                                    if (!runAsScript) {
+                                        resultComponents.add(wrapTextInComponent(String.format(
+                                                "%d rows affected", updateCount)));
+                                    } else {
+                                        results.append(sql);
+                                        results.append("\n");
+                                        results.append("Rows Affected: ");
+                                        results.append(updateCount);
+                                        results.append("\n");
+                                        results.append("\n");
                                     }
-                                    results.append(sql);
-                                    results.append("\n");
-                                    results.append("Rows Retrieved: ");
-                                    results.append(rowsRetrieved);
-                                    results.append("\n");
-                                    results.append("\n");
                                 }
-                            } else {
-                                rowsUpdated = updateCount > 0 ? true : false;
-                                if (!runAsScript) {
-                                    resultComponents.add(wrapTextInComponent(String.format(
-                                            "%d rows affected", updateCount)));
-                                } else {
-                                    results.append(sql);
-                                    results.append("\n");
-                                    results.append("Rows Affected: ");
-                                    results.append(updateCount);
-                                    results.append("\n");
-                                    results.append("\n");
-                                }
+                                hasResults = stmt.getMoreResults();
+                                updateCount = stmt.getUpdateCount();
+                            } finally {
+                                JdbcUtils.closeResultSet(rs);
                             }
-                            hasResults = stmt.getMoreResults();
-                            updateCount = stmt.getUpdateCount();
                         }
+
                         sql = sqlReader.readSqlStatement();
+
                     }
 
                 } finally {
@@ -241,7 +248,7 @@ public class SqlRunner extends Thread {
                 icon = FontAwesome.BAN;
                 resultComponents.add(wrapTextInComponent(buildErrorMessage(ex), "marked"));
             } finally {
-                JdbcUtils.closeResultSet(rs);
+
                 JdbcUtils.closeStatement(stmt);
                 if (autoCommit || (!autoCommit && !rowsUpdated && createdConnection)) {
                     JdbcUtils.closeConnection(connection);

@@ -7,7 +7,6 @@ import static org.jumpmind.symmetric.ui.sqlexplorer.Settings.SQL_EXPLORER_SHOW_R
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -25,7 +24,6 @@ import org.jumpmind.symmetric.ui.sqlexplorer.SqlRunner.ISqlRunnerListener;
 import org.jumpmind.util.FormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.support.JdbcUtils;
 
 import com.vaadin.addon.tableexport.CsvExport;
 import com.vaadin.addon.tableexport.ExcelExport;
@@ -66,7 +64,7 @@ public class TabularResultLayout extends VerticalLayout {
 
     String sql;
 
-    Statement stmt;
+    ResultSet rs;
 
     IDb db;
 
@@ -76,12 +74,12 @@ public class TabularResultLayout extends VerticalLayout {
 
     boolean showSql = true;
 
-    public TabularResultLayout(IDb db, String sql, Statement stmt, ISqlRunnerListener listener,
+    public TabularResultLayout(IDb db, String sql, ResultSet rs, ISqlRunnerListener listener,
             Settings settings, boolean showSql) throws SQLException {
         this.sql = sql;
         this.showSql = showSql;
         this.db = db;
-        this.stmt = stmt;
+        this.rs = rs;
         this.listener = listener;
         this.settings = settings;
         createTabularResultLayout();
@@ -146,8 +144,7 @@ public class TabularResultLayout extends VerticalLayout {
         this.addComponent(resultBar);
 
         try {
-            table = putResultsInTable(stmt,
-                    settings.getProperties().getInt(SQL_EXPLORER_MAX_RESULTS));
+            table = putResultsInTable(settings.getProperties().getInt(SQL_EXPLORER_MAX_RESULTS));
             table.setSizeFull();
 
             final String ACTION_SELECT = "Select From";
@@ -190,7 +187,8 @@ public class TabularResultLayout extends VerticalLayout {
 
                                 sql.append(" FROM "
                                         + org.jumpmind.db.model.Table.getFullyQualifiedTableName(
-                                                catalogName, schemaName, tableName, quote, catalogSeparator, schemaSeparator));
+                                                catalogName, schemaName, tableName, quote,
+                                                catalogSeparator, schemaSeparator));
 
                                 int row = (Integer) setIterator.next();
                                 Collection<?> c = table.getItem(row).getItemPropertyIds();
@@ -238,7 +236,8 @@ public class TabularResultLayout extends VerticalLayout {
 
                                 sql.append("INSERT INTO "
                                         + org.jumpmind.db.model.Table.getFullyQualifiedTableName(
-                                                catalogName, schemaName, tableName, quote, catalogSeparator, schemaSeparator) + " (");
+                                                catalogName, schemaName, tableName, quote,
+                                                catalogSeparator, schemaSeparator) + " (");
 
                                 String[] columnHeaders = table.getColumnHeaders();
                                 for (int i = 1; i < columnHeaders.length; i++) {
@@ -294,7 +293,8 @@ public class TabularResultLayout extends VerticalLayout {
                                 StringBuilder sql = new StringBuilder("UPDATE ");
 
                                 sql.append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(
-                                        catalogName, schemaName, tableName, quote, catalogSeparator, schemaSeparator)
+                                        catalogName, schemaName, tableName, quote,
+                                        catalogSeparator, schemaSeparator)
                                         + " SET ");
 
                                 String[] columnHeaders = table.getColumnHeaders();
@@ -352,7 +352,8 @@ public class TabularResultLayout extends VerticalLayout {
                                 StringBuilder sql = new StringBuilder("DELETE FROM ");
 
                                 sql.append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(
-                                        catalogName, schemaName, tableName, quote, catalogSeparator, schemaSeparator));
+                                        catalogName, schemaName, tableName, quote,
+                                        catalogSeparator, schemaSeparator));
 
                                 String[] columnHeaders = table.getColumnHeaders();
                                 int row = (Integer) setIterator.next();
@@ -491,104 +492,96 @@ public class TabularResultLayout extends VerticalLayout {
         return value;
     }
 
-    protected Table putResultsInTable(Statement stmt, int maxResultSize) throws SQLException {
-        ResultSet rs = null;
-        try {
-            rs = stmt.getResultSet();
-
-            String parsedSql = sql;
-            String first = "";
-            String second = "";
-            String third = "";
-            parsedSql = parsedSql.substring(parsedSql.toUpperCase().indexOf("FROM ") + 5, parsedSql.length());
-            parsedSql = parsedSql.trim();
-            String separator = ".";
+    protected Table putResultsInTable(int maxResultSize) throws SQLException {
+        String parsedSql = sql;
+        String first = "";
+        String second = "";
+        String third = "";
+        parsedSql = parsedSql.substring(parsedSql.toUpperCase().indexOf("FROM ") + 5,
+                parsedSql.length());
+        parsedSql = parsedSql.trim();
+        String separator = ".";
+        if (parsedSql.contains(separator)) {
+            first = parsedSql.substring(0, parsedSql.indexOf(separator) + separator.length() - 1);
+            parsedSql = parsedSql.substring(parsedSql.indexOf(separator) + separator.length(),
+                    parsedSql.length());
             if (parsedSql.contains(separator)) {
-                first = parsedSql.substring(0, parsedSql.indexOf(separator) + separator.length()
+                second = parsedSql.substring(0, parsedSql.indexOf(separator) + separator.length()
                         - 1);
                 parsedSql = parsedSql.substring(parsedSql.indexOf(separator) + separator.length(),
                         parsedSql.length());
                 if (parsedSql.contains(separator)) {
-                    second = parsedSql.substring(0,
+                    third = parsedSql.substring(0,
                             parsedSql.indexOf(separator) + separator.length() - 1);
                     parsedSql = parsedSql.substring(
                             parsedSql.indexOf(separator) + separator.length(), parsedSql.length());
-                    if (parsedSql.contains(separator)) {
-                        third = parsedSql.substring(0,
-                                parsedSql.indexOf(separator) + separator.length() - 1);
-                        parsedSql = parsedSql.substring(
-                                parsedSql.indexOf(separator) + separator.length(),
-                                parsedSql.length());
-                    } else {
-                        third = parsedSql;
-                    }
                 } else {
-                    second = parsedSql;
+                    third = parsedSql;
                 }
             } else {
-                first = parsedSql;
+                second = parsedSql;
             }
-            if (!third.equals("")) {
-                tableName = third;
-                schemaName = second;
-                catalogName = first;
-            } else if (!second.equals("")) {
-                if (db.getPlatform().getDefaultCatalog() != null) {
-                    IDdlReader reader = db.getPlatform().getDdlReader();
-                    List<String> catalogs = reader.getCatalogNames();
-                    if (catalogs.contains(first)) {
-                        catalogName = first;
-                    } else if (db.getPlatform().getDefaultSchema() != null) {
-                        Iterator<String> iterator = catalogs.iterator();
-                        while (iterator.hasNext()) {
-                            List<String> schemas = reader.getSchemaNames(iterator.next());
-                            if (schemas.contains(first)) {
-                                schemaName = first;
-                            }
+        } else {
+            first = parsedSql;
+        }
+        if (!third.equals("")) {
+            tableName = third;
+            schemaName = second;
+            catalogName = first;
+        } else if (!second.equals("")) {
+            if (db.getPlatform().getDefaultCatalog() != null) {
+                IDdlReader reader = db.getPlatform().getDdlReader();
+                List<String> catalogs = reader.getCatalogNames();
+                if (catalogs.contains(first)) {
+                    catalogName = first;
+                } else if (db.getPlatform().getDefaultSchema() != null) {
+                    Iterator<String> iterator = catalogs.iterator();
+                    while (iterator.hasNext()) {
+                        List<String> schemas = reader.getSchemaNames(iterator.next());
+                        if (schemas.contains(first)) {
+                            schemaName = first;
                         }
                     }
-                } else if (db.getPlatform().getDefaultSchema() != null) {
-                    schemaName = first;
                 }
-                tableName = second;
-            } else if (!first.equals("")) {
-                tableName = parsedSql;
+            } else if (db.getPlatform().getDefaultSchema() != null) {
+                schemaName = first;
             }
-
-            if (isNotBlank(tableName)) {
-                if (tableName.contains(" ")) {
-                    tableName = tableName.substring(0, tableName.indexOf(" "));
-                }
-                if (isBlank(schemaName)) {
-                    schemaName = null;
-                }
-                if (isBlank(catalogName)) {
-                    catalogName = null;
-                }
-                String quote = "\"";
-                if (catalogName != null && catalogName.contains(quote)) {
-                    catalogName = catalogName.replaceAll(quote, "");
-                    catalogName = catalogName.trim();
-                }
-                if (schemaName != null && schemaName.contains(quote)) {
-                    schemaName = schemaName.replaceAll(quote, "");
-                    schemaName = schemaName.trim();
-                }
-                if (tableName != null && tableName.contains(quote)) {
-                    tableName = tableName.replaceAll(quote, "");
-                    tableName = tableName.trim();
-                }
-                resultTable = db.getPlatform().getTableFromCache(catalogName, schemaName,
-                        tableName, false);
-            }
-
-            TypedProperties properties = settings.getProperties();
-            return UiUtils.putResultsInTable(rs, properties.getInt(SQL_EXPLORER_MAX_RESULTS),
-                    properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS), getColumnsToExclude());
-
-        } finally {
-            JdbcUtils.closeResultSet(rs);
+            tableName = second;
+        } else if (!first.equals("")) {
+            tableName = parsedSql;
         }
+
+        if (isNotBlank(tableName)) {
+            if (tableName.contains(" ")) {
+                tableName = tableName.substring(0, tableName.indexOf(" "));
+            }
+            if (isBlank(schemaName)) {
+                schemaName = null;
+            }
+            if (isBlank(catalogName)) {
+                catalogName = null;
+            }
+            String quote = "\"";
+            if (catalogName != null && catalogName.contains(quote)) {
+                catalogName = catalogName.replaceAll(quote, "");
+                catalogName = catalogName.trim();
+            }
+            if (schemaName != null && schemaName.contains(quote)) {
+                schemaName = schemaName.replaceAll(quote, "");
+                schemaName = schemaName.trim();
+            }
+            if (tableName != null && tableName.contains(quote)) {
+                tableName = tableName.replaceAll(quote, "");
+                tableName = tableName.trim();
+            }
+            resultTable = db.getPlatform().getTableFromCache(catalogName, schemaName, tableName,
+                    false);
+        }
+
+        TypedProperties properties = settings.getProperties();
+        return UiUtils.putResultsInTable(rs, properties.getInt(SQL_EXPLORER_MAX_RESULTS),
+                properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS), getColumnsToExclude());
+
     }
 
     protected String[] getColumnsToExclude() {
