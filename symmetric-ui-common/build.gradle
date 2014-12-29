@@ -14,6 +14,7 @@ dependencies {
     compile "org.jumpmind.symmetric:symmetric-db:$symmetricVersion"
     compile "org.jumpmind.symmetric:symmetric-jdbc:$symmetricVersion"
     compile "org.jumpmind.symmetric:symmetric-io:$symmetricVersion"
+    compile "org.jumpmind.symmetric:symmetric-util:$symmetricVersion"
     compile "commons-lang:commons-lang:$commonsLangVersion"
     compile "commons-dbcp:commons-dbcp:$commonsDbcpVersion"
     compile "commons-io:commons-io:$commonsIoVersion"
