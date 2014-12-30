@@ -585,6 +585,14 @@ public class SqlExplorer extends HorizontalSplitPanel {
         }
         return tabName;
     }
+    
+    public ISettingsProvider getSettingsProvider() {
+        return settingsProvider;
+    }
+    
+    public IDbProvider getDatabaseProvider() {
+        return databaseProvider;
+    }
 
     public void refresh() {
         dbTree.refresh();
