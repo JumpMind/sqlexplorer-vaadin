@@ -21,6 +21,7 @@ import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.CheckBox;
@@ -40,9 +41,9 @@ public class TableSelectionLayout extends VerticalLayout {
 
     public Table listOfTablesTable;
 
-    public ComboBox catalogSelect;
+    public AbstractSelect catalogSelect;
 
-    public ComboBox schemaSelect;
+    public AbstractSelect schemaSelect;
 
     @SuppressWarnings("unused")
     private String filterCriteria = null;

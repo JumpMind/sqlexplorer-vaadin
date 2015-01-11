@@ -25,6 +25,7 @@ import com.vaadin.server.FileDownloader;
 import com.vaadin.server.Resource;
 import com.vaadin.server.StreamResource;
 import com.vaadin.server.StreamResource.StreamSource;
+import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.CheckBox;
@@ -46,9 +47,9 @@ public class DbExportDialog extends ResizableWindow {
 
     final Logger log = LoggerFactory.getLogger(getClass());
 
-    private ComboBox formatSelect;
+    private AbstractSelect formatSelect;
 
-    private ComboBox compatibilitySelect;
+    private AbstractSelect compatibilitySelect;
 
     private CheckBox data;
 

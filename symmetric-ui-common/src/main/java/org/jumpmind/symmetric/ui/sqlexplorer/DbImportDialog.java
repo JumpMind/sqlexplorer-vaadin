@@ -28,6 +28,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
+import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -58,7 +59,7 @@ public class DbImportDialog extends ResizableWindow {
 
     private VerticalLayout importLayout;
 
-    private ComboBox formatSelect;
+    private AbstractSelect formatSelect;
 
     private CheckBox force;
 
@@ -66,11 +67,11 @@ public class DbImportDialog extends ResizableWindow {
 
     private CheckBox replace;
 
-    private ComboBox schemaSelect;
+    private AbstractSelect schemaSelect;
 
-    private ComboBox catalogSelect;
+    private AbstractSelect catalogSelect;
 
-    private ComboBox listOfTablesSelect;
+    private AbstractSelect listOfTablesSelect;
 
     private TextField commitField;
 
