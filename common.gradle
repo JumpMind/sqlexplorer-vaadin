@@ -29,7 +29,7 @@ ext {
     javaMailVersion = '1.4.7'
     jdomVersion = '2.0.5'
     springVersion = '4.0.2.RELEASE'
-    symmetricVersion = '3.7.0-SNAPSHOT'
+    symmetricVersion = '3.7.x-SNAPSHOT'
     servletVersion = '3.0.1'
     h2Version = '1.3.175'
     mysqlVersion = '5.1.29'
