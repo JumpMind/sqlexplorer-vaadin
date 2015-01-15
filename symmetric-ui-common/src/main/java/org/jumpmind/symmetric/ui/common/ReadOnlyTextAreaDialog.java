@@ -10,6 +10,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
+import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -23,7 +24,7 @@ public class ReadOnlyTextAreaDialog extends ResizableWindow {
 
     final Logger log = LoggerFactory.getLogger(getClass());
     protected TextArea textField;
-    protected ComboBox displayBox;
+    protected AbstractSelect displayBox;
 
     public ReadOnlyTextAreaDialog(String title, final String value, boolean isEncodedInHex) {
         super(title);
