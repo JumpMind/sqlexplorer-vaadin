@@ -22,6 +22,7 @@ import javax.sql.DataSource;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.jumpmind.db.sql.JdbcSqlTemplate;
 import org.jumpmind.db.sql.SqlScriptReader;
 import org.jumpmind.properties.TypedProperties;
 import org.jumpmind.symmetric.ui.common.UiUtils;
@@ -157,8 +158,10 @@ public class SqlRunner extends Thread {
         FontAwesome icon = FontAwesome.CHECK_CIRCLE;
         rowsUpdated = false;
         boolean committed = false;
+        boolean autoCommitBefore = true;
         try {
             DataSource dataSource = db.getPlatform().getDataSource();
+            JdbcSqlTemplate sqlTemplate = (JdbcSqlTemplate)db.getPlatform().getSqlTemplate();
             PreparedStatement stmt = null;
             StringBuilder results = new StringBuilder();
             try {
@@ -166,6 +169,15 @@ public class SqlRunner extends Thread {
                     connection = dataSource.getConnection();
                     connection.setAutoCommit(autoCommit);
                 }
+                               
+                autoCommitBefore = connection.getAutoCommit();
+                if (connection.getTransactionIsolation() != sqlTemplate.getIsolationLevel()) {
+                    connection.setTransactionIsolation(sqlTemplate.getIsolationLevel());
+                }
+                if (sqlTemplate.isRequiresAutoCommitFalseToSetFetchSize()) {
+                    connection.setAutoCommit(false);
+                }
+
                 SqlScriptReader sqlReader = null;
                 try {
                     sqlReader = new SqlScriptReader(new StringReader(sqlText));
@@ -175,7 +187,12 @@ public class SqlRunner extends Thread {
                         JdbcUtils.closeStatement(stmt);
                         stmt = connection.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
                                 ResultSet.CONCUR_READ_ONLY);
-                        stmt.setFetchSize(maxResultsSize < 100 ? maxResultsSize : 100);
+                        
+                        String lowercaseSql = sql.trim().toLowerCase();
+                        if (!lowercaseSql.startsWith("delete") && !lowercaseSql.startsWith("update") &&
+                                !lowercaseSql.startsWith("insert")) {
+                            stmt.setFetchSize(maxResultsSize < 100  ? maxResultsSize : 100);
+                        }
 
                         if (logAtDebug) {
                             log.debug("Executing: {}", sql.trim());
@@ -248,7 +265,13 @@ public class SqlRunner extends Thread {
                 icon = FontAwesome.BAN;
                 resultComponents.add(wrapTextInComponent(buildErrorMessage(ex), "marked"));
             } finally {
-
+                if (autoCommitBefore) {
+                    try {
+                        connection.commit();
+                        connection.setAutoCommit(autoCommitBefore);
+                    } catch (SQLException e) {
+                    }
+                }
                 JdbcUtils.closeStatement(stmt);
                 if (autoCommit || (!autoCommit && !rowsUpdated && createdConnection)) {
                     JdbcUtils.closeConnection(connection);
