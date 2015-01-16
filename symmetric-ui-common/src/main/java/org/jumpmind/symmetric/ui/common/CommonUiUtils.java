@@ -33,8 +33,10 @@ import com.vaadin.server.VaadinServlet;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.shared.Position;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
+import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TabSheet;
@@ -421,5 +423,18 @@ public final class CommonUiUtils {
         separator.setHeight(100, Unit.PERCENTAGE);
         separator.setWidthUndefined();
         return separator;
+    }
+    
+    public static AbstractSelect createComboBox() {
+        return createComboBox(null);
+    }
+    
+    public static AbstractSelect createComboBox(String name) {
+        NativeSelect cb = name == null? new NativeSelect() : new NativeSelect(name);
+        cb.setImmediate(true);
+        cb.setWidth(16, Unit.EM);
+        cb.setHeight(2.15f, Unit.EM);
+        cb.setNullSelectionAllowed(false);
+        return cb;        
     }
 }
