@@ -11,7 +11,7 @@ import java.text.DecimalFormat;
 
 import org.jumpmind.properties.TypedProperties;
 import org.jumpmind.symmetric.ui.common.ResizableWindow;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,7 +108,7 @@ public class SettingsDialog extends ResizableWindow {
     }
 
     protected AbstractLayout createButtonLayout() {
-        Button saveButton = UiUtils.createPrimaryButton("Save", new Button.ClickListener() {
+        Button saveButton = CommonUiUtils.createPrimaryButton("Save", new Button.ClickListener() {
             private static final long serialVersionUID = 1L;
 
             public void buttonClick(ClickEvent event) {
@@ -139,7 +139,7 @@ public class SettingsDialog extends ResizableWindow {
             settingsProvider.save(settings);
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
-            UiUtils.notify(ex);
+            CommonUiUtils.notify(ex);
         }
     }
 }

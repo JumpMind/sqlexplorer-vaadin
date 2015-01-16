@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.vaadin.aceeditor.AceEditor;
 import org.vaadin.aceeditor.AceEditor.SelectionChangeEvent;
 import org.vaadin.aceeditor.AceEditor.SelectionChangeListener;
@@ -109,7 +109,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         VerticalLayout resultsLayout = new VerticalLayout();
         resultsLayout.setSizeFull();
 
-        resultsTabs = UiUtils.createTabSheet();
+        resultsTabs = CommonUiUtils.createTabSheet();
 
         HorizontalLayout statusBar = new HorizontalLayout();
         statusBar.setMargin(true);
@@ -132,7 +132,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
     }
 
     protected AceEditor buildSqlEditor() {
-        final AceEditor editor = UiUtils.createAceEditor();
+        final AceEditor editor = CommonUiUtils.createAceEditor();
         editor.setMode(AceMode.sql);
         editor.addValueChangeListener(new ValueChangeListener() {
 

@@ -11,7 +11,7 @@ public class SqlEntryWindow extends ResizableWindow {
 
     public SqlEntryWindow(String sql) {
         setCaption("Edit SQL");
-        editor = UiUtils.createAceEditor();
+        editor = CommonUiUtils.createAceEditor();
         editor.setMode(AceMode.sql);
         editor.setValue(sql);
         editor.setSizeFull();

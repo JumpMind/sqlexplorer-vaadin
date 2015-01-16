@@ -19,7 +19,7 @@ import org.jumpmind.db.platform.IDatabasePlatform;
 import org.jumpmind.symmetric.io.data.DbImport;
 import org.jumpmind.symmetric.io.data.DbImport.Format;
 import org.jumpmind.symmetric.ui.common.ResizableWindow;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -164,14 +164,14 @@ public class DbImportDialog extends ResizableWindow {
 
         catalogSelect = new ComboBox("Catalog");
         catalogSelect.setImmediate(true);
-        UiUtils.addItems(getCatalogs(), catalogSelect);
+        CommonUiUtils.addItems(getCatalogs(), catalogSelect);
         catalogSelect.select(databasePlatform.getDefaultCatalog());
         catalogSelect.setNullSelectionAllowed(false);
         formLayout.addComponent(catalogSelect);
 
         schemaSelect = new ComboBox("Schema");
         schemaSelect.setImmediate(true);
-        UiUtils.addItems(getSchemas(), schemaSelect);
+        CommonUiUtils.addItems(getSchemas(), schemaSelect);
         if (selectedTablesSet.iterator().hasNext()) {
             schemaSelect.select(selectedTablesSet.iterator().next().getSchema());
         } else {
@@ -255,7 +255,7 @@ public class DbImportDialog extends ResizableWindow {
                     return new BufferedOutputStream(new FileOutputStream(file));
                 } catch (Exception e) {
                     log.warn(e.getMessage(), e);
-                    UiUtils.notify("Failed to import " + filename, e);
+                    CommonUiUtils.notify("Failed to import " + filename, e);
                 }
                 return null;
             }
@@ -297,7 +297,7 @@ public class DbImportDialog extends ResizableWindow {
             }
         });
 
-        importButton = UiUtils.createPrimaryButton("Import", new Button.ClickListener() {
+        importButton = CommonUiUtils.createPrimaryButton("Import", new Button.ClickListener() {
             private static final long serialVersionUID = 1L;
 
             public void buttonClick(ClickEvent event) {

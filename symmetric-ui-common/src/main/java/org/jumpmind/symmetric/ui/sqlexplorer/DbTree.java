@@ -11,7 +11,7 @@ import java.util.Set;
 import org.jumpmind.db.platform.IDatabasePlatform;
 import org.jumpmind.db.platform.IDdlReader;
 import org.jumpmind.symmetric.ui.common.TreeNode;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -202,7 +202,7 @@ public class DbTree extends Tree {
                 }
             } catch (Exception ex) {
                 log.error(ex.getMessage(), ex);
-                UiUtils.notify(ex);
+                CommonUiUtils.notify(ex);
             }
         }
     }

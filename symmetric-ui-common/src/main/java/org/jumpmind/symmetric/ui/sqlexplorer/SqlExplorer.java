@@ -22,7 +22,7 @@ import org.jumpmind.properties.TypedProperties;
 import org.jumpmind.symmetric.ui.common.ConfirmDialog;
 import org.jumpmind.symmetric.ui.common.ConfirmDialog.IConfirmListener;
 import org.jumpmind.symmetric.ui.common.TreeNode;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,7 +116,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
         rightMenuWrapper.addComponent(contentMenuBar);
         rightLayout.addComponent(rightMenuWrapper);
 
-        contentTabs = UiUtils.createTabSheet();
+        contentTabs = CommonUiUtils.createTabSheet();
         contentTabs.addSelectedTabChangeListener(new SelectedTabChangeListener() {
             private static final long serialVersionUID = 1L;
 
@@ -321,7 +321,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             for (Column column : columns) {
                 String value = null;
                 if (column.getParsedDefaultValue() == null) {
-                    value = UiUtils.getJdbcTypeValue(column.getJdbcTypeName());
+                    value = CommonUiUtils.getJdbcTypeValue(column.getJdbcTypeName());
                 } else {
                     value = column.getParsedDefaultValue().toString();
                 }
@@ -370,7 +370,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
                         } catch (Exception e) {
                             String msg = "Failed to drop " + table.getFullyQualifiedTableName()
                                     + ".  ";
-                            UiUtils.notify(msg + "See log file for more details",
+                            CommonUiUtils.notify(msg + "See log file for more details",
                                     Type.WARNING_MESSAGE);
                             log.warn(msg, e);
                             dbTree.refresh();

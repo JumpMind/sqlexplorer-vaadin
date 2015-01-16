@@ -19,7 +19,7 @@ import org.jumpmind.db.platform.DatabaseInfo;
 import org.jumpmind.db.platform.IDdlReader;
 import org.jumpmind.properties.TypedProperties;
 import org.jumpmind.symmetric.ui.common.ReadOnlyTextAreaDialog;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.jumpmind.symmetric.ui.sqlexplorer.SqlRunner.ISqlRunnerListener;
 import org.jumpmind.util.FormatUtils;
 import org.slf4j.Logger;
@@ -457,7 +457,7 @@ public class TabularResultLayout extends VerticalLayout {
             }
         } catch (SQLException ex) {
             log.error(ex.getMessage(), ex);
-            UiUtils.notify(ex);
+            CommonUiUtils.notify(ex);
         }
 
         if (showSql) {
@@ -579,7 +579,7 @@ public class TabularResultLayout extends VerticalLayout {
         }
 
         TypedProperties properties = settings.getProperties();
-        return UiUtils.putResultsInTable(rs, properties.getInt(SQL_EXPLORER_MAX_RESULTS),
+        return CommonUiUtils.putResultsInTable(rs, properties.getInt(SQL_EXPLORER_MAX_RESULTS),
                 properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS), getColumnsToExclude());
 
     }

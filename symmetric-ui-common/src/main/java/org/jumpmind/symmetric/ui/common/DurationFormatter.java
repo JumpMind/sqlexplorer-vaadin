@@ -12,7 +12,7 @@ public class DurationFormatter implements Table.ColumnGenerator {
     public Component generateCell(Table source, Object itemId, Object columnId) {
         Property<?> prop = source.getItem(itemId).getItemProperty(columnId);
         if (prop.getType().equals(Long.class)) {
-            return new Label(UiUtils.formatDuration((Long)prop.getValue()));
+            return new Label(CommonUiUtils.formatDuration((Long)prop.getValue()));
         }
         return null;
     }

@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import org.jumpmind.db.sql.IConnectionCallback;
 import org.jumpmind.db.sql.JdbcSqlTemplate;
 import org.jumpmind.properties.TypedProperties;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,14 +50,14 @@ abstract public class AbstractMetaDataTableCreator {
                 try {
                     DatabaseMetaData metadata = con.getMetaData();
                     rs = getMetaDataResultSet(metadata);
-                    t = UiUtils.putResultsInTable(rs, properties.getInt(SQL_EXPLORER_MAX_RESULTS),
+                    t = CommonUiUtils.putResultsInTable(rs, properties.getInt(SQL_EXPLORER_MAX_RESULTS),
                             properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS), getColumnsToExclude());
                     t.setSizeFull();
                     return t;
                 } catch (Exception ex) {
                     log.info("Failed to retrieve meta data.  It might be that this driver doesn't support it.  Turn on debug logging to see the resulting stacktrace");
                     log.debug("", ex);
-                    return UiUtils.createTable();
+                    return CommonUiUtils.createTable();
                 } finally {
                     JdbcSqlTemplate.close(rs);
                 }

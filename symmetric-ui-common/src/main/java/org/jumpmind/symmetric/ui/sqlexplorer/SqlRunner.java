@@ -25,7 +25,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jumpmind.db.sql.JdbcSqlTemplate;
 import org.jumpmind.db.sql.SqlScriptReader;
 import org.jumpmind.properties.TypedProperties;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.jumpmind.util.FormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -366,7 +366,7 @@ public class SqlRunner extends Thread {
             while (rs.next() && rowNumber <= maxResultSize) {
                 Object[] row = new Object[columns];
                 for (int i = 1; i <= columns; i++) {
-                    Object obj = UiUtils.getObject(rs, i);
+                    Object obj = CommonUiUtils.getObject(rs, i);
                     row[i - 1] = obj;
                     if (obj != null) {
                         int size = obj.toString().length();

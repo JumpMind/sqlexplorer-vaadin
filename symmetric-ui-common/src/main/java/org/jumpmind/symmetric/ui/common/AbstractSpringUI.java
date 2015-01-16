@@ -26,7 +26,7 @@ abstract public class AbstractSpringUI extends UI {
             @Override
             public void error(com.vaadin.server.ErrorEvent event) {
                 Throwable ex = event.getThrowable();
-                UiUtils.notify(ex);
+                CommonUiUtils.notify(ex);
                 if (ex != null) {
                     log.error(ex.getMessage(), ex);
                 } else {

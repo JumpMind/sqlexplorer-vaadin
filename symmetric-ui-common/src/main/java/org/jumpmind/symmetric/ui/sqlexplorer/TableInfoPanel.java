@@ -10,7 +10,7 @@ import org.jumpmind.db.sql.DmlStatement.DmlType;
 import org.jumpmind.db.sql.JdbcSqlTemplate;
 import org.jumpmind.symmetric.io.data.DbExport;
 import org.jumpmind.symmetric.io.data.DbExport.Format;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.jumpmind.symmetric.ui.sqlexplorer.SqlRunner.ISqlRunnerListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +46,7 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
 
         setSizeFull();
 
-        tabSheet = UiUtils.createTabSheet();
+        tabSheet = CommonUiUtils.createTabSheet();
         tabSheet.setImmediate(true);
         tabSheet.addSelectedTabChangeListener(new SelectedTabChangeListener() {
             
@@ -83,7 +83,7 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
             export.setCatalog(table.getCatalog());
             export.setSchema(table.getSchema());
             export.setFormat(Format.SQL);
-            AceEditor editor = UiUtils.createAceEditor();
+            AceEditor editor = CommonUiUtils.createAceEditor();
             editor.setMode(AceMode.sql);
             editor.setValue(export.exportTables(new org.jumpmind.db.model.Table[] { table }));
             tabSheet.addTab(editor, "Source");

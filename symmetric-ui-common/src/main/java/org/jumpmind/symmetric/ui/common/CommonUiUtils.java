@@ -30,18 +30,20 @@ import com.vaadin.data.Container;
 import com.vaadin.data.Property;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.shared.Position;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.themes.ValoTheme;
 
-public final class UiUtils {
+public final class CommonUiUtils {
 
-    final static Logger log = LoggerFactory.getLogger(UiUtils.class);
+    final static Logger log = LoggerFactory.getLogger(CommonUiUtils.class);
 
     static final FastDateFormat DATETIMEFORMAT = FastDateFormat.getDateTimeInstance(
             FastDateFormat.SHORT, FastDateFormat.SHORT);
@@ -50,7 +52,7 @@ public final class UiUtils {
 
     static final String NULL_TEXT = "<null>";
 
-    private UiUtils() {
+    private CommonUiUtils() {
     }
 
     public static void styleTabSheet(TabSheet tabSheet) {
@@ -139,10 +141,11 @@ public final class UiUtils {
     }
 
     public static void notify(String caption, String message, Throwable ex, Type type) {
-        Notification notification = new Notification(caption, contactWithLineFeed(FormatUtils.wordWrap(message, 150)), Type.HUMANIZED_MESSAGE);
+        Notification notification = new Notification(caption,
+                contactWithLineFeed(FormatUtils.wordWrap(message, 150)), Type.HUMANIZED_MESSAGE);
         notification.setPosition(Position.MIDDLE_CENTER);
         notification.setDelayMsec(-1);
-        
+
         String style = ValoTheme.NOTIFICATION_SUCCESS;
         if (type == Type.ERROR_MESSAGE) {
             style = ValoTheme.NOTIFICATION_FAILURE;
@@ -153,7 +156,7 @@ public final class UiUtils {
                 + ValoTheme.NOTIFICATION_CLOSABLE + " " + style);
         notification.show(Page.getCurrent());
     }
-    
+
     private static String contactWithLineFeed(String[] lines) {
         StringBuilder line = new StringBuilder();
         for (String l : lines) {
@@ -167,8 +170,7 @@ public final class UiUtils {
     }
 
     public static void notify(Throwable ex) {
-        notify("An unexpected error occurred",
-                "See the log file for additional details", ex,
+        notify("An unexpected error occurred", "See the log file for additional details", ex,
                 Type.ERROR_MESSAGE);
     }
 
@@ -411,5 +413,13 @@ public final class UiUtils {
             value = null;
         }
         return value;
+    }
+
+    public static Label createSeparator() {
+        Label separator = new Label(" ");
+        separator.setStyleName("vrule");
+        separator.setHeight(100, Unit.PERCENTAGE);
+        separator.setWidthUndefined();
+        return separator;
     }
 }

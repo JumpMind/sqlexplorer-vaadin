@@ -12,7 +12,7 @@ import org.jumpmind.symmetric.io.data.DbFill;
 import org.jumpmind.symmetric.ui.common.ConfirmDialog;
 import org.jumpmind.symmetric.ui.common.ConfirmDialog.IConfirmListener;
 import org.jumpmind.symmetric.ui.common.ResizableWindow;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 
 import com.vaadin.data.Item;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
@@ -96,7 +96,7 @@ public class DbFillDialog extends ResizableWindow {
     }
 
     protected void addButtons() {
-        nextButton = UiUtils.createPrimaryButton("Next", new ClickListener() {
+        nextButton = CommonUiUtils.createPrimaryButton("Next", new ClickListener() {
 
             private static final long serialVersionUID = 1L;
 
@@ -124,7 +124,7 @@ public class DbFillDialog extends ResizableWindow {
         });
         previousButton.setVisible(false);
 
-        fillButton = UiUtils.createPrimaryButton("Fill...", new Button.ClickListener() {
+        fillButton = CommonUiUtils.createPrimaryButton("Fill...", new Button.ClickListener() {
             private static final long serialVersionUID = 1L;
 
             public void buttonClick(ClickEvent event) {

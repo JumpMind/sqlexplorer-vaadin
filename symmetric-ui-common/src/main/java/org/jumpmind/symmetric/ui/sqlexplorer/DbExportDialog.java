@@ -15,7 +15,7 @@ import org.jumpmind.symmetric.io.data.DbExport;
 import org.jumpmind.symmetric.io.data.DbExport.Compatible;
 import org.jumpmind.symmetric.io.data.DbExport.Format;
 import org.jumpmind.symmetric.ui.common.ResizableWindow;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,7 +141,7 @@ public class DbExportDialog extends ResizableWindow {
             }
         });
 
-        nextButton = UiUtils.createPrimaryButton("Next");
+        nextButton = CommonUiUtils.createPrimaryButton("Next");
         nextButton.setEnabled(tableSelectionLayout.getSelectedTables().size() > 0);
         nextButton.addClickListener(new Button.ClickListener() {
 
@@ -170,7 +170,7 @@ public class DbExportDialog extends ResizableWindow {
         });
         previousButton.setVisible(false);
 
-        exportFileButton = UiUtils.createPrimaryButton("Export", new Button.ClickListener() {
+        exportFileButton = CommonUiUtils.createPrimaryButton("Export", new Button.ClickListener() {
             private static final long serialVersionUID = 1L;
 
             public void buttonClick(ClickEvent event) {
@@ -180,7 +180,7 @@ public class DbExportDialog extends ResizableWindow {
         buildFileDownloader();
         exportFileButton.setVisible(false);
 
-        exportEditorButton = UiUtils.createPrimaryButton("Export", new Button.ClickListener() {
+        exportEditorButton = CommonUiUtils.createPrimaryButton("Export", new Button.ClickListener() {
             private static final long serialVersionUID = 1L;
 
             public void buttonClick(ClickEvent event) {
@@ -395,7 +395,7 @@ public class DbExportDialog extends ResizableWindow {
         } catch (IOException e) {
             String msg = "Failed to export to the sql editor";
             log.error(msg, e);
-            UiUtils.notify(msg, e);
+            CommonUiUtils.notify(msg, e);
         }
     }
 
@@ -436,7 +436,7 @@ public class DbExportDialog extends ResizableWindow {
                 } catch (IOException e) {
                     String msg = "Failed to export to a file";
                     log.error(msg, e);
-                    UiUtils.notify(msg, e);
+                    CommonUiUtils.notify(msg, e);
                 }
                 return null;
             }

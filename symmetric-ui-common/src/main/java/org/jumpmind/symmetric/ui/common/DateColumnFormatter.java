@@ -14,7 +14,7 @@ public class DateColumnFormatter implements Table.ColumnGenerator {
     public Component generateCell(Table source, Object itemId, Object columnId) {
         Property<?> prop = source.getItem(itemId).getItemProperty(columnId);
         if (prop.getType().equals(Date.class)) {
-            return new Label(UiUtils.formatDateTime((Date) prop.getValue()));
+            return new Label(CommonUiUtils.formatDateTime((Date) prop.getValue()));
         }
         return null;
     }

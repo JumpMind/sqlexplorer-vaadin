@@ -1,7 +1,7 @@
 package org.jumpmind.symmetric.ui.sqlexplorer;
 
 import org.jumpmind.symmetric.ui.common.ResizableWindow;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Button;
@@ -71,7 +71,7 @@ public class ExportDialog extends ResizableWindow {
             }
         });
 
-        exportButton = UiUtils.createPrimaryButton("Export",
+        exportButton = CommonUiUtils.createPrimaryButton("Export",
                 new Button.ClickListener() {
                     private static final long serialVersionUID = 1L;
 

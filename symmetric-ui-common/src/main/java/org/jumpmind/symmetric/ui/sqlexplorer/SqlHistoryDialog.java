@@ -9,7 +9,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jumpmind.symmetric.ui.common.DateColumnFormatter;
 import org.jumpmind.symmetric.ui.common.DurationFormatter;
 import org.jumpmind.symmetric.ui.common.ResizableWindow;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
@@ -70,7 +70,7 @@ public class SqlHistoryDialog extends ResizableWindow {
         searchPanel.addComponent(filterField);
         mainLayout.addComponent(searchPanel);
 
-        table = UiUtils.createTable();
+        table = CommonUiUtils.createTable();
         table.setImmediate(true);
         table.setSortEnabled(true);
         table.setSelectable(true);
@@ -92,10 +92,10 @@ public class SqlHistoryDialog extends ResizableWindow {
                             || filterCriteria.equals("")
                             || StringUtils.containsIgnoreCase(
                                     String.valueOf(temp.getExecuteCount()), filterCriteria)
-                            || StringUtils.containsIgnoreCase(UiUtils
+                            || StringUtils.containsIgnoreCase(CommonUiUtils
                                     .formatDuration(temp.getLastExecuteDuration()), filterCriteria)
                             || StringUtils.containsIgnoreCase(
-                                    UiUtils.formatDateTime(temp.getLastExecuteTime()),
+                                    CommonUiUtils.formatDateTime(temp.getLastExecuteTime()),
                                     filterCriteria)
                             || StringUtils.containsIgnoreCase(temp.getLastExecuteUserId(),
                                     filterCriteria)) {
@@ -158,7 +158,7 @@ public class SqlHistoryDialog extends ResizableWindow {
             }
         });
 
-        Button applyButton = UiUtils.createPrimaryButton("Select");
+        Button applyButton = CommonUiUtils.createPrimaryButton("Select");
         applyButton.setClickShortcut(KeyCode.ENTER);
         applyButton.addClickListener(new Button.ClickListener() {
             private static final long serialVersionUID = 1L;

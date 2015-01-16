@@ -11,7 +11,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.jumpmind.db.platform.IDatabasePlatform;
 import org.jumpmind.symmetric.ui.common.UiConstants;
-import org.jumpmind.symmetric.ui.common.UiUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
@@ -81,7 +81,7 @@ public class TableSelectionLayout extends VerticalLayout {
 
         catalogSelect = new ComboBox("Catalog");
         catalogSelect.setImmediate(true);
-        UiUtils.addItems(getCatalogs(), catalogSelect);
+        CommonUiUtils.addItems(getCatalogs(), catalogSelect);
         schemaChooserLayout.addComponent(catalogSelect);
         if (selectedTablesSet.iterator().hasNext()) {
             catalogSelect.select(selectedTablesSet.iterator().next().getCatalog());
@@ -90,7 +90,7 @@ public class TableSelectionLayout extends VerticalLayout {
         }
         schemaSelect = new ComboBox("Schema");
         schemaSelect.setImmediate(true);
-        UiUtils.addItems(getSchemas(), schemaSelect);
+        CommonUiUtils.addItems(getSchemas(), schemaSelect);
         schemaChooserLayout.addComponent(schemaSelect);
         if (selectedTablesSet.iterator().hasNext()) {
             schemaSelect.select(selectedTablesSet.iterator().next().getSchema());
@@ -122,7 +122,7 @@ public class TableSelectionLayout extends VerticalLayout {
         schemaChooserLayout.addComponent(filterField);
         schemaChooserLayout.setComponentAlignment(filterField, Alignment.BOTTOM_RIGHT);
 
-        listOfTablesTable = UiUtils.createTable();
+        listOfTablesTable = CommonUiUtils.createTable();
         listOfTablesTable.setImmediate(true);
         listOfTablesTable.addItemClickListener(new ItemClickListener() {            
             private static final long serialVersionUID = 1L;
