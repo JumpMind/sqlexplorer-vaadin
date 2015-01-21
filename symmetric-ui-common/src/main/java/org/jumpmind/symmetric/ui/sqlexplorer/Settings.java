@@ -31,7 +31,7 @@ public class Settings implements Serializable {
         properties.put(SQL_EXPLORER_SHOW_ROW_NUMBERS, "true");
         properties.put(SQL_EXPLORER_AUTO_COMMIT, "true");
         properties.put(SQL_EXPLORER_RESULT_AS_TEXT, "false");
-        properties.put(SQL_EXPLORER_EXCLUDE_TABLES_REGEX, "[SYM_].*");
+        properties.put(SQL_EXPLORER_EXCLUDE_TABLES_REGEX, "(SYM_)\\w+");
         properties.put(SQL_EXPLORER_MAX_RESULTS, "1000");
     }
 
