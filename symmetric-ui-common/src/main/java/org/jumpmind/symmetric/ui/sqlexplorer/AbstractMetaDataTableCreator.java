@@ -1,6 +1,5 @@
 package org.jumpmind.symmetric.ui.sqlexplorer;
 
-import static org.jumpmind.symmetric.ui.sqlexplorer.Settings.SQL_EXPLORER_MAX_RESULTS;
 import static org.jumpmind.symmetric.ui.sqlexplorer.Settings.SQL_EXPLORER_SHOW_ROW_NUMBERS;
 
 import java.sql.Connection;
