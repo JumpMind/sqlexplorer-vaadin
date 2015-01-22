@@ -50,7 +50,7 @@ abstract public class AbstractMetaDataTableCreator {
                 try {
                     DatabaseMetaData metadata = con.getMetaData();
                     rs = getMetaDataResultSet(metadata);
-                    t = CommonUiUtils.putResultsInTable(rs, properties.getInt(SQL_EXPLORER_MAX_RESULTS),
+                    t = CommonUiUtils.putResultsInTable(rs, Integer.MAX_VALUE,
                             properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS), getColumnsToExclude());
                     t.setSizeFull();
                     return t;
