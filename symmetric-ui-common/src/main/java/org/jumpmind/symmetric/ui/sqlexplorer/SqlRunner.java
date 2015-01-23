@@ -22,6 +22,7 @@ import javax.sql.DataSource;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.jumpmind.db.platform.DatabaseNamesConstants;
 import org.jumpmind.db.sql.JdbcSqlTemplate;
 import org.jumpmind.db.sql.SqlScriptReader;
 import org.jumpmind.properties.TypedProperties;
@@ -191,7 +192,11 @@ public class SqlRunner extends Thread {
                         String lowercaseSql = sql.trim().toLowerCase();
                         if (!lowercaseSql.startsWith("delete") && !lowercaseSql.startsWith("update") &&
                                 !lowercaseSql.startsWith("insert")) {
-                            stmt.setFetchSize(maxResultsSize < 100  ? maxResultsSize : 100);
+                            if (db.getPlatform().getName().equals(DatabaseNamesConstants.MYSQL)) {
+                                stmt.setFetchSize(Integer.MIN_VALUE);
+                            } else {
+                                stmt.setFetchSize(maxResultsSize < 100  ? maxResultsSize : 100);
+                            }
                         }
 
                         if (logAtDebug) {
