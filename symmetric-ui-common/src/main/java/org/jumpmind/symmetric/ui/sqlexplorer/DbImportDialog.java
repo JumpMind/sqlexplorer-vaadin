@@ -112,12 +112,15 @@ public class DbImportDialog extends ResizableWindow {
 
     protected void createImportLayout() {
         importLayout = new VerticalLayout();
+        importLayout.setSizeFull();
+        importLayout.addStyleName("v-scrollable");
         importLayout.setMargin(true);
         importLayout.setSpacing(true);
 
         importLayout.addComponent(new Label("Please select from the following options"));
 
         FormLayout formLayout = new FormLayout();
+        formLayout.setSizeFull();
         importLayout.addComponent(formLayout);
         importLayout.setExpandRatio(formLayout, 1);
 

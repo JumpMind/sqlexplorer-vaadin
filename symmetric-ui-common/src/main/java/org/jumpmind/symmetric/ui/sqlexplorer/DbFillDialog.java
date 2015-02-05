@@ -168,12 +168,14 @@ public class DbFillDialog extends ResizableWindow {
 
     protected void createOptionLayout() {
         optionLayout = new VerticalLayout();
+        optionLayout.addStyleName("v-scrollable");
         optionLayout.setMargin(true);
         optionLayout.setSpacing(true);
         optionLayout.setSizeFull();
         optionLayout.addComponent(new Label("Please choose from the following options"));
 
         FormLayout formLayout = new FormLayout();
+        formLayout.setSizeFull();
         optionLayout.addComponent(formLayout);
         optionLayout.setExpandRatio(formLayout, 1);
 
