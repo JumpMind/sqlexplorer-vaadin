@@ -47,8 +47,6 @@ public class DbFillDialog extends ResizableWindow {
 
     private CheckBox continueBox;
 
-    private CheckBox cascade;
-
     private TextField countField;
 
     private TextField intervalField;
@@ -258,11 +256,6 @@ public class DbFillDialog extends ResizableWindow {
         continueBox.setValue(true);
         formLayout.addComponent(continueBox);
 
-        cascade = new CheckBox(
-                "Cascade (include FK dependent tables not included in selected tables)");
-        cascade.setValue(true);
-        formLayout.addComponent(cascade);
-
         oGroup = new OptionGroup();
         oGroup.addItem("Fill Table(s)");
         oGroup.addItem("Send to Sql Editor");
@@ -305,7 +298,6 @@ public class DbFillDialog extends ResizableWindow {
         dbFill.setSchema(tableSelectionLayout.schemaSelect.getValue() != null ? tableSelectionLayout.schemaSelect
                 .getValue().toString() : null);
         dbFill.setContinueOnError(continueBox.getValue());
-        dbFill.setCascading(cascade.getValue());
         dbFill.setRecordCount(Integer.parseInt(countField.getValue().toString()));
         dbFill.setInterval(Integer.parseInt(intervalField.getValue().toString()));
         int[] weights = new int[3];
