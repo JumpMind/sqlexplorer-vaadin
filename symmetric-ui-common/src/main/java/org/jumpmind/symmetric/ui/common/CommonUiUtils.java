@@ -143,20 +143,23 @@ public final class CommonUiUtils {
     }
 
     public static void notify(String caption, String message, Throwable ex, Type type) {
-        Notification notification = new Notification(caption,
-                contactWithLineFeed(FormatUtils.wordWrap(message, 150)), Type.HUMANIZED_MESSAGE);
-        notification.setPosition(Position.MIDDLE_CENTER);
-        notification.setDelayMsec(-1);
+        Page page = Page.getCurrent();
+        if (page != null) {
+            Notification notification = new Notification(caption,
+                    contactWithLineFeed(FormatUtils.wordWrap(message, 150)), Type.HUMANIZED_MESSAGE);
+            notification.setPosition(Position.MIDDLE_CENTER);
+            notification.setDelayMsec(-1);
 
-        String style = ValoTheme.NOTIFICATION_SUCCESS;
-        if (type == Type.ERROR_MESSAGE) {
-            style = ValoTheme.NOTIFICATION_FAILURE;
-        } else if (type == Type.WARNING_MESSAGE) {
-            style = ValoTheme.NOTIFICATION_WARNING;
+            String style = ValoTheme.NOTIFICATION_SUCCESS;
+            if (type == Type.ERROR_MESSAGE) {
+                style = ValoTheme.NOTIFICATION_FAILURE;
+            } else if (type == Type.WARNING_MESSAGE) {
+                style = ValoTheme.NOTIFICATION_WARNING;
+            }
+            notification.setStyleName(notification.getStyleName() + " "
+                    + ValoTheme.NOTIFICATION_CLOSABLE + " " + style);
+            notification.show(Page.getCurrent());
         }
-        notification.setStyleName(notification.getStyleName() + " "
-                + ValoTheme.NOTIFICATION_CLOSABLE + " " + style);
-        notification.show(Page.getCurrent());
     }
 
     private static String contactWithLineFeed(String[] lines) {
