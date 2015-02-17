@@ -148,6 +148,13 @@ public class ResizableWindow extends Window {
        
     }
 
+    @Override
+    public void bringToFront() {
+        if (isAttached()) {
+           super.bringToFront();
+        }
+    }
+    
     public class CloseButtonListener implements ClickListener {
 
         private static final long serialVersionUID = 1L;
