@@ -30,7 +30,6 @@ import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.jumpmind.util.FormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.support.JdbcUtils;
 
 import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.label.ContentMode;
@@ -119,7 +118,7 @@ public class SqlRunner extends Thread {
                     connection.setAutoCommit(true);
                 } catch (SQLException e) {
                 }
-                JdbcUtils.closeConnection(connection);
+                JdbcSqlTemplate.close(connection);
             }
         }
     }
@@ -135,7 +134,7 @@ public class SqlRunner extends Thread {
                     connection.setAutoCommit(true);
                 } catch (SQLException e) {
                 }
-                JdbcUtils.closeConnection(connection);
+                JdbcSqlTemplate.close(connection);
             }
         }
     }
@@ -185,7 +184,7 @@ public class SqlRunner extends Thread {
                     sqlReader.setDelimiter(delimiter);
                     String sql = sqlReader.readSqlStatement();
                     while (sql != null) {
-                        JdbcUtils.closeStatement(stmt);
+                        JdbcSqlTemplate.close(stmt);
                         stmt = connection.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
                                 ResultSet.CONCUR_READ_ONLY);
                         
@@ -254,7 +253,7 @@ public class SqlRunner extends Thread {
                                 hasResults = stmt.getMoreResults();
                                 updateCount = stmt.getUpdateCount();
                             } finally {
-                                JdbcUtils.closeResultSet(rs);
+                                JdbcSqlTemplate.close(rs);
                             }
                         }
 
@@ -277,9 +276,9 @@ public class SqlRunner extends Thread {
                     } catch (SQLException e) {
                     }
                 }
-                JdbcUtils.closeStatement(stmt);
+                JdbcSqlTemplate.close(stmt);
                 if (autoCommit || (!autoCommit && !rowsUpdated && createdConnection)) {
-                    JdbcUtils.closeConnection(connection);
+                    JdbcSqlTemplate.close(connection);
                     connection = null;
                 }
 
@@ -409,7 +408,7 @@ public class SqlRunner extends Thread {
 
             return text.toString();
         } finally {
-            JdbcUtils.closeResultSet(rs);
+            JdbcSqlTemplate.close(rs);
         }
     }
 
