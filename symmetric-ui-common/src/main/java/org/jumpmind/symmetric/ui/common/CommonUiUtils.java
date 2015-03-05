@@ -204,11 +204,12 @@ public final class CommonUiUtils {
         table.setColumnCollapsingAllowed(true);
 
         final ResultSetMetaData meta = rs.getMetaData();
-        int columns = meta.getColumnCount();
+        int columnCount = meta.getColumnCount();
         table.addContainerProperty("#", Integer.class, null);
         Set<String> columnNames = new HashSet<String>();
         Set<Integer> skipColumnIndexes = new HashSet<Integer>();
-        for (int i = 1; i <= columns; i++) {
+        int[] types = new int[columnCount];
+        for (int i = 1; i <= columnCount; i++) {
             String realColumnName = meta.getColumnName(i);
             String columnName = realColumnName;
             if (!Arrays.asList(excludeValues).contains(columnName)) {
@@ -221,6 +222,7 @@ public final class CommonUiUtils {
 
                 Class<?> typeClass = Object.class;
                 int type = meta.getColumnType(i);
+                types[i-1] = type;
                 switch (type) {
                     case Types.FLOAT:
                     case Types.DOUBLE:
@@ -256,10 +258,10 @@ public final class CommonUiUtils {
             Object[] row = new Object[columnNames.size() + 1];
             row[0] = new Integer(rowNumber);
             int rowIndex = 1;
-            for (int i = 0; i < columns; i++) {
+            for (int i = 0; i < columnCount; i++) {
                 if (!skipColumnIndexes.contains(i)) {
                     Object o = getObject(rs, i + 1);
-                    int type = meta.getColumnType(i + 1);
+                    int type = types[i];
                     switch (type) {
                         case Types.FLOAT:
                         case Types.DOUBLE:
@@ -317,7 +319,7 @@ public final class CommonUiUtils {
         } else if ("YES".equalsIgnoreCase(value) || "TRUE".equalsIgnoreCase(value)) {
             return "1";
         } else {
-            return value;
+            return value.replace(",", ".");
         }
     }
 
