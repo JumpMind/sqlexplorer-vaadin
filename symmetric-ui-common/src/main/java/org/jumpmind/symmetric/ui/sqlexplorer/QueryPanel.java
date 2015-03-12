@@ -472,6 +472,13 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
             SqlRunner.commit(connection);
         } catch (Exception ex) {
             Notification.show(ex.getMessage());
+        } finally {
+            commitButtonValue = false;
+            rollbackButtonValue = false;
+            executeAtCursorButtonValue = true;
+            executeScriptButtonValue = true;
+            setButtonsEnabled();
+            connection = null;
         }
     }
 
