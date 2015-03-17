@@ -141,7 +141,7 @@ public class SqlHistoryDialog extends ResizableWindow {
                 }
             }
         });
-
+        
         table.setSizeFull();
 
         mainLayout.addComponent(table);
@@ -175,6 +175,9 @@ public class SqlHistoryDialog extends ResizableWindow {
             toSelect.add((String) table.getItemIds().iterator().next());
             table.setValue(toSelect);
         }
+        
+        table.setSortAscending(false);
+        table.setSortContainerPropertyId("lastExecuteTime");
 
     }
 
