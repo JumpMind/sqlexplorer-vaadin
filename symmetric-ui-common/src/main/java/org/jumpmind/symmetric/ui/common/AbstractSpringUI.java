@@ -56,7 +56,7 @@ abstract public class AbstractSpringUI extends UI {
             @Override
             protected Converter<Date, ?> createDateConverter(Class<?> sourceType) {
                 return super.createDateConverter(sourceType);
-            }            
+            }
             
             protected Converter<String, ?> createStringConverter(Class<?> sourceType) {
                 if (Double.class.isAssignableFrom(sourceType)) {
@@ -74,7 +74,15 @@ abstract public class AbstractSpringUI extends UI {
                         }  
                     };
                 } else if (Long.class.isAssignableFrom(sourceType)) {
-                    return new StringToLongConverter();
+                    return new StringToLongConverter() {
+                        private static final long serialVersionUID = 1L;
+                      @Override
+                          protected NumberFormat getFormat(Locale locale) {
+                              NumberFormat format = super.getFormat(locale);
+                              format.setGroupingUsed(false);
+                              return format;
+                          }  
+                      };
                 } else if (BigDecimal.class.isAssignableFrom(sourceType)) {
                     return new StringToBigDecimalConverter();
                 } else if (Boolean.class.isAssignableFrom(sourceType)) {
