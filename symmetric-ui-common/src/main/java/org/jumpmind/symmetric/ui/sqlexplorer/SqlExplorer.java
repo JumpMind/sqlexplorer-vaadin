@@ -73,15 +73,24 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
     String user;
 
-    Set<TableInfoPanel> tableInfoTabs = new HashSet<TableInfoPanel>();
+    Set<TableInfoPanel> tableInfoTabs = new HashSet<TableInfoPanel>();    
 
+    public SqlExplorer(String configDir, IDbProvider databaseProvider, ISettingsProvider settingsProvider, String user) {
+        this(configDir, databaseProvider, settingsProvider, user, DEFAULT_SPLIT_POS);
+    }
+    
     public SqlExplorer(String configDir, IDbProvider databaseProvider, String user) {
-        this(databaseProvider, new DefaultSettingsProvider(configDir), user);
+        this(configDir, databaseProvider, new DefaultSettingsProvider(configDir), user, DEFAULT_SPLIT_POS);
+    }
+    
+    public SqlExplorer(String configDir, IDbProvider databaseProvider, String user, float leftSplitPos) {
+        this(configDir, databaseProvider, new DefaultSettingsProvider(configDir), user, leftSplitPos);
     }
 
-    public SqlExplorer(IDbProvider databaseProvider, ISettingsProvider settingsProvider, String user) {
+    public SqlExplorer(String configDir, IDbProvider databaseProvider, ISettingsProvider settingsProvider, String user, float leftSplitSize) {
         this.databaseProvider = databaseProvider;
         this.settingsProvider = settingsProvider;
+        this.savedSplitPosition = leftSplitSize;
 
         setSizeFull();
         addStyleName("sqlexplorer");
@@ -94,7 +103,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
         Panel scrollable = new Panel();
         scrollable.setSizeFull();
-        scrollable.addStyleName(ValoTheme.PANEL_BORDERLESS);
+        //scrollable.addStyleName(ValoTheme.PANEL_BORDERLESS);
 
         dbTree = buildDbTree();
         scrollable.setContent(dbTree);
@@ -130,7 +139,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
         addComponents(leftLayout, rightLayout);
 
-        setSplitPosition(DEFAULT_SPLIT_POS, Unit.PIXELS);
+        setSplitPosition(savedSplitPosition, Unit.PIXELS);
     }
 
     protected MenuBar buildLeftMenu() {
