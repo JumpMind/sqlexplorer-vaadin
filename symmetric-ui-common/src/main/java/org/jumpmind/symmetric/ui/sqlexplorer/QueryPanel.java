@@ -31,9 +31,6 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.MenuBar;
-import com.vaadin.ui.MenuBar.Command;
-import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TabSheet;
@@ -62,26 +59,8 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
     boolean commitButtonValue = false;
 
     boolean rollbackButtonValue = false;
-
-    MenuItem executeAtCursorButton;
-
-    MenuItem executeScriptButton;
-
-    MenuItem commitButton;
-
-    MenuItem rollbackButton;
-
-    MenuItem databaseExplorerButton;
-
-    MenuItem historyButton;
-
-    MenuItem settingsButton;
-
-    MenuItem importButton;
-
-    MenuItem exportButton;
-
-    MenuItem fillButton;
+    
+    IButtonBar buttonBar;
 
     TabSheet resultsTabs;
 
@@ -99,10 +78,11 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
     transient Set<SqlRunner> runnersInProgress = new HashSet<SqlRunner>();
 
-    public QueryPanel(IDb db, ISettingsProvider settingsProvider, String user) {
+    public QueryPanel(IDb db, ISettingsProvider settingsProvider, IButtonBar buttonBar, String user) {
         this.settingsProvider = settingsProvider;
         this.db = db;
         this.user = user;
+        this.buttonBar = buttonBar;
         this.sqlArea = buildSqlEditor();
         this.shortCutListeners.add(createExecuteSqlShortcutListener());
 
@@ -158,107 +138,20 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         };
         return editor;
     }
+    
+    public IButtonBar getButtonBar() {
+        return buttonBar;
+    }
 
     @Override
-    public void selected(MenuBar menuBar) {
+    public void selected() {
         unselected();
-
-        executeAtCursorButton = menuBar.addItem("", FontAwesome.PLAY, new Command() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                execute(false);
-            }
-        });
-        executeAtCursorButton.setEnabled(executeAtCursorButtonValue);
-        executeAtCursorButton.setDescription("Run sql under cursor (CTRL+ENTER)");
-
-        executeScriptButton = menuBar.addItem("", FontAwesome.FORWARD, new Command() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                execute(true);
-            }
-        });
-        executeScriptButton.setDescription("Run as script");
-
-        commitButton = menuBar.addItem("", FontAwesome.ARROW_CIRCLE_O_RIGHT, new Command() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                commit();
-            }
-        });
-        commitButton.setDescription("Commit");
-        commitButton.setEnabled(false);
-
-        rollbackButton = menuBar.addItem("", FontAwesome.ARROW_CIRCLE_O_LEFT, new Command() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                rollback();
-            }
-        });
-        rollbackButton.setDescription("Rollback");
-        rollbackButton.setEnabled(false);
-
-        historyButton = menuBar.addItem("", FontAwesome.SEARCH, new Command() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                new SqlHistoryDialog(settingsProvider, QueryPanel.this).showAtSize(0.6);
-            }
-        });
-        historyButton.setDescription("Sql History");
-        historyButton.setEnabled(true);
-
-        MenuItem optionsButton = menuBar.addItem("", FontAwesome.TASKS, null);
-        optionsButton.setDescription("Options");
-
-        importButton = optionsButton.addItem("DB Import", FontAwesome.DOWNLOAD, new Command() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                new DbImportDialog(db.getPlatform()).showAtSize(0.6);
-            }
-        });
-
-        exportButton = optionsButton.addItem("DB Export", FontAwesome.UPLOAD, new Command() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                new DbExportDialog(db.getPlatform(), QueryPanel.this).showAtSize(0.6);
-            }
-        });
-
-        fillButton = optionsButton.addItem("DB Fill", FontAwesome.BEER, new Command() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                new DbFillDialog(db.getPlatform(), QueryPanel.this).showAtSize(0.6);
-            }
-        });
 
         sqlArea.addSelectionChangeListener(selectionChangeListener);
         for (ShortcutListener l : shortCutListeners) {
             sqlArea.addShortcutListener(l);
         }
+
         setButtonsEnabled();
 
         sqlArea.focus();
@@ -273,10 +166,10 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
     }
 
     protected void setButtonsEnabled() {
-        executeScriptButton.setEnabled(executeScriptButtonValue);
-        executeAtCursorButton.setEnabled(executeAtCursorButtonValue);
-        commitButton.setEnabled(commitButtonValue);
-        rollbackButton.setEnabled(rollbackButtonValue);
+        buttonBar.setExecuteScriptButtonEnabled(executeScriptButtonValue);
+        buttonBar.setExecuteAtCursorButtonEnabled(executeAtCursorButtonValue);
+        buttonBar.setCommitButtonEnabled(commitButtonValue);
+        buttonBar.setRollbackButtonEnabled(rollbackButtonValue);
     }
 
     protected ShortcutListener createExecuteSqlShortcutListener() {

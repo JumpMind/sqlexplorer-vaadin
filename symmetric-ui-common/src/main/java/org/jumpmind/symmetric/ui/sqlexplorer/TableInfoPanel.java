@@ -22,7 +22,6 @@ import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.AbstractLayout;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
@@ -177,7 +176,7 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
     }
 
     @Override
-    public void selected(MenuBar menuBar) {
+    public void selected() {
     }
 
     @Override

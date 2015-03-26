@@ -221,7 +221,10 @@ public class SqlExplorer extends HorizontalSplitPanel {
         contentTabs.setSelectedTab(tab);
         contentMenuBar.removeItems();
         addShowButton(contentMenuBar);
-        tab.selected(contentMenuBar);
+        if (tab instanceof QueryPanel) {
+            ((DefaultButtonBar)((QueryPanel)tab).getButtonBar()).populate(contentMenuBar);
+        }
+        tab.selected();
         selected = tab;
     }
 
@@ -231,7 +234,9 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
     protected QueryPanel openQueryWindow(IDb db) {
         String dbName = db.getName();
-        QueryPanel panel = new QueryPanel(db, settingsProvider, user);
+        DefaultButtonBar buttonBar = new DefaultButtonBar();
+        QueryPanel panel = new QueryPanel(db, settingsProvider, buttonBar, user);
+        buttonBar.init(db, settingsProvider, panel);
         Tab tab = contentTabs.addTab(panel, getTabName(dbName));
         tab.setClosable(true);
         tab.setIcon(QUERY_ICON);
