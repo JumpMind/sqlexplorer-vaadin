@@ -14,8 +14,8 @@ import org.jumpmind.db.platform.IDatabasePlatform;
 import org.jumpmind.symmetric.io.data.DbExport;
 import org.jumpmind.symmetric.io.data.DbExport.Compatible;
 import org.jumpmind.symmetric.io.data.DbExport.Format;
-import org.jumpmind.symmetric.ui.common.ResizableWindow;
 import org.jumpmind.symmetric.ui.common.CommonUiUtils;
+import org.jumpmind.symmetric.ui.common.ResizableWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -10,8 +10,8 @@ import static org.jumpmind.symmetric.ui.sqlexplorer.Settings.SQL_EXPLORER_SHOW_R
 import java.text.DecimalFormat;
 
 import org.jumpmind.properties.TypedProperties;
-import org.jumpmind.symmetric.ui.common.ResizableWindow;
 import org.jumpmind.symmetric.ui.common.CommonUiUtils;
+import org.jumpmind.symmetric.ui.common.ResizableWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

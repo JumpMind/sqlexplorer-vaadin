@@ -10,8 +10,8 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.jumpmind.db.platform.IDatabasePlatform;
-import org.jumpmind.symmetric.ui.common.UiConstants;
 import org.jumpmind.symmetric.ui.common.CommonUiUtils;
+import org.jumpmind.symmetric.ui.common.UiConstants;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;

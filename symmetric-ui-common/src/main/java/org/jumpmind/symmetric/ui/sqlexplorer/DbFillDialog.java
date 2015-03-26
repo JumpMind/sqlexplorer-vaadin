@@ -9,10 +9,10 @@ import java.util.Set;
 import org.jumpmind.db.model.Table;
 import org.jumpmind.db.platform.IDatabasePlatform;
 import org.jumpmind.symmetric.io.data.DbFill;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.jumpmind.symmetric.ui.common.ConfirmDialog;
 import org.jumpmind.symmetric.ui.common.ConfirmDialog.IConfirmListener;
 import org.jumpmind.symmetric.ui.common.ResizableWindow;
-import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 
 import com.vaadin.data.Item;
 import com.vaadin.event.FieldEvents.TextChangeEvent;

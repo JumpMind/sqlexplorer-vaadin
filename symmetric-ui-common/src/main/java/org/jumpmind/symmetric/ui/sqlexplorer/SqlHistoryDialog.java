@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.jumpmind.symmetric.ui.common.DateColumnFormatter;
 import org.jumpmind.symmetric.ui.common.DurationFormatter;
 import org.jumpmind.symmetric.ui.common.ResizableWindow;
-import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.event.FieldEvents.TextChangeEvent;

@@ -18,8 +18,8 @@ import org.jumpmind.db.model.Table;
 import org.jumpmind.db.platform.IDatabasePlatform;
 import org.jumpmind.symmetric.io.data.DbImport;
 import org.jumpmind.symmetric.io.data.DbImport.Format;
-import org.jumpmind.symmetric.ui.common.ResizableWindow;
 import org.jumpmind.symmetric.ui.common.CommonUiUtils;
+import org.jumpmind.symmetric.ui.common.ResizableWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

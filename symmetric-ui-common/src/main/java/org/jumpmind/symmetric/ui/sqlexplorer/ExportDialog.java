@@ -1,7 +1,7 @@
 package org.jumpmind.symmetric.ui.sqlexplorer;
 
-import org.jumpmind.symmetric.ui.common.ResizableWindow;
 import org.jumpmind.symmetric.ui.common.CommonUiUtils;
+import org.jumpmind.symmetric.ui.common.ResizableWindow;
 
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Button;
