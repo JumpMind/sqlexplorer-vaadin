@@ -171,7 +171,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         buttonBar.setCommitButtonEnabled(commitButtonValue);
         buttonBar.setRollbackButtonEnabled(rollbackButtonValue);
     }
-
+    
     protected ShortcutListener createExecuteSqlShortcutListener() {
         return new ShortcutListener("", KeyCode.ENTER, new int[] { ModifierKey.CTRL }) {
 
@@ -221,17 +221,23 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         return execute(false, sql, tabPosition);
     }
 
-    protected boolean execute(final boolean runAsScript) {
+    public boolean execute(final boolean runAsScript) {
         return execute(runAsScript, null, 0);
     }
 
-    protected void writeSql(String sql) {
-        sqlArea.setValue((isNotBlank(sqlArea.getValue()) ? sqlArea.getValue() + "\n" : "") + sql);
+    public void appendSql(String sql) {
+        if (isNotBlank(sql)) {
+            sqlArea.setValue((isNotBlank(sqlArea.getValue()) ? sqlArea.getValue() + "\n" : "") + sql);
+        }
+    }
+    
+    public String getSql() {
+        return sqlArea.getValue();
     }
 
     protected void executeSql(String sql, boolean writeToQueryWindow) {
         if (writeToQueryWindow) {
-            writeSql(sql);
+            appendSql(sql);
         }
         execute(false, sql, 0);
     }
@@ -281,7 +287,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
                 @Override
                 public void writeSql(String sql) {
-                    QueryPanel.this.writeSql(sql);
+                    QueryPanel.this.appendSql(sql);
                 }
 
                 @Override

@@ -298,7 +298,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             Table table = getTableFor(treeNode);
             DmlStatement dmlStatement = platform
                     .createDmlStatement(DmlType.SELECT_ALL, table, null);
-            panel.writeSql(dmlStatement.getSql());
+            panel.appendSql(dmlStatement.getSql());
             contentTabs.setSelectedTab(panel);
         }
     }
@@ -343,7 +343,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
             }
             String sql = dmlStatement.buildDynamicSql(BinaryEncoding.HEX, row, false, true);
-            panel.writeSql(sql);
+            panel.appendSql(sql);
             contentTabs.setSelectedTab(panel);
         }
     }
@@ -545,7 +545,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
                     Table table = getTableFor(treeNode);
                     if (table != null) {
                         QueryPanel panel = findQueryPanelForDb(db);
-                        panel.writeSql(table.getQualifiedTableName(quote, catalogSeparator, schemaSeparator));
+                        panel.appendSql(table.getQualifiedTableName(quote, catalogSeparator, schemaSeparator));
                         contentTabs.setSelectedTab(panel);
                     }
                 }

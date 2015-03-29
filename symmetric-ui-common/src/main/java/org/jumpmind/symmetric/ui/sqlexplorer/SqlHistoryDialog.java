@@ -187,7 +187,7 @@ public class SqlHistoryDialog extends ResizableWindow {
         if (values != null && values.size() > 0) {
             String delimiter = settingsProvider.get().getProperties().get(Settings.SQL_EXPLORER_DELIMITER);
             for (String sql : values) {
-                queryPanel.writeSql(sql + (sql.trim().endsWith(delimiter) ? "" : delimiter));
+                queryPanel.appendSql(sql + (sql.trim().endsWith(delimiter) ? "" : delimiter));
             }
             close();
         }
