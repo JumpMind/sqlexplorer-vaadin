@@ -393,7 +393,7 @@ public class DbExportDialog extends ResizableWindow {
         String script;
         try {
             script = dbExport.exportTables(array);
-            queryPanel.writeSql(script);
+            queryPanel.appendSql(script);
         } catch (IOException e) {
             String msg = "Failed to export to the sql editor";
             log.error(msg, e);
