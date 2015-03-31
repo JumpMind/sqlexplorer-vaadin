@@ -144,7 +144,7 @@ public class ResizableWindow extends Window {
         setHeight((int) (pageHeight * percentOfBrowserSize), Unit.PIXELS);
         setWidth((int) (pageWidth * percentOfBrowserSize), Unit.PIXELS);
 
-        show();
+        show();       
        
     }
 

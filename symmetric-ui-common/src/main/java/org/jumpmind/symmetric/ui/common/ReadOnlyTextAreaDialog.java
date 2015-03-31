@@ -68,7 +68,6 @@ public class ReadOnlyTextAreaDialog extends ResizableWindow {
 
         buttonLayout.addComponent(buildCloseButton());
 
-        this.textField.focus();
         textField.setValue(value);
         textField.addTextChangeListener(new TextChangeListener() {
 
@@ -83,6 +82,21 @@ public class ReadOnlyTextAreaDialog extends ResizableWindow {
                 }
             }
         });
+    }
+    
+    @Override
+    protected void grabFocus() {        
+    }
+    
+    @Override
+    public void show() {
+        super.show();
+        selectAll();
+    }
+    
+    public void selectAll() {
+        textField.focus();
+        textField.selectAll();      
     }
 
     protected void updateTextField(String display, String value) {
