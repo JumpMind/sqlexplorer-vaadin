@@ -8,8 +8,6 @@ import com.vaadin.event.FieldEvents.BlurEvent;
 import com.vaadin.event.FieldEvents.BlurListener;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
-import com.vaadin.event.ShortcutAction.KeyCode;
-import com.vaadin.event.ShortcutListener;
 import com.vaadin.ui.PasswordField;
 
 public class ImmediateUpdatePasswordField extends PasswordField {
@@ -43,16 +41,6 @@ public class ImmediateUpdatePasswordField extends PasswordField {
             public void blur(BlurEvent event) {
                 if (isNotBlank(getState().errorMessage)) {
                     setValue(startValue);
-                }
-            }
-        });
-        addShortcutListener(new ShortcutListener("field", KeyCode.ENTER, null) {
-            private static final long serialVersionUID = 1L;
-            @Override
-            public void handleAction(Object sender, Object target) {
-                if (!StringUtils.equals(startValue, getValue())) {
-                    save();
-                    startValue = getValue();
                 }
             }
         });
