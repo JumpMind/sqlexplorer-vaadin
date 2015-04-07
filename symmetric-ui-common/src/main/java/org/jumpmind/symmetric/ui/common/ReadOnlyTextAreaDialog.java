@@ -34,6 +34,7 @@ public class ReadOnlyTextAreaDialog extends ResizableWindow {
         wrapper.setSizeFull();
         textField = new TextArea();
         textField.setSizeFull();
+        textField.setWordwrap(false);
         wrapper.addComponent(textField);
         addComponent(wrapper, 1);
 

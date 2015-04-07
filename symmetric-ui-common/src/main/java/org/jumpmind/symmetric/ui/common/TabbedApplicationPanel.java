@@ -24,7 +24,7 @@ public class TabbedApplicationPanel extends TabSheet {
             public void selectedTabChange(SelectedTabChangeEvent event) {
                 Component selected = event.getTabSheet().getSelectedTab();
                 if (selected instanceof IUiPanel) {
-                    ((IUiPanel)selected).showing();
+                    ((IUiPanel)selected).selected();
                 }
             }
         });
