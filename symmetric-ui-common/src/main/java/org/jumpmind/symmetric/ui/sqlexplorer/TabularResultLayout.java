@@ -574,8 +574,12 @@ public class TabularResultLayout extends VerticalLayout {
                 tableName = tableName.replaceAll(quote, "");
                 tableName = tableName.trim();
             }
-            resultTable = db.getPlatform().getTableFromCache(catalogName, schemaName, tableName,
-                    false);
+            try {
+                resultTable = db.getPlatform().getTableFromCache(catalogName, schemaName, tableName,
+                        false);
+            } catch (Exception e) {
+                log.debug("Failed to lookup table: " + tableName, e);
+            }
         }
 
         TypedProperties properties = settings.getProperties();
