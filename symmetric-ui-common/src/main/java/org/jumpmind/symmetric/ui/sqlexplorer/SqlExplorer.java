@@ -428,7 +428,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
                     for (TreeNode treeNode : nodes) {
                         IDb db = dbTree.getDbForNode(treeNode);
                         QueryPanel panel = getQueryPanelForDb(db);
-                        if (panel == null) {
+                        if (panel == null && db != null) {
                             openQueryWindow(db);
                         }
                     }
