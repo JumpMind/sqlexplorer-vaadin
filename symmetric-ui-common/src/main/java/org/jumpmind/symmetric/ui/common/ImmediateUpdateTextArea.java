@@ -1,11 +1,7 @@
 package org.jumpmind.symmetric.ui.common;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-
 import org.apache.commons.lang.StringUtils;
 
-import com.vaadin.event.FieldEvents.BlurEvent;
-import com.vaadin.event.FieldEvents.BlurListener;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.TextArea;
@@ -29,18 +25,11 @@ public class ImmediateUpdateTextArea extends TextArea {
             @Override
             public void textChange(TextChangeEvent event) {
                 if (!StringUtils.equals(startValue, event.getText())) {
-                    setValue(event.getText());
+                    int cursor = getCursorPosition();
+                    setValue(event.getText(), false);
+                    setCursorPosition(cursor);
                     save();
                     startValue = getValue();
-                }
-            }
-        });
-        addBlurListener(new BlurListener() {                
-            private static final long serialVersionUID = 1L;                
-            @Override
-            public void blur(BlurEvent event) {
-                if (isNotBlank(getState().errorMessage)) {
-                    setValue(startValue);
                 }
             }
         });
