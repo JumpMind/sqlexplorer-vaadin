@@ -50,7 +50,7 @@ public final class CommonUiUtils {
     static final FastDateFormat DATETIMEFORMAT = FastDateFormat.getDateTimeInstance(
             FastDateFormat.SHORT, FastDateFormat.SHORT);
 
-    static final FastDateFormat TIMEFORMAT = FastDateFormat.getTimeInstance(FastDateFormat.MEDIUM);
+    static final FastDateFormat TIMEFORMAT = FastDateFormat.getInstance("hh:mm:ss.SSS");
 
     static final String NULL_TEXT = "<null>";
 
