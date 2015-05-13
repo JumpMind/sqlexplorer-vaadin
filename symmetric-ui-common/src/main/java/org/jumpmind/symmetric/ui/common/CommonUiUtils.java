@@ -47,10 +47,10 @@ public final class CommonUiUtils {
 
     final static Logger log = LoggerFactory.getLogger(CommonUiUtils.class);
 
-    static final FastDateFormat DATETIMEFORMAT = FastDateFormat.getDateTimeInstance(
-            FastDateFormat.SHORT, FastDateFormat.SHORT);
+    static final FastDateFormat DATETIMEFORMAT = FastDateFormat.getInstance(
+            "yyyy-MM-dd HH:mm:ss.SSS");
 
-    static final FastDateFormat TIMEFORMAT = FastDateFormat.getInstance("hh:mm:ss.SSS");
+    static final FastDateFormat TIMEFORMAT = FastDateFormat.getInstance("HH:mm:ss.SSS");
 
     static final String NULL_TEXT = "<null>";
 
