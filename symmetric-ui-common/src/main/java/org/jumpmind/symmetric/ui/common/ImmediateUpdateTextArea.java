@@ -6,7 +6,7 @@ import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.TextArea;
 
-public class ImmediateUpdateTextArea extends TextArea {
+public abstract class ImmediateUpdateTextArea extends TextArea {
 
     private static final long serialVersionUID = 1L;
 
@@ -25,26 +25,12 @@ public class ImmediateUpdateTextArea extends TextArea {
             @Override
             public void textChange(TextChangeEvent event) {
                 if (!StringUtils.equals(startValue, event.getText())) {
-                    int cursor = getCursorPosition();
-                    setValue(event.getText(), false);
-                    setCursorPosition(cursor);
-                    save();
-                    startValue = getValue();
+                    save(event.getText());
                 }
             }
         });
     }
     
-    @Override
-    public void setValue(String newValue) throws com.vaadin.data.Property.ReadOnlyException {
-        super.setValue(newValue);
-        if (!initialized) {
-            startValue = newValue;
-            initialized = true;
-        }
-    }
+    abstract protected void save(String text);
     
-    protected void save() {
-        
-    }
 }

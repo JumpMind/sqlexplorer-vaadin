@@ -1,17 +1,13 @@
 package org.jumpmind.symmetric.ui.common;
 
-import org.apache.commons.lang.StringUtils;
-
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.TextField;
 
-public class ImmediateUpdateTextField extends TextField {
+public abstract class ImmediateUpdateTextField extends TextField {
 
     private static final long serialVersionUID = 1L;
 
-    String startValue;
-    
     boolean initialized = false;
     
     public ImmediateUpdateTextField(String caption) {
@@ -24,27 +20,10 @@ public class ImmediateUpdateTextField extends TextField {
             private static final long serialVersionUID = 1L;
             @Override
             public void textChange(TextChangeEvent event) {
-                if (!StringUtils.equals(startValue, event.getText())) {
-                    int cursor = getCursorPosition();
-                    setValue(event.getText(), false);
-                    setCursorPosition(cursor);
-                    save();
-                    startValue = getValue();
-                }
+                  save(event.getText());
             }
         });
     }
     
-    @Override
-    public void setValue(String newValue) throws com.vaadin.data.Property.ReadOnlyException {
-        super.setValue(newValue);
-        if (!initialized) {
-            startValue = newValue;
-            initialized = true;
-        }
-    }
-    
-    protected void save() {
-        
-    }
+    protected abstract void save(String text);
 }
