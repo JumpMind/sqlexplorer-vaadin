@@ -5,12 +5,15 @@ import java.beans.XMLEncoder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.Serializable;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DefaultSettingsProvider implements ISettingsProvider {
+public class DefaultSettingsProvider implements ISettingsProvider, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     final Logger log = LoggerFactory.getLogger(getClass());
 
