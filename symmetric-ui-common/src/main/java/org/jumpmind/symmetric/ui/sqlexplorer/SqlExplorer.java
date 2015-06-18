@@ -73,16 +73,16 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
     String user;
 
-    Set<TableInfoPanel> tableInfoTabs = new HashSet<TableInfoPanel>();    
+    Set<TableInfoPanel> tableInfoTabs = new HashSet<TableInfoPanel>();
 
     public SqlExplorer(String configDir, IDbProvider databaseProvider, ISettingsProvider settingsProvider, String user) {
         this(configDir, databaseProvider, settingsProvider, user, DEFAULT_SPLIT_POS);
     }
-    
+
     public SqlExplorer(String configDir, IDbProvider databaseProvider, String user) {
         this(configDir, databaseProvider, new DefaultSettingsProvider(configDir), user, DEFAULT_SPLIT_POS);
     }
-    
+
     public SqlExplorer(String configDir, IDbProvider databaseProvider, String user, float leftSplitPos) {
         this(configDir, databaseProvider, new DefaultSettingsProvider(configDir), user, leftSplitPos);
     }
@@ -103,7 +103,6 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
         Panel scrollable = new Panel();
         scrollable.setSizeFull();
-        //scrollable.addStyleName(ValoTheme.PANEL_BORDERLESS);
 
         dbTree = buildDbTree();
         scrollable.setContent(dbTree);
@@ -151,8 +150,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                savedSplitPosition = getSplitPosition() > 10 ? getSplitPosition()
-                        : DEFAULT_SPLIT_POS;
+                savedSplitPosition = getSplitPosition() > 10 ? getSplitPosition() : DEFAULT_SPLIT_POS;
                 setSplitPosition(0);
                 setLocked(true);
                 showButton.setVisible(true);
@@ -222,7 +220,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
         contentMenuBar.removeItems();
         addShowButton(contentMenuBar);
         if (tab instanceof QueryPanel) {
-            ((DefaultButtonBar)((QueryPanel)tab).getButtonBar()).populate(contentMenuBar);
+            ((DefaultButtonBar) ((QueryPanel) tab).getButtonBar()).populate(contentMenuBar);
         }
         tab.selected();
         selected = tab;
@@ -296,8 +294,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             QueryPanel panel = findQueryPanelForDb(db);
             IDatabasePlatform platform = db.getPlatform();
             Table table = getTableFor(treeNode);
-            DmlStatement dmlStatement = platform
-                    .createDmlStatement(DmlType.SELECT_ALL, table, null);
+            DmlStatement dmlStatement = platform.createDmlStatement(DmlType.SELECT_ALL, table, null);
             panel.appendSql(dmlStatement.getSql());
             contentTabs.setSelectedTab(panel);
         }
@@ -307,8 +304,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
         IDb db = dbTree.getDbForNode(treeNode);
         IDatabasePlatform platform = db.getPlatform();
         TypedProperties nodeProperties = treeNode.getProperties();
-        return platform.getTableFromCache(nodeProperties.get("catalogName"),
-                nodeProperties.get("schemaName"), treeNode.getName(), false);
+        return platform.getTableFromCache(nodeProperties.get("catalogName"), nodeProperties.get("schemaName"), treeNode.getName(), false);
     }
 
     protected Set<Table> getTablesFor(Set<TreeNode> nodes) {
@@ -364,34 +360,38 @@ public class SqlExplorer extends HorizontalSplitPanel {
     }
 
     private void dropTables(final List<Table> tables, final Map<Table, TreeNode> tableToTreeNode) {
-        final Table table = tables.remove(0);
-        ConfirmDialog.show("Drop " + table.getFullyQualifiedTableName() + "?",
-                "Do you want to drop " + table.getFullyQualifiedTableName() + "?",
-                new IConfirmListener() {
-                    private static final long serialVersionUID = 1L;
+        String msg = null;
+        if (tables.size() > 1) {
+            msg = "Do you want to drop " + tables.size() + " tables?";
+        } else if (tables.size() == 1) {
+            Table table = tables.get(0);
+            msg = "Do you want to drop " + table.getFullyQualifiedTableName() + "?";
+        }
+        ConfirmDialog.show("Drop Tables?", msg, new IConfirmListener() {
+            private static final long serialVersionUID = 1L;
 
-                    @Override
-                    public boolean onOk() {
-                        TreeNode treeNode = tableToTreeNode.get(table);
-                        IDb db = dbTree.getDbForNode(treeNode);
-                        try {
-                            db.getPlatform().dropTables(false, table);
-                            if (tables.size() > 0) {
-                                dropTables(tables, tableToTreeNode);
-                            } else {
-                                dbTree.refresh();
-                            }
-                        } catch (Exception e) {
-                            String msg = "Failed to drop " + table.getFullyQualifiedTableName()
-                                    + ".  ";
-                            CommonUiUtils.notify(msg + "See log file for more details",
-                                    Type.WARNING_MESSAGE);
-                            log.warn(msg, e);
-                            dbTree.refresh();
-                        }
-                        return true;
+            @Override
+            public boolean onOk() {
+                for (Table table : tables) {
+                    TreeNode treeNode = tableToTreeNode.get(table);
+                    IDb db = dbTree.getDbForNode(treeNode);
+                    try {
+                        db.getPlatform().dropTables(false, table);
+                    } catch (Exception e) {
+                        String msg = "Failed to drop " + table.getFullyQualifiedTableName() + ".  ";
+                        CommonUiUtils.notify(msg + "See log file for more details", Type.WARNING_MESSAGE);
+                        log.warn(msg, e);
                     }
-                });
+                }
+                for (TableInfoPanel panel : tableInfoTabs) {
+                    contentTabs.removeComponent(panel);
+                }
+                tableInfoTabs.clear();
+                dbTree.refresh();
+                return true;
+
+            }
+        });
     }
 
     protected DbTree buildDbTree() {
@@ -407,8 +407,9 @@ public class SqlExplorer extends HorizontalSplitPanel {
                     String selectedTabCaption = null;
                     for (TableInfoPanel panel : tableInfoTabs) {
                         selectedTabCaption = panel.getSelectedTabCaption();
-                        contentTabs.removeComponent(panel);                        
+                        contentTabs.removeComponent(panel);
                     }
+                    tableInfoTabs.clear();
                     if (nodes.size() > 0) {
                         TreeNode treeNode = nodes.iterator().next();
                         if (treeNode != null && DbTree.NODE_TYPE_TABLE.equals(treeNode.getType())) {
@@ -416,15 +417,14 @@ public class SqlExplorer extends HorizontalSplitPanel {
                             if (table != null) {
                                 IDb db = dbTree.getDbForNode(treeNode);
                                 TableInfoPanel tableInfoTab = new TableInfoPanel(table, user, db, settingsProvider.get(), selectedTabCaption);
-                                Tab tab = contentTabs.addTab(tableInfoTab,
-                                        table.getFullyQualifiedTableName(), FontAwesome.TABLE, 0);
+                                Tab tab = contentTabs.addTab(tableInfoTab, table.getFullyQualifiedTableName(), FontAwesome.TABLE, 0);
                                 tab.setClosable(true);
                                 selectContentTab(tableInfoTab);
                                 tableInfoTabs.add(tableInfoTab);
                             }
-                        }                        
+                        }
                     }
-                    
+
                     for (TreeNode treeNode : nodes) {
                         IDb db = dbTree.getDbForNode(treeNode);
                         QueryPanel panel = getQueryPanelForDb(db);
@@ -442,8 +442,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             public void handle(Set<TreeNode> nodes) {
                 openQueryWindow(nodes);
             }
-        }, DbTree.NODE_TYPE_DATABASE, DbTree.NODE_TYPE_CATALOG, DbTree.NODE_TYPE_SCHEMA,
-                DbTree.NODE_TYPE_TABLE);
+        }, DbTree.NODE_TYPE_DATABASE, DbTree.NODE_TYPE_CATALOG, DbTree.NODE_TYPE_SCHEMA, DbTree.NODE_TYPE_TABLE);
 
         tree.registerAction(new DbTreeAction("Select", QUERY_ICON) {
             private static final long serialVersionUID = 1L;
@@ -509,8 +508,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             public void handle(Set<TreeNode> nodes) {
                 if (nodes.size() > 0) {
                     IDb db = dbTree.getDbForNode(nodes.iterator().next());
-                    new DbExportDialog(db.getPlatform(), getTablesFor(nodes),
-                            findQueryPanelForDb(db)).showAtSize(0.6);
+                    new DbExportDialog(db.getPlatform(), getTablesFor(nodes), findQueryPanelForDb(db)).showAtSize(0.6);
                 }
             }
         }, DbTree.NODE_TYPE_TABLE);
@@ -522,8 +520,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             public void handle(Set<TreeNode> nodes) {
                 if (nodes.size() > 0) {
                     IDb db = dbTree.getDbForNode(nodes.iterator().next());
-                    new DbFillDialog(db.getPlatform(), getTablesFor(nodes), findQueryPanelForDb(db))
-                            .showAtSize(0.6);
+                    new DbFillDialog(db.getPlatform(), getTablesFor(nodes), findQueryPanelForDb(db)).showAtSize(0.6);
                 }
 
             }
@@ -534,7 +531,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
             @Override
             public void handle(Set<TreeNode> nodes) {
-                
+
                 for (TreeNode treeNode : nodes) {
                     IDb db = dbTree.getDbForNode(nodes.iterator().next());
                     DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
@@ -555,14 +552,14 @@ public class SqlExplorer extends HorizontalSplitPanel {
         return tree;
 
     }
-    
+
     protected QueryPanel getQueryPanelForDb(IDb db) {
         if (db != null) {
             Iterator<Component> i = contentTabs.iterator();
             while (i.hasNext()) {
                 Component c = i.next();
                 if (c instanceof QueryPanel) {
-                    QueryPanel panel = (QueryPanel)c;
+                    QueryPanel panel = (QueryPanel) c;
                     if (panel.getDb().getName().equals(db.getName())) {
                         return panel;
                     }
@@ -599,11 +596,11 @@ public class SqlExplorer extends HorizontalSplitPanel {
         }
         return tabName;
     }
-    
+
     public ISettingsProvider getSettingsProvider() {
         return settingsProvider;
     }
-    
+
     public IDbProvider getDatabaseProvider() {
         return databaseProvider;
     }
