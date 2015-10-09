@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.Serializable;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,23 +51,23 @@ public class DefaultSettingsProvider implements ISettingsProvider, Serializable 
 
     public Settings load() {
         synchronized (getClass()) {
-            File historyFile = getSettingsFile();
-            if (historyFile.exists()) {
+            File file = getSettingsFile();
+            if (file.exists() && file.length() > 0) {
                 FileInputStream is = null;
                 try {
-                    is = new FileInputStream(historyFile);
+                    is = new FileInputStream(file);
                     XMLDecoder decoder = new XMLDecoder(is);
-                    settings = (Settings) decoder.readObject();
+                    Settings settings = (Settings) decoder.readObject();
                     decoder.close();
+                    return settings;
                 } catch (Exception ex) {
-                    log.error(ex.getMessage(), ex);
+                    log.error("Failed to load settings", ex);
+                    FileUtils.deleteQuietly(file);
                 } finally {
                     IOUtils.closeQuietly(is);
                 }
-            } else {
-                settings = new Settings();
             }
-            return settings;
+            return new Settings();
         }
     }
 
