@@ -1,15 +1,17 @@
-package org.jumpmind.symmetric.ui.common;
+package org.jumpmind.symmetric.ui.sqlexplorer;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.jumpmind.db.model.Table;
+import org.jumpmind.db.platform.IDatabasePlatform;
 import org.jumpmind.properties.TypedProperties;
 
 import com.vaadin.server.Resource;
 
-public class TreeNode implements Serializable {
+public class DbTreeNode implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -23,25 +25,28 @@ public class TreeNode implements Serializable {
     
     protected TypedProperties properties = new TypedProperties();
     
-    protected TreeNode parent;
+    protected DbTreeNode parent;
 
-    protected List<TreeNode> children = new ArrayList<TreeNode>();
+    protected List<DbTreeNode> children = new ArrayList<DbTreeNode>();
+    
+    protected DbTree dbTree;
 
-    public TreeNode(String name, String type, Resource icon, TreeNode parent) {
+    public DbTreeNode(DbTree dbTree, String name, String type, Resource icon, DbTreeNode parent) {
         this.name = name;
         this.type = type;
         this.parent = parent;
         this.icon = icon;
+        this.dbTree = dbTree;
     }
 
-    public TreeNode() {
+    public DbTreeNode() {
     }
     
-    public void setParent(TreeNode parent) {
+    public void setParent(DbTreeNode parent) {
         this.parent = parent;
     }
     
-    public TreeNode getParent() {
+    public DbTreeNode getParent() {
         return parent;
     }
 
@@ -70,28 +75,28 @@ public class TreeNode implements Serializable {
         return children.size() > 0;
     }
 
-    public List<TreeNode> getChildren() {
+    public List<DbTreeNode> getChildren() {
         return children;
     }
 
-    public void setChildren(List<TreeNode> children) {
+    public void setChildren(List<DbTreeNode> children) {
         this.children = children;
     }
 
-    public TreeNode find(TreeNode node) {
+    public DbTreeNode find(DbTreeNode node) {
         if (this.equals(node)) {
             return this;
         } else if (children != null && children.size() > 0) {
-            Iterator<TreeNode> it = children.iterator();
+            Iterator<DbTreeNode> it = children.iterator();
             while (it.hasNext()) {
-                TreeNode child = (TreeNode) it.next();
+                DbTreeNode child = (DbTreeNode) it.next();
                 if (child.equals(node)) {
                     return child;
                 }
             }
 
-            for (TreeNode child : children) {
-                TreeNode target = child.find(node);
+            for (DbTreeNode child : children) {
+                DbTreeNode target = child.find(node);
                 if (target != null) {
                     return target;
                 }
@@ -100,19 +105,27 @@ public class TreeNode implements Serializable {
 
         return null;
     }
+    
+    protected Table getTableFor() {
+        IDb db = dbTree.getDbForNode(this);
+        IDatabasePlatform platform = db.getPlatform();
+        TypedProperties nodeProperties = getProperties();
+        return platform.getTableFromCache(nodeProperties.get(DbTree.PROPERTY_CATALOG_NAME), 
+                nodeProperties.get(DbTree.PROPERTY_SCHEMA_NAME), name, false);
+    }
 
-    public boolean delete(TreeNode node) {
+    public boolean delete(DbTreeNode node) {
         if (children != null && children.size() > 0) {
-            Iterator<TreeNode> it = children.iterator();
+            Iterator<DbTreeNode> it = children.iterator();
             while (it.hasNext()) {
-                TreeNode child = (TreeNode) it.next();
+                DbTreeNode child = (DbTreeNode) it.next();
                 if (child.equals(node)) {
                     it.remove();
                     return true;
                 }
             }
 
-            for (TreeNode child : children) {
+            for (DbTreeNode child : children) {
                 if (child.delete(node)) {
                     return true;
                 }
@@ -147,8 +160,8 @@ public class TreeNode implements Serializable {
         return names;
     }
 
-    public void findTreeNodeNamesOfType(String type, List<TreeNode> treeNodes, List<String> names) {
-        for (TreeNode treeNode : treeNodes) {
+    public void findTreeNodeNamesOfType(String type, List<DbTreeNode> treeNodes, List<String> names) {
+        for (DbTreeNode treeNode : treeNodes) {
             if (treeNode.getType().equals(type)) {
                 names.add(treeNode.getName());
             }
@@ -183,7 +196,7 @@ public class TreeNode implements Serializable {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        TreeNode other = (TreeNode) obj;
+        DbTreeNode other = (DbTreeNode) obj;
         if (name == null) {
             if (other.name != null)
                 return false;

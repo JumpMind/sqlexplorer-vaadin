@@ -18,11 +18,9 @@ import org.jumpmind.db.sql.DmlStatement;
 import org.jumpmind.db.sql.DmlStatement.DmlType;
 import org.jumpmind.db.sql.Row;
 import org.jumpmind.db.util.BinaryEncoding;
-import org.jumpmind.properties.TypedProperties;
 import org.jumpmind.symmetric.ui.common.CommonUiUtils;
 import org.jumpmind.symmetric.ui.common.ConfirmDialog;
 import org.jumpmind.symmetric.ui.common.ConfirmDialog.IConfirmListener;
-import org.jumpmind.symmetric.ui.common.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -226,7 +224,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
         selected = tab;
     }
 
-    protected QueryPanel openQueryWindow(TreeNode node) {
+    protected QueryPanel openQueryWindow(DbTreeNode node) {
         return openQueryWindow(dbTree.getDbForNode(node));
     }
 
@@ -242,9 +240,9 @@ public class SqlExplorer extends HorizontalSplitPanel {
         return panel;
     }
 
-    protected void openQueryWindow(Set<TreeNode> nodes) {
+    protected void openQueryWindow(Set<DbTreeNode> nodes) {
         Set<String> dbNames = new HashSet<String>();
-        for (TreeNode node : nodes) {
+        for (DbTreeNode node : nodes) {
             IDb db = dbTree.getDbForNode(node);
             String dbName = db.getName();
             if (!dbNames.contains(dbName)) {
@@ -288,43 +286,25 @@ public class SqlExplorer extends HorizontalSplitPanel {
     }
 
     protected void generateSelectForSelectedTables() {
-        Set<TreeNode> tableNodes = dbTree.getSelected(DbTree.NODE_TYPE_TABLE);
-        for (TreeNode treeNode : tableNodes) {
+        Set<DbTreeNode> tableNodes = dbTree.getSelected(DbTree.NODE_TYPE_TABLE);
+        for (DbTreeNode treeNode : tableNodes) {
             IDb db = dbTree.getDbForNode(treeNode);
             QueryPanel panel = findQueryPanelForDb(db);
             IDatabasePlatform platform = db.getPlatform();
-            Table table = getTableFor(treeNode);
+            Table table = treeNode.getTableFor();
             DmlStatement dmlStatement = platform.createDmlStatement(DmlType.SELECT_ALL, table, null);
             panel.appendSql(dmlStatement.getSql());
             contentTabs.setSelectedTab(panel);
         }
     }
 
-    protected Table getTableFor(TreeNode treeNode) {
-        IDb db = dbTree.getDbForNode(treeNode);
-        IDatabasePlatform platform = db.getPlatform();
-        TypedProperties nodeProperties = treeNode.getProperties();
-        return platform.getTableFromCache(nodeProperties.get("catalogName"), nodeProperties.get("schemaName"), treeNode.getName(), false);
-    }
-
-    protected Set<Table> getTablesFor(Set<TreeNode> nodes) {
-        Set<Table> tables = new HashSet<Table>();
-        for (TreeNode treeNode : nodes) {
-            Table table = getTableFor(treeNode);
-            if (table != null) {
-                tables.add(table);
-            }
-        }
-        return tables;
-    }
-
     protected void generateDmlForSelectedTables(DmlType dmlType) {
-        Set<TreeNode> tableNodes = dbTree.getSelected(DbTree.NODE_TYPE_TABLE);
-        for (TreeNode treeNode : tableNodes) {
+        Set<DbTreeNode> tableNodes = dbTree.getSelected(DbTree.NODE_TYPE_TABLE);
+        for (DbTreeNode treeNode : tableNodes) {
             IDb db = dbTree.getDbForNode(treeNode);
             QueryPanel panel = findQueryPanelForDb(db);
             IDatabasePlatform platform = db.getPlatform();
-            Table table = getTableFor(treeNode);
+            Table table = treeNode.getTableFor();
             DmlStatement dmlStatement = platform.createDmlStatement(dmlType, table, null);
             Row row = new Row(table.getColumnCount());
             Column[] columns = table.getColumns();
@@ -345,11 +325,11 @@ public class SqlExplorer extends HorizontalSplitPanel {
     }
 
     protected void dropSelectedTables() {
-        Set<TreeNode> tableNodes = dbTree.getSelected(DbTree.NODE_TYPE_TABLE);
+        Set<DbTreeNode> tableNodes = dbTree.getSelected(DbTree.NODE_TYPE_TABLE);
         List<Table> tables = new ArrayList<Table>();
-        Map<Table, TreeNode> tableToTreeNode = new HashMap<Table, TreeNode>();
-        for (TreeNode treeNode : tableNodes) {
-            Table table = getTableFor(treeNode);
+        Map<Table, DbTreeNode> tableToTreeNode = new HashMap<Table, DbTreeNode>();
+        for (DbTreeNode treeNode : tableNodes) {
+            Table table = treeNode.getTableFor();
             tables.add(table);
             tableToTreeNode.put(table, treeNode);
         }
@@ -359,7 +339,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
         dropTables(tables, tableToTreeNode);
     }
 
-    private void dropTables(final List<Table> tables, final Map<Table, TreeNode> tableToTreeNode) {
+    private void dropTables(final List<Table> tables, final Map<Table, DbTreeNode> tableToTreeNode) {
         String msg = null;
         if (tables.size() > 1) {
             msg = "Do you want to drop " + tables.size() + " tables?";
@@ -373,7 +353,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             @Override
             public boolean onOk() {
                 for (Table table : tables) {
-                    TreeNode treeNode = tableToTreeNode.get(table);
+                    DbTreeNode treeNode = tableToTreeNode.get(table);
                     IDb db = dbTree.getDbForNode(treeNode);
                     try {
                         db.getPlatform().dropTables(false, table);
@@ -402,7 +382,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
             @Override
             public void valueChange(ValueChangeEvent event) {
-                Set<TreeNode> nodes = dbTree.getSelected();
+                Set<DbTreeNode> nodes = dbTree.getSelected();
                 if (nodes != null) {
                     String selectedTabCaption = null;
                     for (TableInfoPanel panel : tableInfoTabs) {
@@ -411,9 +391,9 @@ public class SqlExplorer extends HorizontalSplitPanel {
                     }
                     tableInfoTabs.clear();
                     if (nodes.size() > 0) {
-                        TreeNode treeNode = nodes.iterator().next();
+                        DbTreeNode treeNode = nodes.iterator().next();
                         if (treeNode != null && DbTree.NODE_TYPE_TABLE.equals(treeNode.getType())) {
-                            Table table = getTableFor(treeNode);
+                            Table table = treeNode.getTableFor();
                             if (table != null) {
                                 IDb db = dbTree.getDbForNode(treeNode);
                                 TableInfoPanel tableInfoTab = new TableInfoPanel(table, user, db, settingsProvider.get(), selectedTabCaption);
@@ -425,7 +405,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
                         }
                     }
 
-                    for (TreeNode treeNode : nodes) {
+                    for (DbTreeNode treeNode : nodes) {
                         IDb db = dbTree.getDbForNode(treeNode);
                         QueryPanel panel = getQueryPanelForDb(db);
                         if (panel == null && db != null) {
@@ -439,7 +419,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void handle(Set<TreeNode> nodes) {
+            public void handle(Set<DbTreeNode> nodes) {
                 openQueryWindow(nodes);
             }
         }, DbTree.NODE_TYPE_DATABASE, DbTree.NODE_TYPE_CATALOG, DbTree.NODE_TYPE_SCHEMA, DbTree.NODE_TYPE_TABLE);
@@ -448,7 +428,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void handle(Set<TreeNode> nodes) {
+            public void handle(Set<DbTreeNode> nodes) {
                 generateSelectForSelectedTables();
             }
         }, DbTree.NODE_TYPE_TABLE);
@@ -457,7 +437,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void handle(Set<TreeNode> nodes) {
+            public void handle(Set<DbTreeNode> nodes) {
                 generateDmlForSelectedTables(DmlType.INSERT);
             }
         }, DbTree.NODE_TYPE_TABLE);
@@ -466,7 +446,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void handle(Set<TreeNode> nodes) {
+            public void handle(Set<DbTreeNode> nodes) {
                 generateDmlForSelectedTables(DmlType.UPDATE);
             }
         }, DbTree.NODE_TYPE_TABLE);
@@ -475,7 +455,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void handle(Set<TreeNode> nodes) {
+            public void handle(Set<DbTreeNode> nodes) {
                 generateDmlForSelectedTables(DmlType.DELETE);
             }
         }, DbTree.NODE_TYPE_TABLE);
@@ -484,7 +464,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void handle(Set<TreeNode> nodes) {
+            public void handle(Set<DbTreeNode> nodes) {
                 dropSelectedTables();
             }
         }, DbTree.NODE_TYPE_TABLE);
@@ -493,10 +473,10 @@ public class SqlExplorer extends HorizontalSplitPanel {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void handle(Set<TreeNode> nodes) {
+            public void handle(Set<DbTreeNode> nodes) {
                 if (nodes.size() > 0) {
                     IDb db = dbTree.getDbForNode(nodes.iterator().next());
-                    new DbImportDialog(db.getPlatform(), getTablesFor(nodes)).showAtSize(0.6);
+                    new DbImportDialog(db.getPlatform(), dbTree.getSelectedTables()).showAtSize(0.6);
                 }
             }
         }, DbTree.NODE_TYPE_TABLE);
@@ -505,10 +485,10 @@ public class SqlExplorer extends HorizontalSplitPanel {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void handle(Set<TreeNode> nodes) {
+            public void handle(Set<DbTreeNode> nodes) {
                 if (nodes.size() > 0) {
                     IDb db = dbTree.getDbForNode(nodes.iterator().next());
-                    new DbExportDialog(db.getPlatform(), getTablesFor(nodes), findQueryPanelForDb(db)).showAtSize(0.6);
+                    new DbExportDialog(db.getPlatform(), dbTree.getSelectedTables(), findQueryPanelForDb(db)).showAtSize(0.6);
                 }
             }
         }, DbTree.NODE_TYPE_TABLE);
@@ -517,10 +497,10 @@ public class SqlExplorer extends HorizontalSplitPanel {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void handle(Set<TreeNode> nodes) {
+            public void handle(Set<DbTreeNode> nodes) {
                 if (nodes.size() > 0) {
                     IDb db = dbTree.getDbForNode(nodes.iterator().next());
-                    new DbFillDialog(db.getPlatform(), getTablesFor(nodes), findQueryPanelForDb(db)).showAtSize(0.6);
+                    new DbFillDialog(db.getPlatform(), dbTree.getSelectedTables(), findQueryPanelForDb(db)).showAtSize(0.6);
                 }
 
             }
@@ -530,16 +510,16 @@ public class SqlExplorer extends HorizontalSplitPanel {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void handle(Set<TreeNode> nodes) {
+            public void handle(Set<DbTreeNode> nodes) {
 
-                for (TreeNode treeNode : nodes) {
+                for (DbTreeNode treeNode : nodes) {
                     IDb db = dbTree.getDbForNode(nodes.iterator().next());
                     DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
                     final String quote = dbInfo.getDelimiterToken();
                     final String catalogSeparator = dbInfo.getCatalogSeparator();
                     final String schemaSeparator = dbInfo.getSchemaSeparator();
 
-                    Table table = getTableFor(treeNode);
+                    Table table = treeNode.getTableFor();
                     if (table != null) {
                         QueryPanel panel = findQueryPanelForDb(db);
                         panel.appendSql(table.getQualifiedTableName(quote, catalogSeparator, schemaSeparator));
