@@ -1,11 +1,15 @@
 package org.jumpmind.symmetric.ui.sqlexplorer;
 
+import java.io.Serializable;
+
 import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 
-public class DefaultButtonBar implements IButtonBar {
+public class DefaultButtonBar implements IButtonBar, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     MenuItem executeAtCursorButton;
 
