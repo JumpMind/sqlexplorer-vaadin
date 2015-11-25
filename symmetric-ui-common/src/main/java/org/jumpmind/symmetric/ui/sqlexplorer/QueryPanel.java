@@ -4,6 +4,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.jumpmind.symmetric.ui.sqlexplorer.Settings.SQL_EXPLORER_AUTO_COMMIT;
 import static org.jumpmind.symmetric.ui.sqlexplorer.Settings.SQL_EXPLORER_DELIMITER;
 
+import java.io.Serializable;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -131,11 +132,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
             }
         });
 
-        selectionChangeListener = new SelectionChangeListener() {
-            public void selectionChanged(SelectionChangeEvent e) {
-                // adding this seems to make the cursor position not flake out
-            }
-        };
+        selectionChangeListener = new DummyChangeListener();
         return editor;
     }
     
@@ -448,6 +445,14 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
             sql = sql.substring(0, sql.length() - 1);
         }
         return sql;
+    }
+    
+    class DummyChangeListener implements SelectionChangeListener, Serializable {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void selectionChanged(SelectionChangeEvent e) {
+        }
     }
 
 }
