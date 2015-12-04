@@ -1,7 +1,7 @@
 import org.apache.tools.ant.filters.FixCrLfFilter
 import org.apache.tools.ant.filters.ReplaceTokens
 
-group = 'org.jumpmind.symmetric'
+group = 'org.jumpmind.vaadin'
 
 buildscript {
     repositories { 
