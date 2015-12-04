@@ -1,2 +1,2 @@
-symmetric-common
+Sql Explorer
 ================
