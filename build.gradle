@@ -23,9 +23,14 @@ apply plugin: 'propdeps-maven'
 apply plugin: 'propdeps-eclipse'
 apply plugin: 'license'
 
-
 sourceCompatibility=1.6
 targetCompatibility=1.6
+
+repositories {
+    mavenCentral()
+    maven { url "http://maven.jumpmind.com/repo" }
+    maven { url "http://maven.vaadin.com/vaadin-addons" }
+}
 
 compileJava { options.bootClasspath = "${System.getProperty('java.home')}/lib/rt.jar" }
 
@@ -57,10 +62,11 @@ ext {
 
 configurations { deployerJars }
 
-repositories {
-    mavenCentral()
-    maven { url "http://maven.jumpmind.com/repo" }
-    maven { url "http://maven.vaadin.com/vaadin-addons" }
+license {
+    header rootProject.file('HEADER')
+    strictCheck true
+    includes(["**/*.java", "**/*.properties", "**/*.xml"])
+    excludes(["**/AppWidgetSet.gwt.xml"])
 }
 
 task sourcesJar(type: Jar, dependsOn:classes) {
