@@ -20,8 +20,9 @@
  */
 package org.jumpmind.vaadin.ui.sqlexplorer;
 
+import java.io.Serializable;
 
-public interface IButtonBar {
+public interface IButtonBar extends Serializable {
     
     public void setExecuteScriptButtonEnabled(boolean enabled);
     

@@ -20,7 +20,9 @@
  */
 package org.jumpmind.vaadin.ui.sqlexplorer;
 
-public interface ISettingsProvider {
+import java.io.Serializable;
+
+public interface ISettingsProvider extends Serializable {
 
     public void save(Settings settings);
     

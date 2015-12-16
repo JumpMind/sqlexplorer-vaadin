@@ -20,9 +20,11 @@
  */
 package org.jumpmind.vaadin.ui.sqlexplorer;
 
+import java.io.Serializable;
+
 import org.jumpmind.db.platform.IDatabasePlatform;
 
-public interface IDb  {
+public interface IDb extends Serializable  {
 
     public String getName();
     
