@@ -22,11 +22,11 @@ dependencies {
 ```
 
 <p align="center">
-  <img src='screenshots/screenshot2.png?raw=true' />
+  <img src='src/test/screenshots/screenshot2.png?raw=true' />
 </p>
 
 <p align="center">
-  <img src='screenshots/screenshot1.png?raw=true' />
+  <img src='scr/test/screenshots/screenshot1.png?raw=true' />
 </p>
 
 
