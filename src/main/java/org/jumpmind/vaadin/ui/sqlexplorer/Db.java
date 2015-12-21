@@ -24,6 +24,8 @@ import org.jumpmind.db.platform.IDatabasePlatform;
 
 public class Db implements IDb {
 
+    private static final long serialVersionUID = 1L;
+    
     String name;
     IDatabasePlatform platform;
 

@@ -35,6 +35,7 @@ import org.jumpmind.vaadin.ui.common.ResizableWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractLayout;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -74,7 +75,9 @@ public class SettingsDialog extends ResizableWindow {
 
     protected AbstractLayout createSettingsLayout() {
         VerticalLayout layout = new VerticalLayout();
-        layout.setMargin(true);
+        layout.setSizeFull();
+        layout.setMargin(new MarginInfo(false, true, false, true));
+        layout.addStyleName("v-scrollable");
         FormLayout settingsLayout = new FormLayout();
 
         Settings settings = settingsProvider.get();
