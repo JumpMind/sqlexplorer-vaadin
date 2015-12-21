@@ -102,6 +102,7 @@ vaadin.manageDependencies = false
 vaadin.plugin.logToConsole = true
 vaadin.push = true
 sourceSets.main.compileClasspath += [configurations.provided]
+jar.baseName='sqlexplorer-vaadin'
 
 artifacts {
    archives file("$buildDir/libs/${jar.baseName}-${jar.version}.${jar.extension}")
