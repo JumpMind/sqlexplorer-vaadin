@@ -1,5 +1,5 @@
 #Introduction
-This library provides a sql explorer component that can be used in Vaadin applications.
+This library provides a sql explorer component that can be used in Vaadin applications.  This component is used by the Metl and SymmetricDS Pro applications.
 
 # Usage
 
