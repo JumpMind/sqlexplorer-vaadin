@@ -2,6 +2,7 @@ import org.apache.tools.ant.filters.FixCrLfFilter
 import org.apache.tools.ant.filters.ReplaceTokens
 
 group = 'org.jumpmind.vaadin'
+name='sqlexplorer-vaadin'
 
 buildscript {
     repositories { 
@@ -102,7 +103,6 @@ vaadin.manageDependencies = false
 vaadin.plugin.logToConsole = true
 vaadin.push = true
 sourceSets.main.compileClasspath += [configurations.provided]
-jar.baseName='sqlexplorer-vaadin'
 
 artifacts {
    archives file("$buildDir/libs/${jar.baseName}-${jar.version}.${jar.extension}")
