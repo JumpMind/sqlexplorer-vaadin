@@ -26,7 +26,7 @@ dependencies {
 </p>
 
 <p align="center">
-  <img src='scr/test/screenshots/screenshot1.png?raw=true' />
+  <img src='src/test/screenshots/screenshot1.png?raw=true' />
 </p>
 
 
