@@ -214,8 +214,7 @@ public class TabularResultLayout extends VerticalLayout {
                                         if (track == 0) {
                                             sql.append(col.getName() + "=" + typeValueList.get(i));
                                         } else {
-                                            sql.append(" and " + col.getName() + "=" + typeValueList.get(i));
-
+                                            sql.append(" and ").append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
                                         }
                                         track++;
                                     }
