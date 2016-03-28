@@ -196,9 +196,9 @@ public class TabularResultLayout extends VerticalLayout {
 
                                 for (int i = 1; i < columnHeaders.length; i++) {
                                     if (i == 1) {
-                                        sql.append(columnHeaders[i]);
+                                        sql.append(quote).append(columnHeaders[i]).append(quote);
                                     } else {
-                                        sql.append(", " + columnHeaders[i]);
+                                        sql.append(", ").append(quote).append(columnHeaders[i]).append(quote);
                                     }
                                 }
 
