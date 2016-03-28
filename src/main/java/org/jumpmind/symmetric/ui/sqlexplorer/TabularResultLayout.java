@@ -164,7 +164,7 @@ public class TabularResultLayout extends VerticalLayout {
                 public void handleAction(Action action, Object sender, Object target) {
                     try {
                         DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
-                        final String quote = dbInfo.getDelimiterToken();
+                        final String quote = db.getPlatform().getDdlBuilder().isDelimitedIdentifierModeOn() ? dbInfo.getDelimiterToken() : "";
                         final String catalogSeparator = dbInfo.getCatalogSeparator();
                         final String schemaSeparator = dbInfo.getSchemaSeparator();
 
@@ -469,6 +469,16 @@ public class TabularResultLayout extends VerticalLayout {
             }
             try {
                 resultTable = db.getPlatform().getTableFromCache(catalogName, schemaName, tableName, false);
+                if (resultTable != null) {
+                    tableName = resultTable.getName();
+                    if (isNotBlank(catalogName) && isNotBlank(resultTable.getCatalog())) {
+                        catalogName = resultTable.getCatalog();
+                    }
+                    if (isNotBlank(schemaName) && isNotBlank(resultTable.getSchema())) {
+                        schemaName = resultTable.getSchema();
+                    }
+
+                }
             } catch (Exception e) {
                 log.debug("Failed to lookup table: " + tableName, e);
             }
