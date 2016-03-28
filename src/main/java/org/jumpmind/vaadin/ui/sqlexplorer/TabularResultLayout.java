@@ -65,6 +65,7 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 
+
 public class TabularResultLayout extends VerticalLayout {
 
     private static final long serialVersionUID = 1L;
@@ -216,9 +217,9 @@ public class TabularResultLayout extends VerticalLayout {
 
                                 for (int i = 1; i < columnHeaders.length; i++) {
                                     if (i == 1) {
-                                        sql.append(columnHeaders[i]);
+                                        sql.append(quote).append(columnHeaders[i]).append(quote);
                                     } else {
-                                        sql.append(", " + columnHeaders[i]);
+                                        sql.append(", ").append(quote).append(columnHeaders[i]).append(quote);
                                     }
                                 }
 
@@ -234,8 +235,7 @@ public class TabularResultLayout extends VerticalLayout {
                                         if (track == 0) {
                                             sql.append(col.getName() + "=" + typeValueList.get(i));
                                         } else {
-                                            sql.append(" and " + col.getName() + "=" + typeValueList.get(i));
-
+                                            sql.append(" and ").append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
                                         }
                                         track++;
                                     }
@@ -249,9 +249,9 @@ public class TabularResultLayout extends VerticalLayout {
 
                                 for (int i = 1; i < columnHeaders.length; i++) {
                                     if (i == 1) {
-                                        sql.append(columnHeaders[i]);
+                                        sql.append(quote + columnHeaders[i] + quote);
                                     } else {
-                                        sql.append(", " + columnHeaders[i]);
+                                        sql.append(", " + quote + columnHeaders[i] + quote);
                                     }
                                 }
                                 sql.append(") VALUES (");
@@ -273,9 +273,9 @@ public class TabularResultLayout extends VerticalLayout {
                                         catalogSeparator, schemaSeparator) + " SET ");
                                 for (int i = 1; i < columnHeaders.length; i++) {
                                     if (i == 1) {
-                                        sql.append(columnHeaders[i]).append("=");
+                                        sql.append(quote).append(columnHeaders[i]).append(quote).append("=");
                                     } else {
-                                        sql.append(", ").append(columnHeaders[i]).append("=");
+                                        sql.append(", ").append(quote).append(columnHeaders[i]).append(quote).append("=");
                                     }
 
                                     sql.append(typeValueList.get(i - 1));
@@ -288,9 +288,9 @@ public class TabularResultLayout extends VerticalLayout {
                                     Column col = resultTable.getColumn(i);
                                     if (col.isPrimaryKey()) {
                                         if (track == 0) {
-                                            sql.append(col.getName()).append("=").append(typeValueList.get(i));
+                                            sql.append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
                                         } else {
-                                            sql.append(" and ").append(col.getName()).append("=").append(typeValueList.get(i));
+                                            sql.append(" and ").append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
                                         }
                                         track++;
                                     }
@@ -307,9 +307,9 @@ public class TabularResultLayout extends VerticalLayout {
                                     Column col = resultTable.getColumn(i);
                                     if (col.isPrimaryKey()) {
                                         if (track == 0) {
-                                            sql.append(col.getName()).append("=").append(typeValueList.get(i));
+                                            sql.append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
                                         } else {
-                                            sql.append(" and ").append(col.getName()).append("=").append(typeValueList.get(i));
+                                            sql.append(" and ").append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
                                         }
                                         track++;
                                     }
