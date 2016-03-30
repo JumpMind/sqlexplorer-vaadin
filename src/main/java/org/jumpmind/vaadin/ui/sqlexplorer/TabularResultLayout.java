@@ -66,6 +66,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 
 
+
 public class TabularResultLayout extends VerticalLayout {
 
     private static final long serialVersionUID = 1L;
