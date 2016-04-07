@@ -9,3 +9,11 @@
 .sqlexplorer .v-tabsheet-deco {
     visibility: hidden;
 }
+
+.sqlexplorer .v-menubar-borderless .v-menubar-menuitem.v-menubar-menuitem-green {
+    color: #76aa2e;
+}
+
+.sqlexplorer .v-menubar-borderless .v-menubar-menuitem.v-menubar-menuitem-red {
+    color: #E84855;
+}

@@ -95,6 +95,7 @@ public class DefaultButtonBar implements IButtonBar, Serializable {
                 queryPanel.commit();
             }
         });
+        commitButton.setStyleName("green");
         commitButton.setDescription("Commit");
         commitButton.setEnabled(false);
 
@@ -107,6 +108,7 @@ public class DefaultButtonBar implements IButtonBar, Serializable {
                 queryPanel.rollback();
             }
         });
+        rollbackButton.setStyleName("red");
         rollbackButton.setDescription("Rollback");
         rollbackButton.setEnabled(false);
 
