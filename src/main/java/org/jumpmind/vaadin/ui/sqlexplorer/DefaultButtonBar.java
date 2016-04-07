@@ -128,7 +128,7 @@ public class DefaultButtonBar implements IButtonBar, Serializable {
                 queryPanel.rollback();
             }
         });
-        commitButton.setStyleName("red");
+        rollbackButton.setStyleName("red");
         rollbackButton.setDescription("Rollback");
         rollbackButton.setEnabled(false);
 

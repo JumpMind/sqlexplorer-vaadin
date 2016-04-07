@@ -10,10 +10,10 @@
     visibility: hidden;
 }
 
-.sqlexplorer .v-menubar-menuitem-green {
-	color: #A8CD1B;
+.sqlexplorer .v-menubar-borderless .v-menubar-menuitem.v-menubar-menuitem-green {
+	color: #76aa2e;
 }
 
-.sqlexplorer .v-menubar-menuitem-red {
-    color: #800000;
+.sqlexplorer .v-menubar-borderless .v-menubar-menuitem.v-menubar-menuitem-red {
+    color: #E84855;
 }
