@@ -12,7 +12,7 @@ buildscript {
     dependencies { 
         classpath "org.springframework.build.gradle:propdeps-plugin:0.0.7"
         classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'     
-        classpath 'fi.jasoft.plugin:gradle-vaadin-plugin:0.10.4'        
+        classpath 'fi.jasoft.plugin:gradle-vaadin-plugin:0.10.7'        
     }    
 }
 
@@ -41,8 +41,8 @@ ext {
     log4jVersion = '1.2.17'
     slf4jVersion = '1.7.7'
     springVersion = '4.0.5.RELEASE'
-    vaadinVersion = '7.5.10'
-    jettyVersion = '9.3.6.v20151106'
+    vaadinVersion = '7.6.4'
+    jettyVersion = '9.3.8.v20160314'
     commonsLangVersion = '2.6'
     commonsDbcpVersion = '1.4'
     commonsIoVersion = '2.4'
@@ -146,9 +146,17 @@ dependencies {
     testCompile "org.mockito:mockito-all:1.9.5"
     testCompile "org.springframework:spring-test:$springVersion"
     testCompile "javax.servlet:javax.servlet-api:$servletVersion"
+    testCompile "javax.servlet.jsp:jsp-api:2.2"
+    testCompile "javax.websocket:javax.websocket-api:1.1"
+    
     testCompile "org.eclipse.jetty:jetty-webapp:$jettyVersion"
     testCompile "org.eclipse.jetty:jetty-jmx:$jettyVersion"
     testCompile "org.eclipse.jetty:jetty-annotations:$jettyVersion"
+    //testCompile "org.eclipse.jetty.websocket:websocket-servlet:$jettyVersion"
+    //testCompile "org.eclipse.jetty.websocket:websocket-server:$jettyVersion"
+    testCompile "org.eclipse.jetty.websocket:javax-websocket-server-impl:$jettyVersion"
+    
+
     testCompile "org.slf4j:slf4j-api:$slf4jVersion"
     testCompile "org.slf4j:jul-to-slf4j:$slf4jVersion"
     testCompile "org.slf4j:slf4j-log4j12:$slf4jVersion"

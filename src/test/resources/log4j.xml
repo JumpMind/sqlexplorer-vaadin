@@ -47,6 +47,9 @@
     <category name="org.springframework">
         <priority value="ERROR" />
     </category>
+    <category name="org.atmosphere">
+        <priority value="DEBUG" />
+    </category>    
     <root>
         <priority value="WARN" />
         <appender-ref ref="CONSOLE" />

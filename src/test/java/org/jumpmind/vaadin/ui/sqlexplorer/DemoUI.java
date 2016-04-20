@@ -6,10 +6,13 @@ import java.util.List;
 import javax.servlet.annotation.WebServlet;
 
 import org.apache.commons.dbcp.BasicDataSource;
+import org.atmosphere.container.JSR356AsyncSupport;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.Configuration;
 import org.eclipse.jetty.webapp.Configuration.ClassList;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.h2.Driver;
 import org.jumpmind.db.platform.IDatabasePlatform;
 import org.jumpmind.db.platform.JdbcDatabasePlatformFactory;
@@ -25,12 +28,13 @@ import com.vaadin.annotations.Title;
 import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.shared.communication.PushMode;
 import com.vaadin.ui.UI;
 
 @Title("SQL Explorer Demo")
-@Theme("valo")
+@Theme("sqlexplorer")
 @PreserveOnRefresh
-@Push
+@Push(value=PushMode.AUTOMATIC)
 public class DemoUI extends UI implements IDbProvider {
 
     static final Logger log = LoggerFactory.getLogger(DemoUI.class);
@@ -55,7 +59,7 @@ public class DemoUI extends UI implements IDbProvider {
     }
 
     @WebServlet(urlPatterns = "/*")
-    @VaadinServletConfiguration(ui = DemoUI.class, productionMode = true, widgetset = "org.jumpmind.vaadin.ui.sqlexplorer.AppWidgetSet")
+    @VaadinServletConfiguration(ui = DemoUI.class, productionMode = false, widgetset = "org.jumpmind.vaadin.ui.sqlexplorer.AppWidgetSet")
     public static class DemoUIServlet extends VaadinServlet {
         private static final long serialVersionUID = 1L;
     }
@@ -99,9 +103,12 @@ public class DemoUI extends UI implements IDbProvider {
         webapp.setConfigurationDiscovered(true);
         webapp.setContextPath("/");
         webapp.setResourceBase("src/main/webapp");
-        webapp.setWar("src/main/webapp");
-        webapp.addServlet(DemoUIServlet.class, "/*");
+        webapp.setWar("src/main/webapp");       
+        ServletHolder servletHolder = webapp.addServlet(DemoUIServlet.class, "/*");
+        servletHolder.setAsyncSupported(true);
+        servletHolder.setInitParameter("org.atmosphere.cpr.asyncSupport", JSR356AsyncSupport.class.getName());
         server.setHandler(webapp);
+        WebSocketServerContainerInitializer.configureContext(webapp);
         server.start();
         log.info("Browse http://localhost:9090 to see the demo");
         server.join();
