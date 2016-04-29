@@ -330,7 +330,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                                     connection = runner.getConnection();
                                 }
 
-                                addToSqlHistory(sql, runner.getStartTime(), executionTimeInMs, user);
+                                addToSqlHistory(StringUtils.abbreviate(sql, 1024*8), runner.getStartTime(), executionTimeInMs, user);
 
                                 for (Component resultComponent : results) {
                                     resultComponent.setSizeFull();
