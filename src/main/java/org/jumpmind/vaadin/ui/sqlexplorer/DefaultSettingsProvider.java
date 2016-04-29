@@ -20,6 +20,8 @@
  */
 package org.jumpmind.vaadin.ui.sqlexplorer;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.File;
@@ -38,12 +40,22 @@ public class DefaultSettingsProvider implements ISettingsProvider, Serializable 
 
     final Logger log = LoggerFactory.getLogger(getClass());
 
-    String dir;
+    File dir;
 
     Settings settings;
-
+    
     public DefaultSettingsProvider(String dir) {
-        this.dir = dir;
+        this(dir, null);
+    }
+
+    public DefaultSettingsProvider(String dir, String user) {
+        if (isNotBlank(user)) {
+            this.dir = new File(dir, user);
+            this.dir.mkdirs();
+        } else {
+            this.dir = new File(dir);
+            this.dir.mkdirs();
+        }
     }
 
     protected File getSettingsFile() {

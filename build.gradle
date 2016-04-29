@@ -133,7 +133,7 @@ dependencies {
     compile "com.vaadin:vaadin-server:$vaadinVersion"
     compile "com.vaadin:vaadin-push:$vaadinVersion"
     compile "com.vaadin:vaadin-themes:$vaadinVersion"
-    compile "org.vaadin.addons:aceeditor:0.8.13"
+    compile "org.vaadin.addons:aceeditor:0.8.14"
     compile "org.vaadin.addons:tableexport:1.4.0"
 
     provided ("com.vaadin:vaadin-client-compiler:$vaadinVersion") {

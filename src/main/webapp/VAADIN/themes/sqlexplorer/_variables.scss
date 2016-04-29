@@ -1,4 +1,4 @@
-$v-app-loading-text: "Light Valo";
+$v-app-loading-text: "Sql Explorer";
 
 $v-background-color: hsl(0, 0, 99.5%);
 $v-app-background-color: #fff;
@@ -15,10 +15,3 @@ $v-error-indicator-color: hsl(349, 66%, 56%);
 
 
 @import "../valo/valo";
-
-.tests-valo-light .valo-menu .valo-menu-title {
-  background: $v-app-background-color;
-  color: $v-selection-color;
-  text-shadow: none;
-  border-color: first-color(valo-border($color: $v-app-background-color, $strength: 0.5));
-}

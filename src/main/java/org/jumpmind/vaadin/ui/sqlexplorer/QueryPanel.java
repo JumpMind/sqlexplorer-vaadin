@@ -221,7 +221,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         if (history == null) {
             history = new SqlHistory();
             history.setSqlStatement(sqlStatement);
-            settings.getSqlHistory().add(history);
+            settings.addSqlHistory(history);
         }
         history.setLastExecuteDuration(executeDuration);
         history.setExecuteCount(history.getExecuteCount() + 1);

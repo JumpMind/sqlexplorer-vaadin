@@ -23,7 +23,7 @@ package org.jumpmind.vaadin.ui.sqlexplorer;
 import java.io.Serializable;
 import java.util.Date;
 
-public class SqlHistory implements Serializable {
+public class SqlHistory implements Serializable, Comparable<SqlHistory> {
 
     private static final long serialVersionUID = 1L;
 
@@ -71,6 +71,11 @@ public class SqlHistory implements Serializable {
 
     public void setExecuteCount(long executeCount) {
         this.executeCount = executeCount;
+    }
+    
+    @Override
+    public int compareTo(SqlHistory o) {
+        return -lastExecuteTime.compareTo(o.lastExecuteTime);
     }
 
 }

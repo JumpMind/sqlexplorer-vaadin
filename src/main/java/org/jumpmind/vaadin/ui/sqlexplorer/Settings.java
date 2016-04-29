@@ -41,6 +41,8 @@ public class Settings implements Serializable {
     public static final String SQL_EXPLORER_DELIMITER = "sql.explorer.delimiter";
 
     public static final String SQL_EXPLORER_MAX_RESULTS = "sql.explorer.max.results";
+    
+    public static final String SQL_EXPLORER_MAX_HISTORY = "sql.explorer.max.history";
 
     List<SqlHistory> sqlHistory = new ArrayList<SqlHistory>();
 
@@ -53,6 +55,7 @@ public class Settings implements Serializable {
         properties.put(SQL_EXPLORER_RESULT_AS_TEXT, "false");
         properties.put(SQL_EXPLORER_EXCLUDE_TABLES_REGEX, "(SYM_)\\w+");
         properties.put(SQL_EXPLORER_MAX_RESULTS, "1000");
+        properties.put(SQL_EXPLORER_MAX_HISTORY, "100");
     }
 
     public TypedProperties getProperties() {
@@ -61,6 +64,20 @@ public class Settings implements Serializable {
 
     public void setProperties(TypedProperties properties) {
         this.properties = properties;
+    }
+    
+    public void addSqlHistory(SqlHistory history) {
+        int maxSize = Integer.parseInt(properties.get(SQL_EXPLORER_MAX_HISTORY));
+        if (sqlHistory.size() > maxSize) {
+            SqlHistory oldest = null;
+            for (SqlHistory s : sqlHistory) {
+                if (oldest == null || oldest.getLastExecuteTime().before(s.getLastExecuteTime())) {
+                    oldest = s;
+                }
+            }
+            sqlHistory.remove(oldest);
+        }
+        sqlHistory.add(history);
     }
 
     public List<SqlHistory> getSqlHistory() {

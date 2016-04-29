@@ -98,11 +98,11 @@ public class SqlExplorer extends HorizontalSplitPanel {
     }
 
     public SqlExplorer(String configDir, IDbProvider databaseProvider, String user) {
-        this(configDir, databaseProvider, new DefaultSettingsProvider(configDir), user, DEFAULT_SPLIT_POS);
+        this(configDir, databaseProvider, new DefaultSettingsProvider(configDir, user), user, DEFAULT_SPLIT_POS);
     }
 
     public SqlExplorer(String configDir, IDbProvider databaseProvider, String user, float leftSplitPos) {
-        this(configDir, databaseProvider, new DefaultSettingsProvider(configDir), user, leftSplitPos);
+        this(configDir, databaseProvider, new DefaultSettingsProvider(configDir, user), user, leftSplitPos);
     }
 
     public SqlExplorer(String configDir, IDbProvider databaseProvider, ISettingsProvider settingsProvider, String user, float leftSplitSize) {

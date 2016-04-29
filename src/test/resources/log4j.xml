@@ -48,7 +48,7 @@
         <priority value="ERROR" />
     </category>
     <category name="org.atmosphere">
-        <priority value="DEBUG" />
+        <priority value="WARN" />
     </category>    
     <root>
         <priority value="WARN" />
