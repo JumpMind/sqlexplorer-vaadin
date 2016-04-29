@@ -39,7 +39,7 @@ compileJava { options.bootClasspath = "${System.getProperty('java.home')}/lib/rt
 ext {
 
     log4jVersion = '1.2.17'
-    slf4jVersion = '1.7.7'
+    slf4jVersion = '1.7.12'
     springVersion = '4.0.5.RELEASE'
     vaadinVersion = '7.6.4'
     jettyVersion = '9.3.8.v20160314'
