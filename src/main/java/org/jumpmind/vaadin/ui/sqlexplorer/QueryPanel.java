@@ -48,16 +48,17 @@ import com.vaadin.event.ShortcutAction.ModifierKey;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.VaadinSession;
+import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.Tab;
+import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Table;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
@@ -113,7 +114,8 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         resultsTabs = CommonUiUtils.createTabSheet();
 
         HorizontalLayout statusBar = new HorizontalLayout();
-        statusBar.setMargin(true);
+        statusBar.addStyleName(ValoTheme.PANEL_WELL);
+        statusBar.setMargin(new MarginInfo(true, true, true, true));
         statusBar.setWidth(100, Unit.PERCENTAGE);
 
         status = new Label("No Results");
@@ -280,12 +282,10 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
             HorizontalLayout executingLayout = new HorizontalLayout();
             executingLayout.setMargin(true);
             executingLayout.setSizeFull();
-            final ProgressBar p = new ProgressBar();
-            p.setIndeterminate(true);
-            final int oldPollInterval = UI.getCurrent().getPollInterval();
-            UI.getCurrent().setPollInterval(100);
-            executingLayout.addComponent(p);
-            executingLayout.setComponentAlignment(p, Alignment.MIDDLE_CENTER);
+            Label label = new Label("Executing:\n\n" + StringUtils.abbreviate(sqlText, 250), ContentMode.PREFORMATTED);
+            label.setEnabled(false);
+            executingLayout.addComponent(label);
+            executingLayout.setComponentAlignment(label, Alignment.TOP_LEFT);
 
             final String sql = sqlText;
             final Tab executingTab = resultsTabs.addTab(executingLayout,
@@ -366,7 +366,6 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                                 resultsTabs.removeTab(executingTab);
                                 runnersInProgress.remove(runner);
                                 runner.setListener(null);
-                                UI.getCurrent().setPollInterval(oldPollInterval);
                             }
                         }
                     });

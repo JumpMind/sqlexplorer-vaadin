@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.annotation.WebServlet;
+import javax.websocket.server.ServerContainer;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.atmosphere.container.JSR356AsyncSupport;
@@ -108,7 +109,8 @@ public class DemoUI extends UI implements IDbProvider {
         servletHolder.setAsyncSupported(true);
         servletHolder.setInitParameter("org.atmosphere.cpr.asyncSupport", JSR356AsyncSupport.class.getName());
         server.setHandler(webapp);
-        WebSocketServerContainerInitializer.configureContext(webapp);
+        ServerContainer webSocketServer = WebSocketServerContainerInitializer.configureContext(webapp);
+        webSocketServer.setDefaultMaxSessionIdleTimeout(10000000);        
         server.start();
         log.info("Browse http://localhost:9090 to see the demo");
         server.join();
