@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.jumpmind.vaadin.ui.common.AbbreviatorConverter;
 import org.jumpmind.vaadin.ui.common.CommonUiUtils;
 import org.jumpmind.vaadin.ui.common.DurationConverter;
 import org.jumpmind.vaadin.ui.common.ResizableWindow;
@@ -40,6 +41,8 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.HeaderCell;
 import com.vaadin.ui.Grid.HeaderRow;
+import com.vaadin.ui.Grid.RowDescriptionGenerator;
+import com.vaadin.ui.Grid.RowReference;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
@@ -72,7 +75,7 @@ public class SqlHistoryDialog extends ResizableWindow {
         table = new Grid();
         table.setImmediate(true);
 
-        table.addColumn("sqlStatement", String.class).setHeaderCaption("SQL");
+        table.addColumn("sqlStatement", String.class).setHeaderCaption("SQL").setConverter(new AbbreviatorConverter(50));
 
         table.addColumn("lastExecuteTime", Date.class).setHeaderCaption("Time").setWidth(150).setMaximumWidth(200)
                 .setRenderer(new DateRenderer("%1$tk:%1$tM:%1$tS:%1$tL"));
@@ -82,7 +85,15 @@ public class SqlHistoryDialog extends ResizableWindow {
         table.addColumn("executeCount", Long.class).setHeaderCaption("Count").setWidth(120);
         table.setEditorEnabled(false);
         table.setSelectionMode(SelectionMode.MULTI);
+        table.setRowDescriptionGenerator(new RowDescriptionGenerator() {
 
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public String getDescription(RowReference row) {
+                return (String) row.getItemId();
+            }
+        });
         final BeanContainer<String, SqlHistory> container = new BeanContainer<String, SqlHistory>(SqlHistory.class);
         container.setBeanIdProperty("sqlStatement");
 
