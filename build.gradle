@@ -41,7 +41,7 @@ ext {
     log4jVersion = '1.2.17'
     slf4jVersion = '1.7.12'
     springVersion = '4.0.5.RELEASE'
-    vaadinVersion = '7.6.4'
+    vaadinVersion = '7.6.5'
     jettyVersion = '9.3.8.v20160314'
     commonsLangVersion = '2.6'
     commonsDbcpVersion = '1.4'
@@ -134,7 +134,10 @@ dependencies {
     compile "com.vaadin:vaadin-push:$vaadinVersion"
     compile "com.vaadin:vaadin-themes:$vaadinVersion"
     compile "org.vaadin.addons:aceeditor:0.8.14"
-    compile "org.vaadin.addons:tableexport:1.4.0"
+    compile ("com.vaadin.addon:tableexport-for-vaadin:1.6.2") {
+       exclude (group:"org.vaadin.addons",module:"filteringtable")
+    }
+    compile "com.vaadin.addon:vaadin-context-menu:0.7.3"
 
     provided ("com.vaadin:vaadin-client-compiler:$vaadinVersion") {
        exclude group:'org.eclipse.jetty'

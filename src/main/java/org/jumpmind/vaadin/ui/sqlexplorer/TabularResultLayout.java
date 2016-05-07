@@ -28,9 +28,9 @@ import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_SHOW_ROW_
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.jumpmind.db.model.Column;
@@ -44,32 +44,39 @@ import org.jumpmind.vaadin.ui.sqlexplorer.SqlRunner.ISqlRunnerListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.addon.contextmenu.ContextMenu;
 import com.vaadin.addon.tableexport.CsvExport;
+import com.vaadin.addon.tableexport.DefaultTableHolder;
 import com.vaadin.addon.tableexport.ExcelExport;
+import com.vaadin.data.Item;
 import com.vaadin.data.Property;
-import com.vaadin.event.Action;
-import com.vaadin.event.Action.Handler;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
-
-
 
 public class TabularResultLayout extends VerticalLayout {
 
     private static final long serialVersionUID = 1L;
+
+    final String ACTION_SELECT = "Select From";
+
+    final String ACTION_INSERT = "Insert";
+
+    final String ACTION_UPDATE = "Update";
+
+    final String ACTION_DELETE = "Delete";
 
     final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -79,7 +86,7 @@ public class TabularResultLayout extends VerticalLayout {
 
     String schemaName;
 
-    Table table;
+    Grid table;
 
     org.jumpmind.db.model.Table resultTable;
 
@@ -168,176 +175,41 @@ public class TabularResultLayout extends VerticalLayout {
             table = putResultsInTable(settings.getProperties().getInt(SQL_EXPLORER_MAX_RESULTS));
             table.setSizeFull();
 
-            final String ACTION_SELECT = "Select From";
-
-            final String ACTION_INSERT = "Insert";
-
-            final String ACTION_UPDATE = "Update";
-
-            final String ACTION_DELETE = "Delete";
-
-            // TODO use dml statement
-            table.addActionHandler(new Handler() {
+            ContextMenu menu = new ContextMenu(table, true);
+            menu.addItem(ACTION_SELECT, new ContextMenu.Command() {
 
                 private static final long serialVersionUID = 1L;
 
-                @SuppressWarnings("unchecked")
                 @Override
-                public void handleAction(Action action, Object sender, Object target) {
-                    try {
-                        DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
-                        final String quote = db.getPlatform().getDdlBuilder().isDelimitedIdentifierModeOn() ? dbInfo.getDelimiterToken() : "";
-                        final String catalogSeparator = dbInfo.getCatalogSeparator();
-                        final String schemaSeparator = dbInfo.getSchemaSeparator();
-
-                        String[] columnHeaders = table.getColumnHeaders();
-                        Set<Integer> selectedRowsSet = (Set<Integer>) table.getValue();
-                        Iterator<Integer> setIterator = selectedRowsSet.iterator();
-                        while (setIterator.hasNext()) {
-                            List<Object> typeValueList = new ArrayList<Object>();
-                            int row = (Integer) setIterator.next();
-                            Iterator<?> iterator = table.getItem(row).getItemPropertyIds().iterator();
-                            iterator.next();
-
-                            for (int i = 1; i < columnHeaders.length; i++) {
-                                Object typeValue = table.getItem(row).getItemProperty(iterator.next()).getValue();
-                                if (typeValue instanceof String) {
-                                    if ("<null>".equals(typeValue) || "".equals(typeValue)) {
-                                        typeValue = "null";
-                                    } else {
-                                        typeValue = "'" + typeValue + "'";
-                                    }
-                                } else if (typeValue instanceof java.util.Date) {
-                                    typeValue = "{ts " + "'" + FormatUtils.TIMESTAMP_FORMATTER.format(typeValue) + "'" + "}";
-                                }
-                                typeValueList.add(typeValue);
-                            }
-
-                            if (action.getCaption().equals(ACTION_SELECT)) {
-                                StringBuilder sql = new StringBuilder("SELECT ");
-
-                                for (int i = 1; i < columnHeaders.length; i++) {
-                                    if (i == 1) {
-                                        sql.append(quote).append(columnHeaders[i]).append(quote);
-                                    } else {
-                                        sql.append(", ").append(quote).append(columnHeaders[i]).append(quote);
-                                    }
-                                }
-
-                                sql.append(" FROM " + org.jumpmind.db.model.Table.getFullyQualifiedTableName(catalogName, schemaName,
-                                        tableName, quote, catalogSeparator, schemaSeparator));
-
-                                sql.append(" WHERE ");
-
-                                int track = 0;
-                                for (int i = 0; i < resultTable.getColumnCount(); i++) {
-                                    Column col = resultTable.getColumn(i);
-                                    if (col.isPrimaryKey()) {
-                                        if (track == 0) {
-                                            sql.append(col.getName() + "=" + typeValueList.get(i));
-                                        } else {
-                                            sql.append(" and ").append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
-                                        }
-                                        track++;
-                                    }
-                                }
-                                sql.append(";");
-                                listener.writeSql(sql.toString());
-                            } else if (action.getCaption().equals(ACTION_INSERT)) {
-                                StringBuilder sql = new StringBuilder();
-                                sql.append("INSERT INTO ").append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(catalogName,
-                                        schemaName, tableName, quote, catalogSeparator, schemaSeparator)).append(" (");
-
-                                for (int i = 1; i < columnHeaders.length; i++) {
-                                    if (i == 1) {
-                                        sql.append(quote + columnHeaders[i] + quote);
-                                    } else {
-                                        sql.append(", " + quote + columnHeaders[i] + quote);
-                                    }
-                                }
-                                sql.append(") VALUES (");
-                                boolean first = true;
-                                for (int i = 1; i < columnHeaders.length; i++) {
-                                    if (first) {
-                                        first = false;
-                                    } else {
-                                        sql.append(", ");
-                                    }
-                                    sql.append(typeValueList.get(i - 1));
-                                }
-                                sql.append(");");
-                                listener.writeSql(sql.toString());
-
-                            } else if (action.getCaption().equals(ACTION_UPDATE)) {
-                                StringBuilder sql = new StringBuilder("UPDATE ");
-                                sql.append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(catalogName, schemaName, tableName, quote,
-                                        catalogSeparator, schemaSeparator) + " SET ");
-                                for (int i = 1; i < columnHeaders.length; i++) {
-                                    if (i == 1) {
-                                        sql.append(quote).append(columnHeaders[i]).append(quote).append("=");
-                                    } else {
-                                        sql.append(", ").append(quote).append(columnHeaders[i]).append(quote).append("=");
-                                    }
-
-                                    sql.append(typeValueList.get(i - 1));
-                                }
-
-                                sql.append(" WHERE ");
-
-                                int track = 0;
-                                for (int i = 0; i < resultTable.getColumnCount(); i++) {
-                                    Column col = resultTable.getColumn(i);
-                                    if (col.isPrimaryKey()) {
-                                        if (track == 0) {
-                                            sql.append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
-                                        } else {
-                                            sql.append(" and ").append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
-                                        }
-                                        track++;
-                                    }
-                                }
-                                sql.append(";");
-                                listener.writeSql(sql.toString());
-
-                            } else if (action.getCaption().equals(ACTION_DELETE)) {
-                                StringBuilder sql = new StringBuilder("DELETE FROM ");
-                                sql.append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(catalogName, schemaName, tableName, quote,
-                                        catalogSeparator, schemaSeparator)).append(" WHERE ");
-                                int track = 0;
-                                for (int i = 0; i < resultTable.getColumnCount(); i++) {
-                                    Column col = resultTable.getColumn(i);
-                                    if (col.isPrimaryKey()) {
-                                        if (track == 0) {
-                                            sql.append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
-                                        } else {
-                                            sql.append(" and ").append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
-                                        }
-                                        track++;
-                                    }
-                                }
-                                sql.append(";");
-                                listener.writeSql(sql.toString());
-                            }
-                        }
-                    } catch (Exception ex) {
-                        log.error(ex.getMessage(), ex);
-                        Notification.show(
-                                "There are an error while attempting to perform the action.  Please check the log file for further details.");
-                    }
+                public void menuSelected(com.vaadin.addon.contextmenu.MenuItem selectedItem) {
+                    handleAction(ACTION_SELECT);
                 }
+            });
+            menu.addItem(ACTION_INSERT, new ContextMenu.Command() {
+
+                private static final long serialVersionUID = 1L;
 
                 @Override
-                public Action[] getActions(Object target, Object sender) {
-                    List<Action> actions = new ArrayList<Action>();
+                public void menuSelected(com.vaadin.addon.contextmenu.MenuItem selectedItem) {
+                    handleAction(ACTION_INSERT);
+                }
+            });
+            menu.addItem(ACTION_UPDATE, new ContextMenu.Command() {
 
-                    if (resultTable != null) {
-                        actions.add(new Action(ACTION_SELECT));
-                        actions.add(new Action(ACTION_INSERT));
-                        actions.add(new Action(ACTION_UPDATE));
-                        actions.add(new Action(ACTION_DELETE));
-                    }
+                private static final long serialVersionUID = 1L;
 
-                    return actions.toArray(new Action[actions.size()]);
+                @Override
+                public void menuSelected(com.vaadin.addon.contextmenu.MenuItem selectedItem) {
+                    handleAction(ACTION_UPDATE);
+                }
+            });
+            menu.addItem(ACTION_DELETE, new ContextMenu.Command() {
+
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void menuSelected(com.vaadin.addon.contextmenu.MenuItem selectedItem) {
+                    handleAction(ACTION_DELETE);
                 }
             });
 
@@ -350,16 +222,19 @@ public class TabularResultLayout extends VerticalLayout {
                     if (event.isDoubleClick()) {
                         Object object = event.getPropertyId();
                         if (!object.toString().equals("")) {
-                            int column = (Integer) event.getPropertyId();
-                            String header = table.getColumnHeader(column);
-                            Property<?> p = event.getItem().getItemProperty(column);
-                            String data = String.valueOf(p.getValue());
-                            boolean binary = resultTable != null ? resultTable.getColumn(column - 1).isOfBinaryType() : false;
-                            if (binary) {
-                                ReadOnlyTextAreaDialog.show(header, data.toUpperCase(), binary);
-                            } else {
-                                ReadOnlyTextAreaDialog.show(header, data, binary);
+                            Object prop = event.getPropertyId();
+                            String header = table.getColumn(prop).getHeaderCaption();
+                            Property<?> p = event.getItem().getItemProperty(prop);
+                            if (p != null) {
+                                String data = String.valueOf(p.getValue());
+                                boolean binary = resultTable != null ? resultTable.getColumnWithName(header).isOfBinaryType() : false;
+                                if (binary) {
+                                    ReadOnlyTextAreaDialog.show(header, data.toUpperCase(), binary);
+                                } else {
+                                    ReadOnlyTextAreaDialog.show(header, data, binary);
+                                }
                             }
+                            
                         }
                     }
                 }
@@ -368,7 +243,7 @@ public class TabularResultLayout extends VerticalLayout {
             this.addComponent(table);
             this.setExpandRatio(table, 1);
 
-            int count = (table.getItemIds().size());
+            int count = (table.getContainerDataSource().getItemIds().size());
             int maxResultsSize = settings.getProperties().getInt(SQL_EXPLORER_MAX_RESULTS);
             if (count >= maxResultsSize) {
                 resultLabel.setValue("Limited to <span style='color: red'>" + maxResultsSize + "</span> rows;");
@@ -384,6 +259,152 @@ public class TabularResultLayout extends VerticalLayout {
             sqlLabel.setValue(StringUtils.abbreviate(sql, 200));
         }
 
+    }
+
+    protected void handleAction(String action) {
+        try {
+            DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
+            final String quote = db.getPlatform().getDdlBuilder().isDelimitedIdentifierModeOn() ? dbInfo.getDelimiterToken() : "";
+            final String catalogSeparator = dbInfo.getCatalogSeparator();
+            final String schemaSeparator = dbInfo.getSchemaSeparator();
+
+            String[] columnHeaders = CommonUiUtils.getHeaderCaptions(table);
+            Collection<Object> selectedRowsSet = table.getSelectedRows();
+            Iterator<Object> setIterator = selectedRowsSet.iterator();
+            while (setIterator.hasNext()) {
+                List<Object> typeValueList = new ArrayList<Object>();
+                int row = (Integer) setIterator.next();
+                Item item = table.getContainerDataSource().getItem(row);
+                Iterator<?> iterator = item.getItemPropertyIds().iterator();
+                iterator.next();
+
+                for (int i = 1; i < columnHeaders.length; i++) {
+                    Object typeValue = item.getItemProperty(iterator.next()).getValue();
+                    if (typeValue instanceof String) {
+                        if ("<null>".equals(typeValue) || "".equals(typeValue)) {
+                            typeValue = "null";
+                        } else {
+                            typeValue = "'" + typeValue + "'";
+                        }
+                    } else if (typeValue instanceof java.util.Date) {
+                        typeValue = "{ts " + "'" + FormatUtils.TIMESTAMP_FORMATTER.format(typeValue) + "'" + "}";
+                    }
+                    typeValueList.add(typeValue);
+                }
+
+                if (action.equals(ACTION_SELECT)) {
+                    StringBuilder sql = new StringBuilder("SELECT ");
+
+                    for (int i = 1; i < columnHeaders.length; i++) {
+                        if (i == 1) {
+                            sql.append(quote).append(columnHeaders[i]).append(quote);
+                        } else {
+                            sql.append(", ").append(quote).append(columnHeaders[i]).append(quote);
+                        }
+                    }
+
+                    sql.append(" FROM " + org.jumpmind.db.model.Table.getFullyQualifiedTableName(catalogName, schemaName, tableName, quote,
+                            catalogSeparator, schemaSeparator));
+
+                    sql.append(" WHERE ");
+
+                    int track = 0;
+                    for (int i = 0; i < resultTable.getColumnCount(); i++) {
+                        Column col = resultTable.getColumn(i);
+                        if (col.isPrimaryKey()) {
+                            if (track == 0) {
+                                sql.append(col.getName() + "=" + typeValueList.get(i));
+                            } else {
+                                sql.append(" and ").append(quote).append(col.getName()).append(quote).append("=")
+                                        .append(typeValueList.get(i));
+                            }
+                            track++;
+                        }
+                    }
+                    sql.append(";");
+                    listener.writeSql(sql.toString());
+                } else if (action.equals(ACTION_INSERT)) {
+                    StringBuilder sql = new StringBuilder();
+                    sql.append("INSERT INTO ").append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(catalogName, schemaName,
+                            tableName, quote, catalogSeparator, schemaSeparator)).append(" (");
+
+                    for (int i = 1; i < columnHeaders.length; i++) {
+                        if (i == 1) {
+                            sql.append(quote + columnHeaders[i] + quote);
+                        } else {
+                            sql.append(", " + quote + columnHeaders[i] + quote);
+                        }
+                    }
+                    sql.append(") VALUES (");
+                    boolean first = true;
+                    for (int i = 1; i < columnHeaders.length; i++) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            sql.append(", ");
+                        }
+                        sql.append(typeValueList.get(i - 1));
+                    }
+                    sql.append(");");
+                    listener.writeSql(sql.toString());
+
+                } else if (action.equals(ACTION_UPDATE)) {
+                    StringBuilder sql = new StringBuilder("UPDATE ");
+                    sql.append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(catalogName, schemaName, tableName, quote,
+                            catalogSeparator, schemaSeparator) + " SET ");
+                    for (int i = 1; i < columnHeaders.length; i++) {
+                        if (i == 1) {
+                            sql.append(quote).append(columnHeaders[i]).append(quote).append("=");
+                        } else {
+                            sql.append(", ").append(quote).append(columnHeaders[i]).append(quote).append("=");
+                        }
+
+                        sql.append(typeValueList.get(i - 1));
+                    }
+
+                    sql.append(" WHERE ");
+
+                    int track = 0;
+                    for (int i = 0; i < resultTable.getColumnCount(); i++) {
+                        Column col = resultTable.getColumn(i);
+                        if (col.isPrimaryKey()) {
+                            if (track == 0) {
+                                sql.append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
+                            } else {
+                                sql.append(" and ").append(quote).append(col.getName()).append(quote).append("=")
+                                        .append(typeValueList.get(i));
+                            }
+                            track++;
+                        }
+                    }
+                    sql.append(";");
+                    listener.writeSql(sql.toString());
+
+                } else if (action.equals(ACTION_DELETE)) {
+                    StringBuilder sql = new StringBuilder("DELETE FROM ");
+                    sql.append(org.jumpmind.db.model.Table.getFullyQualifiedTableName(catalogName, schemaName, tableName, quote,
+                            catalogSeparator, schemaSeparator)).append(" WHERE ");
+                    int track = 0;
+                    for (int i = 0; i < resultTable.getColumnCount(); i++) {
+                        Column col = resultTable.getColumn(i);
+                        if (col.isPrimaryKey()) {
+                            if (track == 0) {
+                                sql.append(quote).append(col.getName()).append(quote).append("=").append(typeValueList.get(i));
+                            } else {
+                                sql.append(" and ").append(quote).append(col.getName()).append(quote).append("=")
+                                        .append(typeValueList.get(i));
+                            }
+                            track++;
+                        }
+                    }
+                    sql.append(";");
+                    listener.writeSql(sql.toString());
+                }
+            }
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            Notification.show("There are an error while attempting to perform the action.  Please check the log file for further details.");
+        }
     }
 
     protected static String getTypeValue(String type) {
@@ -412,7 +433,7 @@ public class TabularResultLayout extends VerticalLayout {
         return value;
     }
 
-    protected Table putResultsInTable(int maxResultSize) throws SQLException {
+    protected Grid putResultsInTable(int maxResultSize) throws SQLException {
         String parsedSql = sql;
         String first = "";
         String second = "";
@@ -506,7 +527,7 @@ public class TabularResultLayout extends VerticalLayout {
         }
 
         TypedProperties properties = settings.getProperties();
-        return CommonUiUtils.putResultsInTable(rs, properties.getInt(SQL_EXPLORER_MAX_RESULTS), properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS),
+        return CommonUiUtils.putResultsInGrid(rs, properties.getInt(SQL_EXPLORER_MAX_RESULTS), properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS),
                 getColumnsToExclude());
 
     }
@@ -517,7 +538,7 @@ public class TabularResultLayout extends VerticalLayout {
 
     public void csvExport() {
         if (table != null) {
-            CsvExport csvExport = new CsvExport(table);
+            CsvExport csvExport = new CsvExport(new DefaultTableHolder(table));
             csvExport.excludeCollapsedColumns();
             csvExport.setDisplayTotals(false);
             csvExport.setExportFileName(db.getName() + "-export.csv");
@@ -528,7 +549,7 @@ public class TabularResultLayout extends VerticalLayout {
 
     public void excelExport() {
         if (table != null) {
-            ExcelExport excelExport = new ExcelExport(table);
+            ExcelExport excelExport = new ExcelExport(new DefaultTableHolder(table));
             excelExport.excludeCollapsedColumns();
             excelExport.setDisplayTotals(false);
             excelExport.setExportFileName(db.getName() + "-export.xls");
