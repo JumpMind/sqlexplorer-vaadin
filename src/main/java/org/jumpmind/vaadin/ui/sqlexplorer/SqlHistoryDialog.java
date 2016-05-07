@@ -132,9 +132,19 @@ public class SqlHistoryDialog extends ResizableWindow {
             private static final long serialVersionUID = 1L;
 
             public void itemClick(ItemClickEvent event) {
-                if (event.isDoubleClick()) {
-                    table.select(event.getItemId());
-                    select();
+                Object object = event.getPropertyId();
+                if (!object.toString().equals("")) {
+                    if (event.isDoubleClick()) {
+                        table.select(event.getItemId());
+                        select();
+                    } else {
+                        Object row = event.getItemId();
+                        if (!table.getSelectedRows().contains(row)) {
+                            table.select(row);
+                        } else {
+                            table.deselect(row);
+                        }
+                    }
                 }
             }
         });

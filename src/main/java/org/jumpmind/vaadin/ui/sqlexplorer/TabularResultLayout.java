@@ -219,9 +219,10 @@ public class TabularResultLayout extends VerticalLayout {
 
                 @Override
                 public void itemClick(ItemClickEvent event) {
-                    if (event.isDoubleClick()) {
-                        Object object = event.getPropertyId();
-                        if (!object.toString().equals("")) {
+                    Object object = event.getPropertyId();
+                    if (!object.toString().equals("")) {
+                        if (event.isDoubleClick()) {
+
                             Object prop = event.getPropertyId();
                             String header = table.getColumn(prop).getHeaderCaption();
                             Property<?> p = event.getItem().getItemProperty(prop);
@@ -234,7 +235,14 @@ public class TabularResultLayout extends VerticalLayout {
                                     ReadOnlyTextAreaDialog.show(header, data, binary);
                                 }
                             }
-                            
+
+                        } else {
+                            Object row = event.getItemId();
+                            if (!table.getSelectedRows().contains(row)) {
+                                table.select(row);
+                            } else {
+                                table.deselect(row);
+                            }
                         }
                     }
                 }
