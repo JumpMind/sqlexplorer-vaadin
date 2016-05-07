@@ -133,7 +133,7 @@ public class SqlHistoryDialog extends ResizableWindow {
 
             public void itemClick(ItemClickEvent event) {
                 Object object = event.getPropertyId();
-                if (!object.toString().equals("")) {
+                if (object != null && !object.toString().equals("")) {
                     if (event.isDoubleClick()) {
                         table.select(event.getItemId());
                         select();

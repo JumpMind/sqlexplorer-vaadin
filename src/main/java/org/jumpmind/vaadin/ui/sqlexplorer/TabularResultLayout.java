@@ -220,7 +220,7 @@ public class TabularResultLayout extends VerticalLayout {
                 @Override
                 public void itemClick(ItemClickEvent event) {
                     Object object = event.getPropertyId();
-                    if (!object.toString().equals("")) {
+                    if (object != null && !object.toString().equals("")) {
                         if (event.isDoubleClick()) {
 
                             Object prop = event.getPropertyId();
