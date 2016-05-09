@@ -205,8 +205,13 @@ public class SqlRunner extends Thread {
                     String sql = sqlReader.readSqlStatement();
                     while (sql != null) {
                         JdbcSqlTemplate.close(stmt);
-                        stmt = connection.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
-                                ResultSet.CONCUR_READ_ONLY);
+                        if (db.getPlatform().getName().equals("voltdb")) {
+                            stmt = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE,
+                                    ResultSet.CONCUR_READ_ONLY);                            
+                        } else {                            
+                            stmt = connection.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
+                                    ResultSet.CONCUR_READ_ONLY);
+                        }
                         
                         String lowercaseSql = sql.trim().toLowerCase();
                         if (!lowercaseSql.startsWith("delete") && !lowercaseSql.startsWith("update") &&
