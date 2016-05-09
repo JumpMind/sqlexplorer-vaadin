@@ -20,8 +20,10 @@
  */
 package org.jumpmind.vaadin.ui.sqlexplorer;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -130,8 +132,19 @@ public class SqlHistoryDialog extends ResizableWindow {
             private static final long serialVersionUID = 1L;
 
             public void itemClick(ItemClickEvent event) {
-                if (event.isDoubleClick()) {
-                    select();
+                Object object = event.getPropertyId();
+                if (object != null && !object.toString().equals("")) {
+                    if (event.isDoubleClick()) {
+                        table.select(event.getItemId());
+                        select();
+                    } else {
+                        Object row = event.getItemId();
+                        if (!table.getSelectedRows().contains(row)) {
+                            table.select(row);
+                        } else {
+                            table.deselect(row);
+                        }
+                    }
                 }
             }
         });
@@ -167,7 +180,8 @@ public class SqlHistoryDialog extends ResizableWindow {
     }
 
     protected void select() {
-        Collection<Object> values = table.getSelectedRows();
+        List<Object> values = new ArrayList<Object>(table.getSelectedRows());
+        Collections.reverse(values);
         if (values != null && values.size() > 0) {
             String delimiter = settingsProvider.get().getProperties().get(Settings.SQL_EXPLORER_DELIMITER);
             for (Object sql : values) {

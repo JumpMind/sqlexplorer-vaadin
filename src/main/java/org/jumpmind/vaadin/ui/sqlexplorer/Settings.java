@@ -37,6 +37,8 @@ public class Settings implements Serializable {
     public static final String SQL_EXPLORER_AUTO_COMMIT = "sql.explorer.auto.commit";
 
     public static final String SQL_EXPLORER_RESULT_AS_TEXT = "sql.explorer.result.as.text";
+    
+    public static final String SQL_EXPLORER_IGNORE_ERRORS_WHEN_RUNNING_SCRIPTS = "sql.explorer.ignore.errors.when.running.scripts";
 
     public static final String SQL_EXPLORER_DELIMITER = "sql.explorer.delimiter";
 
@@ -56,6 +58,7 @@ public class Settings implements Serializable {
         properties.put(SQL_EXPLORER_EXCLUDE_TABLES_REGEX, "(SYM_)\\w+");
         properties.put(SQL_EXPLORER_MAX_RESULTS, "1000");
         properties.put(SQL_EXPLORER_MAX_HISTORY, "100");
+        properties.put(SQL_EXPLORER_IGNORE_ERRORS_WHEN_RUNNING_SCRIPTS, "false");
     }
 
     public TypedProperties getProperties() {

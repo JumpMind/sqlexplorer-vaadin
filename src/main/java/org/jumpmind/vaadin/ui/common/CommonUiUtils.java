@@ -29,11 +29,13 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
@@ -48,6 +50,8 @@ import org.vaadin.aceeditor.AceEditor;
 
 import com.vaadin.data.Container;
 import com.vaadin.data.Property;
+import com.vaadin.data.util.converter.StringToBigDecimalConverter;
+import com.vaadin.data.util.converter.StringToLongConverter;
 import com.vaadin.server.Page;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.server.VaadinServlet;
@@ -55,6 +59,9 @@ import com.vaadin.shared.Position;
 import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.Column;
+import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.Notification;
@@ -67,8 +74,7 @@ public final class CommonUiUtils {
 
     final static Logger log = LoggerFactory.getLogger(CommonUiUtils.class);
 
-    static final FastDateFormat DATETIMEFORMAT = FastDateFormat.getInstance(
-            "yyyy-MM-dd HH:mm:ss.SSS");
+    static final FastDateFormat DATETIMEFORMAT = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSS");
 
     static final FastDateFormat TIMEFORMAT = FastDateFormat.getInstance("HH:mm:ss.SSS");
 
@@ -136,8 +142,7 @@ public final class CommonUiUtils {
             editor.setModePath(acePath);
             editor.setWorkerPath(acePath);
         } else {
-            log.warn("Could not find a local version of the ace editor.  "
-                    + "You might want to consider installing the ace web artifacts at "
+            log.warn("Could not find a local version of the ace editor.  " + "You might want to consider installing the ace web artifacts at "
                     + context.getRealPath(""));
         }
         editor.setTextChangeEventMode(TextChangeEventMode.EAGER);
@@ -165,8 +170,8 @@ public final class CommonUiUtils {
     public static void notify(String caption, String message, Throwable ex, Type type) {
         Page page = Page.getCurrent();
         if (page != null) {
-            Notification notification = new Notification(caption,
-                    contactWithLineFeed(FormatUtils.wordWrap(message, 150)), Type.HUMANIZED_MESSAGE);
+            Notification notification = new Notification(caption, contactWithLineFeed(FormatUtils.wordWrap(message, 150)),
+                    Type.HUMANIZED_MESSAGE);
             notification.setPosition(Position.MIDDLE_CENTER);
             notification.setDelayMsec(-1);
 
@@ -176,8 +181,7 @@ public final class CommonUiUtils {
             } else if (type == Type.WARNING_MESSAGE) {
                 style = ValoTheme.NOTIFICATION_WARNING;
             }
-            notification.setStyleName(notification.getStyleName() + " "
-                    + ValoTheme.NOTIFICATION_CLOSABLE + " " + style);
+            notification.setStyleName(notification.getStyleName() + " " + ValoTheme.NOTIFICATION_CLOSABLE + " " + style);
             notification.show(Page.getCurrent());
         }
     }
@@ -195,8 +199,7 @@ public final class CommonUiUtils {
     }
 
     public static void notify(Throwable ex) {
-        notify("An unexpected error occurred", "See the log file for additional details", ex,
-                Type.ERROR_MESSAGE);
+        notify("An unexpected error occurred", "See the log file for additional details", ex, Type.ERROR_MESSAGE);
     }
 
     public static Object getObject(ResultSet rs, int i) throws SQLException {
@@ -211,8 +214,8 @@ public final class CommonUiUtils {
         return obj;
     }
 
-    public static Table putResultsInTable(final ResultSet rs, int maxResultSize,
-            final boolean showRowNumbers, String... excludeValues) throws SQLException {
+    public static Table putResultsInTable(final ResultSet rs, int maxResultSize, final boolean showRowNumbers, String... excludeValues)
+            throws SQLException {
 
         final Table table = createTable();
         table.setImmediate(true);
@@ -242,7 +245,7 @@ public final class CommonUiUtils {
 
                 Class<?> typeClass = Object.class;
                 int type = meta.getColumnType(i);
-                types[i-1] = type;
+                types[i - 1] = type;
                 switch (type) {
                     case Types.FLOAT:
                     case Types.DOUBLE:
@@ -333,6 +336,163 @@ public final class CommonUiUtils {
         return table;
     }
 
+    public static String[] getHeaderCaptions(Grid grid) {
+        List<String> headers = new ArrayList<String>();
+        List<Column> columns = grid.getColumns();
+        for (Column column : columns) {
+            headers.add(column.getHeaderCaption());
+        }
+        return headers.toArray(new String[headers.size()]);
+    }
+
+    public static Grid putResultsInGrid(final ResultSet rs, int maxResultSize, final boolean showRowNumbers, String... excludeValues)
+            throws SQLException {
+
+        final Grid table = new Grid();
+        table.setImmediate(true);
+        table.setSelectionMode(SelectionMode.MULTI);
+        table.setColumnReorderingAllowed(true);
+
+        final ResultSetMetaData meta = rs.getMetaData();
+        int columnCount = meta.getColumnCount();
+        table.addColumn("#", Integer.class).setHeaderCaption("#").setHidable(true);
+        Set<String> columnNames = new HashSet<String>();
+        Set<Integer> skipColumnIndexes = new HashSet<Integer>();
+        int[] types = new int[columnCount];
+        for (int i = 1; i <= columnCount; i++) {
+            String realColumnName = meta.getColumnName(i);
+            String columnName = realColumnName;
+            if (!Arrays.asList(excludeValues).contains(columnName)) {
+
+                int index = 1;
+                while (columnNames.contains(columnName)) {
+                    columnName = realColumnName + "_" + index++;
+                }
+                columnNames.add(columnName);
+
+                Class<?> typeClass = Object.class;
+                int type = meta.getColumnType(i);
+                types[i - 1] = type;
+                switch (type) {
+                    case Types.FLOAT:
+                    case Types.DOUBLE:
+                    case Types.NUMERIC:
+                    case Types.REAL:
+                    case Types.DECIMAL:
+                        typeClass = BigDecimal.class;
+                        break;
+                    case Types.TINYINT:
+                    case Types.SMALLINT:
+                    case Types.BIGINT:
+                    case Types.INTEGER:
+                        typeClass = Long.class;
+                        break;
+                    case Types.VARCHAR:
+                    case Types.CHAR:
+                    case Types.NVARCHAR:
+                    case Types.NCHAR:
+                    case Types.CLOB:
+                        typeClass = String.class;
+                    default:
+                        break;
+                }
+                Column column = table.addColumn(columnName, typeClass).setHeaderCaption(columnName).setHidable(true);
+                if (typeClass.equals(Long.class)) {
+                    column.setConverter(new StringToLongConverter() {
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        public String convertToPresentation(Long value, Class<? extends String> targetType, Locale locale)
+                                throws com.vaadin.data.util.converter.Converter.ConversionException {
+                            if (value == Long.MIN_VALUE) {
+                                return "<null>";
+                            } else {
+                                return super.convertToPresentation(value, targetType, locale);
+                            }
+                        }
+                    });
+                } else if (typeClass.equals(BigDecimal.class)) {
+                    column.setConverter(new StringToBigDecimalConverter() {
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        public String convertToPresentation(BigDecimal value, Class<? extends String> targetType, Locale locale)
+                                throws com.vaadin.data.util.converter.Converter.ConversionException {
+                            if (value.longValue() == Long.MIN_VALUE) {
+                                return "<null>";
+                            } else {
+                                return super.convertToPresentation(value, targetType, locale);
+                            }
+                        }
+                    });
+                }
+            } else {
+                skipColumnIndexes.add(i - 1);
+            }
+
+        }
+        int rowNumber = 1;
+        while (rs.next() && rowNumber <= maxResultSize) {
+            Object[] row = new Object[columnNames.size() + 1];
+            row[0] = new Integer(rowNumber);
+            int rowIndex = 1;
+            for (int i = 0; i < columnCount; i++) {
+                if (!skipColumnIndexes.contains(i)) {
+                    Object o = getObject(rs, i + 1);
+                    int type = types[i];
+                    switch (type) {
+                        case Types.FLOAT:
+                        case Types.DOUBLE:
+                        case Types.REAL:
+                        case Types.NUMERIC:
+                        case Types.DECIMAL:
+                            if (o == null) {
+                                o = new BigDecimal(Long.MIN_VALUE);
+                            }
+                            if (!(o instanceof BigDecimal)) {
+                                o = new BigDecimal(castToNumber(o.toString()));
+                            }
+                            break;
+                        case Types.TINYINT:
+                        case Types.SMALLINT:
+                        case Types.BIGINT:
+                        case Types.INTEGER:
+                            if (o == null) {
+                                o = new Long(Long.MIN_VALUE);
+                            }
+
+                            if (!(o instanceof Long)) {
+                                o = new Long(castToNumber(o.toString()));
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    row[rowIndex] = o == null ? NULL_TEXT : o;
+                    rowIndex++;
+                }
+            }
+            table.addRow(row);
+            rowNumber++;
+        }
+
+        if (rowNumber < 100) {
+            table.getColumn("#").setWidth(75);
+        } else if (rowNumber < 1000) {
+            table.getColumn("#").setWidth(95);
+        } else {
+            table.getColumn("#").setWidth(115);
+        }
+
+        if (!showRowNumbers) {
+            table.getColumn("#").setHidden(true);
+        } else {
+            table.setFrozenColumnCount(1);
+        }
+
+        return table;
+    }
+
     protected static String castToNumber(String value) {
         if ("NO".equalsIgnoreCase(value) || "FALSE".equalsIgnoreCase(value)) {
             return "0";
@@ -361,8 +521,7 @@ public final class CommonUiUtils {
             Calendar cal = Calendar.getInstance();
             Calendar ref = Calendar.getInstance();
             ref.setTime(dateTime);
-            if (ref.get(Calendar.DAY_OF_YEAR) == cal.get(Calendar.DAY_OF_YEAR)
-                    && ref.get(Calendar.YEAR) == cal.get(Calendar.YEAR)) {
+            if (ref.get(Calendar.DAY_OF_YEAR) == cal.get(Calendar.DAY_OF_YEAR) && ref.get(Calendar.YEAR) == cal.get(Calendar.YEAR)) {
                 return TIMEFORMAT.format(dateTime);
             } else {
                 return DATETIMEFORMAT.format(dateTime);
@@ -449,17 +608,17 @@ public final class CommonUiUtils {
         separator.setWidthUndefined();
         return separator;
     }
-    
+
     public static AbstractSelect createComboBox() {
         return createComboBox(null);
     }
-    
+
     public static AbstractSelect createComboBox(String name) {
-        NativeSelect cb = name == null? new NativeSelect() : new NativeSelect(name);
+        NativeSelect cb = name == null ? new NativeSelect() : new NativeSelect(name);
         cb.setImmediate(true);
         cb.setWidth(16, Unit.EM);
         cb.setHeight(2.15f, Unit.EM);
         cb.setNullSelectionAllowed(false);
-        return cb;        
+        return cb;
     }
 }

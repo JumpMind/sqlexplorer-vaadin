@@ -22,6 +22,7 @@ package org.jumpmind.vaadin.ui.sqlexplorer;
 
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_AUTO_COMMIT;
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_DELIMITER;
+import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_IGNORE_ERRORS_WHEN_RUNNING_SCRIPTS;
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_MAX_RESULTS;
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_RESULT_AS_TEXT;
 
@@ -46,7 +47,6 @@ import org.jumpmind.db.platform.DatabaseNamesConstants;
 import org.jumpmind.db.sql.JdbcSqlTemplate;
 import org.jumpmind.db.sql.SqlScriptReader;
 import org.jumpmind.properties.TypedProperties;
-import org.jumpmind.util.FormatUtils;
 import org.jumpmind.vaadin.ui.common.CommonUiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,8 +102,7 @@ public class SqlRunner extends Thread {
         this(sqlText, runAsScript, user, db, settings, null);
     }
 
-    public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings,
-            ISqlRunnerListener listener) {
+    public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings, ISqlRunnerListener listener) {
         this.setName("sql-runner-" + getId());
         this.sqlText = sqlText;
         this.runAsScript = runAsScript;
@@ -173,6 +172,7 @@ public class SqlRunner extends Thread {
         boolean resultsAsText = properties.is(SQL_EXPLORER_RESULT_AS_TEXT);
         int maxResultsSize = properties.getInt(SQL_EXPLORER_MAX_RESULTS);
         String delimiter = properties.get(SQL_EXPLORER_DELIMITER);
+        boolean ignoreWhenRunAsScript = properties.is(SQL_EXPLORER_IGNORE_ERRORS_WHEN_RUNNING_SCRIPTS);
 
         List<Component> resultComponents = new ArrayList<Component>();
         FontAwesome icon = FontAwesome.CHECK_CIRCLE;
@@ -181,7 +181,7 @@ public class SqlRunner extends Thread {
         boolean autoCommitBefore = true;
         try {
             DataSource dataSource = db.getPlatform().getDataSource();
-            JdbcSqlTemplate sqlTemplate = (JdbcSqlTemplate)db.getPlatform().getSqlTemplate();
+            JdbcSqlTemplate sqlTemplate = (JdbcSqlTemplate) db.getPlatform().getSqlTemplate();
             PreparedStatement stmt = null;
             StringBuilder results = new StringBuilder();
             try {
@@ -189,7 +189,7 @@ public class SqlRunner extends Thread {
                     connection = dataSource.getConnection();
                     connection.setAutoCommit(autoCommit);
                 }
-                               
+
                 autoCommitBefore = connection.getAutoCommit();
                 if (connection.getTransactionIsolation() != sqlTemplate.getIsolationLevel()) {
                     connection.setTransactionIsolation(sqlTemplate.getIsolationLevel());
@@ -206,20 +206,17 @@ public class SqlRunner extends Thread {
                     while (sql != null) {
                         JdbcSqlTemplate.close(stmt);
                         if (db.getPlatform().getName().equals("voltdb")) {
-                            stmt = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE,
-                                    ResultSet.CONCUR_READ_ONLY);                            
+                            stmt = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);                            
                         } else {                            
-                            stmt = connection.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
-                                    ResultSet.CONCUR_READ_ONLY);
+                            stmt = connection.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
                         }
-                        
+
                         String lowercaseSql = sql.trim().toLowerCase();
-                        if (!lowercaseSql.startsWith("delete") && !lowercaseSql.startsWith("update") &&
-                                !lowercaseSql.startsWith("insert")) {
+                        if (!lowercaseSql.startsWith("delete") && !lowercaseSql.startsWith("update") && !lowercaseSql.startsWith("insert")) {
                             if (db.getPlatform().getName().equals(DatabaseNamesConstants.MYSQL)) {
                                 stmt.setFetchSize(Integer.MIN_VALUE);
                             } else {
-                                stmt.setFetchSize(maxResultsSize < 100  ? maxResultsSize : 100);
+                                stmt.setFetchSize(maxResultsSize < 100 ? maxResultsSize : 100);
                             }
                         }
 
@@ -234,7 +231,20 @@ public class SqlRunner extends Thread {
                             committed = false;
                         }
 
-                        boolean hasResults = stmt.execute();
+                        boolean hasResults = false;
+                        try {
+                            hasResults = stmt.execute();
+                        } catch (SQLException e) {
+                            if (runAsScript && ignoreWhenRunAsScript) {
+                                results.append(sql);
+                                results.append("\n");
+                                results.append(buildErrorMessage(e));
+                                results.append("\n");
+                                results.append("\n");
+                            } else {
+                                throw e;
+                            }
+                        }
                         int updateCount = stmt.getUpdateCount();
                         while (hasResults || updateCount != -1) {
                             ResultSet rs = null;
@@ -243,11 +253,9 @@ public class SqlRunner extends Thread {
                                     rs = stmt.getResultSet();
                                     if (!runAsScript) {
                                         if (!resultsAsText) {
-                                            resultComponents.add(new TabularResultLayout(db, sql,
-                                                    rs, listener, settings, showSqlOnResults));
+                                            resultComponents.add(new TabularResultLayout(db, sql, rs, listener, settings, showSqlOnResults));
                                         } else {
-                                            resultComponents.add(putResultsInArea(stmt,
-                                                    maxResultsSize));
+                                            resultComponents.add(putResultsInArea(stmt, maxResultsSize));
                                         }
                                     } else {
                                         int rowsRetrieved = 0;
@@ -264,8 +272,7 @@ public class SqlRunner extends Thread {
                                 } else {
                                     rowsUpdated = updateCount > 0 ? true : false;
                                     if (!runAsScript) {
-                                        resultComponents.add(wrapTextInComponent(String.format(
-                                                "%d rows affected", updateCount)));
+                                        resultComponents.add(wrapTextInComponent(String.format("%d rows affected", updateCount)));
                                     } else {
                                         results.append(sql);
                                         results.append("\n");
@@ -310,15 +317,13 @@ public class SqlRunner extends Thread {
             }
 
             if (resultComponents.size() == 0 && StringUtils.isNotBlank(results.toString())) {
-                resultComponents.add(wrapTextInComponent(results.toString(),
-                        icon == FontAwesome.BAN ? "marked" : null));
+                resultComponents.add(wrapTextInComponent(results.toString(), icon == FontAwesome.BAN ? "marked" : null));
             }
 
         } finally {
             endTime = new Date();
             if (listener != null) {
-                listener.finished(icon, resultComponents, endTime.getTime() - startTime.getTime(),
-                        !autoCommit && rowsUpdated, committed);
+                listener.finished(icon, resultComponents, endTime.getTime() - startTime.getTime(), !autoCommit && rowsUpdated, committed);
             } else if (!autoCommit) {
                 rollback(connection);
             }
@@ -327,26 +332,19 @@ public class SqlRunner extends Thread {
     }
 
     protected String buildErrorMessage(Throwable ex) {
-        StringBuilder errorMessage = new StringBuilder();
+        StringBuilder errorMessage = new StringBuilder("<span style='color: red'>");
         if (ex instanceof SQLException) {
             SQLException sqlException = (SQLException) ex;
-            errorMessage.append("SQL Message: ");
-            errorMessage.append("\n");
-            String[] lines = FormatUtils.wordWrap(ex.getMessage(), 120);
-            for (String line : lines) {
-                errorMessage.append(line);
-                errorMessage.append("\n");
-            }
-            errorMessage.append("\n");
-            errorMessage.append("SQL State: ");
+            errorMessage.append("SQL Message: ").append(ex.getMessage());
+            errorMessage.append("\nSQL State: ");
             errorMessage.append(sqlException.getSQLState());
-            errorMessage.append("\n");
-            errorMessage.append("Error Code: ");
+            errorMessage.append("\nError Code: ");
             errorMessage.append(sqlException.getErrorCode());
         } else {
             errorMessage.append(ex.getMessage());
             errorMessage.append(ExceptionUtils.getStackTrace(ex));
         }
+        errorMessage.append("</span>");
         return errorMessage.toString();
     }
 
@@ -364,10 +362,10 @@ public class SqlRunner extends Thread {
 
     protected Component wrapTextInComponent(String text, String style) {
         Panel panel = new Panel();
-        VerticalLayout content = new VerticalLayout();
+        VerticalLayout content = new VerticalLayout();        
         content.setMargin(true);
         panel.setContent(content);
-        Label label = new Label(text.toString(), ContentMode.PREFORMATTED);
+        Label label = new Label("<pre>" + text.toString() + "</pre>", ContentMode.HTML);
         if (StringUtils.isNotBlank(style)) {
             label.setStyleName(style);
         }
@@ -424,8 +422,7 @@ public class SqlRunner extends Thread {
 
             for (Object[] objects : rows) {
                 for (int i = 0; i < objects.length; i++) {
-                    text.append(StringUtils.rightPad(objects[i] != null ? objects[i].toString()
-                            : "<null>", maxColumnSizes[i]));
+                    text.append(StringUtils.rightPad(objects[i] != null ? objects[i].toString() : "<null>", maxColumnSizes[i]));
                     text.append(" ");
                 }
                 text.append("\n");
@@ -478,8 +475,8 @@ public class SqlRunner extends Thread {
 
         public void reExecute(String sql);
 
-        public void finished(FontAwesome icon, List<Component> results, long executionTimeInMs,
-                boolean transactionStarted, boolean transactionEnded);
+        public void finished(FontAwesome icon, List<Component> results, long executionTimeInMs, boolean transactionStarted,
+                boolean transactionEnded);
     }
 
 }

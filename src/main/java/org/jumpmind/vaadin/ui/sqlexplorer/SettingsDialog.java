@@ -20,7 +20,7 @@
  */
 package org.jumpmind.vaadin.ui.sqlexplorer;
 
-import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_AUTO_COMMIT;
+import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.*;
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_DELIMITER;
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_EXCLUDE_TABLES_REGEX;
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_MAX_RESULTS;
@@ -60,6 +60,8 @@ public class SettingsDialog extends ResizableWindow {
     private TextField excludeTablesWithPrefixField;
 
     private CheckBox resultAsTextBox;
+    
+    private CheckBox ignoreErrorsWhenRunningScript;
 
     private CheckBox showRowNumbersBox;
 
@@ -108,6 +110,15 @@ public class SettingsDialog extends ResizableWindow {
         }
         settingsLayout.addComponent(resultAsTextBox);
 
+        ignoreErrorsWhenRunningScript = new CheckBox("Ignore Errors When Running Scripts");
+        String ignoreErrorsWhenRunningScriptTextValue = (properties.getProperty(SQL_EXPLORER_IGNORE_ERRORS_WHEN_RUNNING_SCRIPTS, "false"));
+        if (ignoreErrorsWhenRunningScriptTextValue.equals("true")) {
+            ignoreErrorsWhenRunningScript.setValue(true);
+        } else {
+            ignoreErrorsWhenRunningScript.setValue(false);
+        }
+        settingsLayout.addComponent(ignoreErrorsWhenRunningScript);
+        
         autoCommitBox = new CheckBox("Auto Commit");
         String autoCommitValue = (properties.getProperty(SQL_EXPLORER_AUTO_COMMIT, "true"));
         if (autoCommitValue.equals("true")) {
@@ -159,6 +170,7 @@ public class SettingsDialog extends ResizableWindow {
                     String.valueOf(showRowNumbersBox.getValue()));
             properties.setProperty(SQL_EXPLORER_EXCLUDE_TABLES_REGEX,
                     excludeTablesWithPrefixField.getValue());
+            properties.setProperty(SQL_EXPLORER_IGNORE_ERRORS_WHEN_RUNNING_SCRIPTS, String.valueOf(ignoreErrorsWhenRunningScript.getValue()));
             settingsProvider.save(settings);
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
