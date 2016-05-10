@@ -407,7 +407,7 @@ public final class CommonUiUtils {
                             if (value == Long.MIN_VALUE) {
                                 return "<null>";
                             } else {
-                                return super.convertToPresentation(value, targetType, locale);
+                                return value.toString();
                             }
                         }
                     });
@@ -421,7 +421,7 @@ public final class CommonUiUtils {
                             if (value.longValue() == Long.MIN_VALUE) {
                                 return "<null>";
                             } else {
-                                return super.convertToPresentation(value, targetType, locale);
+                                return value.toString();
                             }
                         }
                     });
