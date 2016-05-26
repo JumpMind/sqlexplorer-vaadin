@@ -53,6 +53,7 @@ import com.vaadin.data.Property;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.shared.MouseEventDetails.MouseButton;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
@@ -86,7 +87,7 @@ public class TabularResultLayout extends VerticalLayout {
 
     String schemaName;
 
-    Grid table;
+    Grid grid;
 
     org.jumpmind.db.model.Table resultTable;
 
@@ -172,10 +173,10 @@ public class TabularResultLayout extends VerticalLayout {
         this.addComponent(resultBar);
 
         try {
-            table = putResultsInTable(settings.getProperties().getInt(SQL_EXPLORER_MAX_RESULTS));
-            table.setSizeFull();
+            grid = putResultsInGrid(settings.getProperties().getInt(SQL_EXPLORER_MAX_RESULTS));
+            grid.setSizeFull();
 
-            ContextMenu menu = new ContextMenu(table, true);
+            ContextMenu menu = new ContextMenu(grid, true);
             menu.addItem(ACTION_SELECT, new ContextMenu.Command() {
 
                 private static final long serialVersionUID = 1L;
@@ -213,45 +214,49 @@ public class TabularResultLayout extends VerticalLayout {
                 }
             });
 
-            table.addItemClickListener(new ItemClickListener() {
+            grid.addItemClickListener(new ItemClickListener() {
 
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public void itemClick(ItemClickEvent event) {
-                    Object object = event.getPropertyId();
-                    if (object != null && !object.toString().equals("")) {
-                        if (event.isDoubleClick()) {
+                    MouseButton button = event.getButton();
+                    if (button == MouseButton.LEFT) {
+                        Object object = event.getPropertyId();
+                        if (object != null && !object.toString().equals("")) {
+                            if (event.isDoubleClick()) {
 
-                            Object prop = event.getPropertyId();
-                            String header = table.getColumn(prop).getHeaderCaption();
-                            Property<?> p = event.getItem().getItemProperty(prop);
-                            if (p != null) {
-                                String data = String.valueOf(p.getValue());
-                                boolean binary = resultTable != null ? resultTable.getColumnWithName(header).isOfBinaryType() : false;
-                                if (binary) {
-                                    ReadOnlyTextAreaDialog.show(header, data.toUpperCase(), binary);
-                                } else {
-                                    ReadOnlyTextAreaDialog.show(header, data, binary);
+                                Object prop = event.getPropertyId();
+                                String header = grid.getColumn(prop).getHeaderCaption();
+                                Property<?> p = event.getItem().getItemProperty(prop);
+                                if (p != null) {
+                                    String data = String.valueOf(p.getValue());
+                                    boolean binary = resultTable != null ? resultTable.getColumnWithName(header).isOfBinaryType() : false;
+                                    if (binary) {
+                                        ReadOnlyTextAreaDialog.show(header, data.toUpperCase(), binary);
+                                    } else {
+                                        ReadOnlyTextAreaDialog.show(header, data, binary);
+                                    }
                                 }
-                            }
 
-                        } else {
-                            Object row = event.getItemId();
-                            if (!table.getSelectedRows().contains(row)) {
-                                table.select(row);
                             } else {
-                                table.deselect(row);
+                                Object row = event.getItemId();
+                                if (!grid.getSelectedRows().contains(row)) {
+                                    grid.deselectAll();
+                                    grid.select(row);
+                                } else {
+                                    grid.deselect(row);
+                                }
                             }
                         }
                     }
                 }
             });
 
-            this.addComponent(table);
-            this.setExpandRatio(table, 1);
+            this.addComponent(grid);
+            this.setExpandRatio(grid, 1);
 
-            int count = (table.getContainerDataSource().getItemIds().size());
+            int count = (grid.getContainerDataSource().getItemIds().size());
             int maxResultsSize = settings.getProperties().getInt(SQL_EXPLORER_MAX_RESULTS);
             if (count >= maxResultsSize) {
                 resultLabel.setValue("Limited to <span style='color: red'>" + maxResultsSize + "</span> rows;");
@@ -276,13 +281,13 @@ public class TabularResultLayout extends VerticalLayout {
             final String catalogSeparator = dbInfo.getCatalogSeparator();
             final String schemaSeparator = dbInfo.getSchemaSeparator();
 
-            String[] columnHeaders = CommonUiUtils.getHeaderCaptions(table);
-            Collection<Object> selectedRowsSet = table.getSelectedRows();
+            String[] columnHeaders = CommonUiUtils.getHeaderCaptions(grid);
+            Collection<Object> selectedRowsSet = grid.getSelectedRows();
             Iterator<Object> setIterator = selectedRowsSet.iterator();
             while (setIterator.hasNext()) {
                 List<Object> typeValueList = new ArrayList<Object>();
                 int row = (Integer) setIterator.next();
-                Item item = table.getContainerDataSource().getItem(row);
+                Item item = grid.getContainerDataSource().getItem(row);
                 Iterator<?> iterator = item.getItemPropertyIds().iterator();
                 iterator.next();
 
@@ -441,7 +446,7 @@ public class TabularResultLayout extends VerticalLayout {
         return value;
     }
 
-    protected Grid putResultsInTable(int maxResultSize) throws SQLException {
+    protected Grid putResultsInGrid(int maxResultSize) throws SQLException {
         String parsedSql = sql;
         String first = "";
         String second = "";
@@ -545,8 +550,8 @@ public class TabularResultLayout extends VerticalLayout {
     }
 
     public void csvExport() {
-        if (table != null) {
-            CsvExport csvExport = new CsvExport(new DefaultTableHolder(table));
+        if (grid != null) {
+            CsvExport csvExport = new CsvExport(new DefaultTableHolder(grid));
             csvExport.excludeCollapsedColumns();
             csvExport.setDisplayTotals(false);
             csvExport.setExportFileName(db.getName() + "-export.csv");
@@ -556,8 +561,8 @@ public class TabularResultLayout extends VerticalLayout {
     }
 
     public void excelExport() {
-        if (table != null) {
-            ExcelExport excelExport = new ExcelExport(new DefaultTableHolder(table));
+        if (grid != null) {
+            ExcelExport excelExport = new ExcelExport(new DefaultTableHolder(grid));
             excelExport.excludeCollapsedColumns();
             excelExport.setDisplayTotals(false);
             excelExport.setExportFileName(db.getName() + "-export.xls");
