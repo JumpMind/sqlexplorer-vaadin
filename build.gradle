@@ -1,5 +1,6 @@
 import org.apache.tools.ant.filters.FixCrLfFilter
 import org.apache.tools.ant.filters.ReplaceTokens
+import java.text.SimpleDateFormat
 
 group = 'org.jumpmind.vaadin'
 
@@ -28,6 +29,8 @@ apply plugin: 'fi.jasoft.plugin.vaadin'
 sourceCompatibility=1.6
 targetCompatibility=1.6
 
+version = version + '.' + ('d'.equals(buildNumber) ? ('d' + new SimpleDateFormat("yyyyMMddHHmmSS").format(new Date())) : buildNumber)
+
 repositories {
     mavenCentral()
     maven { url "http://maven.jumpmind.com/repo" }
@@ -39,8 +42,7 @@ compileJava { options.bootClasspath = "${System.getProperty('java.home')}/lib/rt
 ext {
 
     log4jVersion = '1.2.17'
-    slf4jVersion = '1.7.12'
-    springVersion = '4.0.5.RELEASE'
+    slf4jVersion = '1.7.21'
     vaadinVersion = '7.6.5'
     jettyVersion = '9.3.8.v20160314'
     commonsLangVersion = '2.6'
@@ -51,10 +53,10 @@ ext {
     jaxenVersion = '1.1.4'
     javaMailVersion = '1.4.7'
     jdomVersion = '2.0.5'
-    springVersion = '4.0.2.RELEASE'
-    symmetricVersion = '3.7.27'
+    springVersion = '4.2.6.RELEASE'
+    symmetricVersion = '3.7.x-SNAPSHOT'
     servletVersion = '3.0.1'
-    h2Version = '1.3.175'
+    h2Version='1.4.191'
     mysqlVersion = '5.1.29'
     jtdsVersion = '1.3.1'
 
@@ -115,21 +117,23 @@ dependencies {
 
     deployerJars "org.apache.maven.wagon:wagon-ssh:2.2"
     
-    provided "javax.servlet:javax.servlet-api:$servletVersion"
-
     compile "org.slf4j:slf4j-api:$slf4jVersion"
     compile "org.slf4j:jul-to-slf4j:$slf4jVersion"
     compile "org.slf4j:slf4j-log4j12:$slf4jVersion"
     compile "org.slf4j:jcl-over-slf4j:$slf4jVersion"
     compile "log4j:log4j:$log4jVersion"
+    
     compile "org.jumpmind.symmetric:symmetric-db:$symmetricVersion"
     compile "org.jumpmind.symmetric:symmetric-jdbc:$symmetricVersion"
     compile "org.jumpmind.symmetric:symmetric-io:$symmetricVersion"
     compile "org.jumpmind.symmetric:symmetric-util:$symmetricVersion"
+    
     compile "commons-lang:commons-lang:$commonsLangVersion"
     compile "commons-dbcp:commons-dbcp:$commonsDbcpVersion"
     compile "commons-io:commons-io:$commonsIoVersion"
+    
     compile "org.springframework:spring-webmvc:$springVersion"
+    
     compile "com.vaadin:vaadin-server:$vaadinVersion"
     compile "com.vaadin:vaadin-push:$vaadinVersion"
     compile "com.vaadin:vaadin-themes:$vaadinVersion"
@@ -137,28 +141,26 @@ dependencies {
     compile ("com.vaadin.addon:tableexport-for-vaadin:1.6.2") {
        exclude (group:"org.vaadin.addons",module:"filteringtable")
     }
+    compile "org.vaadin.teemusa:gridextensionpack:1.0.0"
     compile "com.vaadin.addon:vaadin-context-menu:0.7.3"
 
     provided ("com.vaadin:vaadin-client-compiler:$vaadinVersion") {
        exclude group:'org.eclipse.jetty'
     }
     
-    testCompile "com.h2database:h2:1.3.175"
+    testCompile "com.h2database:h2:$h2Version"
     testCompile "junit:junit:4.11"
     testCompile "org.hamcrest:hamcrest-all:1.3"
     testCompile "org.mockito:mockito-all:1.9.5"
-    testCompile "org.springframework:spring-test:$springVersion"
-    testCompile "javax.servlet:javax.servlet-api:$servletVersion"
-    testCompile "javax.servlet.jsp:jsp-api:2.2"
-    testCompile "javax.websocket:javax.websocket-api:1.1"
+    
+    provided "javax.servlet:javax.servlet-api:$servletVersion"
+    provided "javax.servlet.jsp:jsp-api:2.2"
+    provided "javax.websocket:javax.websocket-api:1.1"
     
     testCompile "org.eclipse.jetty:jetty-webapp:$jettyVersion"
     testCompile "org.eclipse.jetty:jetty-jmx:$jettyVersion"
     testCompile "org.eclipse.jetty:jetty-annotations:$jettyVersion"
-    //testCompile "org.eclipse.jetty.websocket:websocket-servlet:$jettyVersion"
-    //testCompile "org.eclipse.jetty.websocket:websocket-server:$jettyVersion"
-    testCompile "org.eclipse.jetty.websocket:javax-websocket-server-impl:$jettyVersion"
-    
+    testCompile "org.eclipse.jetty.websocket:javax-websocket-server-impl:$jettyVersion"    
 
     testCompile "org.slf4j:slf4j-api:$slf4jVersion"
     testCompile "org.slf4j:jul-to-slf4j:$slf4jVersion"
