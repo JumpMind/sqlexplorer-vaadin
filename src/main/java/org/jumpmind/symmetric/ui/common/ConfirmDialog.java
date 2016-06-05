@@ -20,6 +20,10 @@ public class ConfirmDialog extends Window {
     private static final long serialVersionUID = 1L;
 
     public ConfirmDialog(String caption, String text, final IConfirmListener confirmListener) {
+        this(caption, text, true, confirmListener);
+    }
+
+    public ConfirmDialog(String caption, String text, boolean focusOnOk, final IConfirmListener confirmListener) {
         setCaption(caption);
         setModal(true);
         setResizable(true);
@@ -62,7 +66,6 @@ public class ConfirmDialog extends Window {
 
         Button okButton = new Button("Ok");
         okButton.setStyleName(ValoTheme.BUTTON_PRIMARY);
-        okButton.setClickShortcut(KeyCode.ENTER);
         okButton.addClickListener(new ClickListener() {
             private static final long serialVersionUID = 1L;
 
@@ -73,11 +76,16 @@ public class ConfirmDialog extends Window {
                 }
             }
         });
+
         buttonLayout.addComponent(okButton);
 
         layout.addComponent(buttonLayout);
-        
-        okButton.focus();
+
+        if (!focusOnOk) {
+            cancelButton.focus();
+        } else {
+            okButton.focus();
+        }
 
     }
 
