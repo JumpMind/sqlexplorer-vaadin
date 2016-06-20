@@ -98,6 +98,8 @@ public class DbExportDialog extends ResizableWindow {
     private Button exportFileButton;
 
     private Button exportEditorButton;
+    
+    private Button doneButton;
 
     private TableSelectionLayout tableSelectionLayout;
 
@@ -107,7 +109,7 @@ public class DbExportDialog extends ResizableWindow {
 
     private DbExport dbExport;
 
-    private OptionGroup oGroup;
+    private OptionGroup exportFormatOptionGroup;
 
     private QueryPanel queryPanel;
 
@@ -190,13 +192,7 @@ public class DbExportDialog extends ResizableWindow {
         });
         previousButton.setVisible(false);
 
-        exportFileButton = CommonUiUtils.createPrimaryButton("Export", new Button.ClickListener() {
-            private static final long serialVersionUID = 1L;
-
-            public void buttonClick(ClickEvent event) {
-                close();
-            }
-        });
+        exportFileButton = CommonUiUtils.createPrimaryButton("Export");
         buildFileDownloader();
         exportFileButton.setVisible(false);
 
@@ -205,13 +201,21 @@ public class DbExportDialog extends ResizableWindow {
 
             public void buttonClick(ClickEvent event) {
                 exportToEditor();
-                close();
             }
         });
         exportEditorButton.setVisible(false);
+        
+        doneButton = new Button("Close", new Button.ClickListener() {
+            private static final long serialVersionUID = 1L;
+
+            public void buttonClick(ClickEvent event) {
+                close();
+            }
+        });
+        doneButton.setVisible(false);
 
         addComponent(buildButtonFooter(new Button[] { selectAllLink, selectNoneLink },
-                cancelButton, previousButton, nextButton, exportFileButton, exportEditorButton));
+                cancelButton, previousButton, nextButton, exportFileButton, exportEditorButton, doneButton));
 
     }
 
@@ -319,12 +323,14 @@ public class DbExportDialog extends ResizableWindow {
         whereClauseField.setRows(2);
         formLayout.addComponent(whereClauseField);
 
-        oGroup = new OptionGroup("Export Format");
-        oGroup.setImmediate(true);
-        oGroup.addItem(EXPORT_AS_A_FILE);
-        oGroup.addItem(EXPORT_TO_THE_SQL_EDITOR);
-        oGroup.setValue(EXPORT_AS_A_FILE);
-        oGroup.addValueChangeListener(new Property.ValueChangeListener() {
+        exportFormatOptionGroup = new OptionGroup("Export Format");
+        exportFormatOptionGroup.setImmediate(true);
+        exportFormatOptionGroup.addItem(EXPORT_AS_A_FILE);
+        if (queryPanel != null) {
+           exportFormatOptionGroup.addItem(EXPORT_TO_THE_SQL_EDITOR);
+        }
+        exportFormatOptionGroup.setValue(EXPORT_AS_A_FILE);
+        exportFormatOptionGroup.addValueChangeListener(new Property.ValueChangeListener() {
 
             private static final long serialVersionUID = 1L;
 
@@ -333,7 +339,7 @@ public class DbExportDialog extends ResizableWindow {
                 setExportButtonsEnabled();
             }
         });
-        formLayout.addComponent(oGroup);
+        formLayout.addComponent(exportFormatOptionGroup);
 
     }
 
@@ -347,13 +353,15 @@ public class DbExportDialog extends ResizableWindow {
     }
 
     protected void setExportButtonsEnabled() {
-        if (oGroup.getValue().equals(EXPORT_AS_A_FILE)) {
+        if (exportFormatOptionGroup.getValue().equals(EXPORT_AS_A_FILE)) {
             exportEditorButton.setVisible(false);
             exportFileButton.setVisible(true);
         } else {
             exportFileButton.setVisible(false);
             exportEditorButton.setVisible(true);
         }
+        doneButton.setVisible(true);
+        cancelButton.setVisible(false);
     }
 
     protected void previous() {
@@ -364,8 +372,10 @@ public class DbExportDialog extends ResizableWindow {
         previousButton.setVisible(false);
         exportEditorButton.setVisible(false);
         exportFileButton.setVisible(false);
+        doneButton.setVisible(false);
         selectAllLink.setVisible(true);
         selectNoneLink.setVisible(true);
+        cancelButton.setVisible(true);
     }
 
     protected void next() {
