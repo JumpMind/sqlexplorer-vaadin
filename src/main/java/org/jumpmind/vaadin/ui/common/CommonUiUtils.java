@@ -348,14 +348,14 @@ public final class CommonUiUtils {
     public static Grid putResultsInGrid(final ResultSet rs, int maxResultSize, final boolean showRowNumbers, String... excludeValues)
             throws SQLException {
 
-        final Grid table = new Grid();
-        table.setImmediate(true);
-        table.setSelectionMode(SelectionMode.MULTI);
-        table.setColumnReorderingAllowed(true);
+        final Grid grid = new Grid();
+        grid.setImmediate(true);
+        grid.setSelectionMode(SelectionMode.MULTI);
+        grid.setColumnReorderingAllowed(true);
 
         final ResultSetMetaData meta = rs.getMetaData();
         int columnCount = meta.getColumnCount();
-        table.addColumn("#", Integer.class).setHeaderCaption("#").setHidable(true);
+        grid.addColumn("#", Integer.class).setHeaderCaption("#").setHidable(true);
         Set<String> columnNames = new HashSet<String>();
         Set<Integer> skipColumnIndexes = new HashSet<Integer>();
         int[] types = new int[columnCount];
@@ -396,7 +396,7 @@ public final class CommonUiUtils {
                     default:
                         break;
                 }
-                Column column = table.addColumn(columnName, typeClass).setHeaderCaption(columnName).setHidable(true);
+                Column column = grid.addColumn(columnName, typeClass).setHeaderCaption(columnName).setHidable(true);
                 if (typeClass.equals(Long.class)) {
                     column.setConverter(new StringToLongConverter() {
                         private static final long serialVersionUID = 1L;
@@ -472,25 +472,25 @@ public final class CommonUiUtils {
                     rowIndex++;
                 }
             }
-            table.addRow(row);
+            grid.addRow(row);
             rowNumber++;
         }
 
         if (rowNumber < 100) {
-            table.getColumn("#").setWidth(75);
+            grid.getColumn("#").setWidth(75);
         } else if (rowNumber < 1000) {
-            table.getColumn("#").setWidth(95);
+            grid.getColumn("#").setWidth(95);
         } else {
-            table.getColumn("#").setWidth(115);
+            grid.getColumn("#").setWidth(115);
         }
 
         if (!showRowNumbers) {
-            table.getColumn("#").setHidden(true);
+            grid.getColumn("#").setHidden(true);
         } else {
-            table.setFrozenColumnCount(1);
+            grid.setFrozenColumnCount(1);
         }
 
-        return table;
+        return grid;
     }
 
     protected static String castToNumber(String value) {
