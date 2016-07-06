@@ -67,6 +67,14 @@ public class DbFillDialog extends ResizableWindow {
 
     private CheckBox continueBox;
 
+    private CheckBox cascadeBox;
+
+    private CheckBox cascadeSelectBox;
+
+    private CheckBox truncateBox;
+
+    private CheckBox verboseBox;
+ 
     private TextField countField;
 
     private TextField intervalField;
@@ -276,6 +284,22 @@ public class DbFillDialog extends ResizableWindow {
         continueBox.setValue(true);
         formLayout.addComponent(continueBox);
 
+        cascadeBox = new CheckBox("Fill dependent tables also.");
+        cascadeBox.setValue(false);
+        formLayout.addComponent(cascadeBox);
+
+        cascadeSelectBox = new CheckBox("Fill dependent tables by selecting existing data.");
+        cascadeSelectBox.setValue(false);
+        formLayout.addComponent(cascadeSelectBox);
+
+        verboseBox = new CheckBox("Turn on verbose logging during fill.");
+        verboseBox.setValue(false);
+        formLayout.addComponent(verboseBox);
+
+        truncateBox = new CheckBox("Truncate table(s) before filling.");
+        truncateBox.setValue(false);
+        formLayout.addComponent(truncateBox);
+        
         oGroup = new OptionGroup();
         oGroup.addItem("Fill Table(s)");
         oGroup.addItem("Send to Sql Editor");
@@ -318,6 +342,10 @@ public class DbFillDialog extends ResizableWindow {
         dbFill.setSchema(tableSelectionLayout.schemaSelect.getValue() != null ? tableSelectionLayout.schemaSelect
                 .getValue().toString() : null);
         dbFill.setContinueOnError(continueBox.getValue());
+        dbFill.setCascading(cascadeBox.getValue());
+        dbFill.setCascadingSelect(cascadeSelectBox.getValue());
+        dbFill.setVerbose(verboseBox.getValue());
+        dbFill.setTruncate(truncateBox.getValue());
         dbFill.setRecordCount(Integer.parseInt(countField.getValue().toString()));
         dbFill.setInterval(Integer.parseInt(intervalField.getValue().toString()));
         int[] weights = new int[3];
