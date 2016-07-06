@@ -343,9 +343,10 @@ public class DbFillDialog extends ResizableWindow {
                 .getValue().toString() : null);
         dbFill.setContinueOnError(continueBox.getValue());
         dbFill.setCascading(cascadeBox.getValue());
-        dbFill.setCascadingSelect(cascadeSelectBox.getValue());
+        // TODO these can be made available when SymmetricDS dependency is pointed to 3.8
+        //dbFill.setCascadingSelect(cascadeSelectBox.getValue());
         dbFill.setVerbose(verboseBox.getValue());
-        dbFill.setTruncate(truncateBox.getValue());
+        //dbFill.setTruncate(truncateBox.getValue());
         dbFill.setRecordCount(Integer.parseInt(countField.getValue().toString()));
         dbFill.setInterval(Integer.parseInt(intervalField.getValue().toString()));
         int[] weights = new int[3];
