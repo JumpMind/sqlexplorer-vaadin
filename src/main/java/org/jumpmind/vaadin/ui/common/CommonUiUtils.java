@@ -203,7 +203,7 @@ public final class CommonUiUtils {
     }
 
     public static Object getObject(ResultSet rs, int i) throws SQLException {
-        Object obj = JdbcSqlTemplate.getResultSetValue(rs, i, false);
+        Object obj = JdbcSqlTemplate.getResultSetValue(rs, rs.getMetaData(), i, false);
         if (obj instanceof byte[]) {
             obj = new String(Hex.encodeHex((byte[]) obj));
         }
