@@ -32,8 +32,10 @@ import java.util.Set;
 import org.jumpmind.db.model.Column;
 import org.jumpmind.db.model.Database;
 import org.jumpmind.db.model.Table;
+import org.jumpmind.db.model.Trigger;
 import org.jumpmind.db.platform.DatabaseInfo;
 import org.jumpmind.db.platform.IDatabasePlatform;
+import org.jumpmind.db.platform.IDdlReader;
 import org.jumpmind.db.sql.DmlStatement;
 import org.jumpmind.db.sql.DmlStatement.DmlType;
 import org.jumpmind.db.sql.Row;
@@ -92,6 +94,8 @@ public class SqlExplorer extends HorizontalSplitPanel {
     String user;
 
     Set<TableInfoPanel> tableInfoTabs = new HashSet<TableInfoPanel>();
+    
+    Set<TriggerInfoPanel> triggerInfoTabs = new HashSet<TriggerInfoPanel>();
 
     public SqlExplorer(String configDir, IDbProvider databaseProvider, ISettingsProvider settingsProvider, String user) {
         this(configDir, databaseProvider, settingsProvider, user, DEFAULT_SPLIT_POS);
@@ -409,10 +413,16 @@ public class SqlExplorer extends HorizontalSplitPanel {
                         selectedTabCaption = panel.getSelectedTabCaption();
                         contentTabs.removeComponent(panel);
                     }
+                    for (TriggerInfoPanel panel : triggerInfoTabs) {
+                    	selectedTabCaption = panel.getSelectedTabCaption();
+                    	contentTabs.removeComponent(panel);
+                    }
                     tableInfoTabs.clear();
+                    triggerInfoTabs.clear();
+                    
                     if (nodes.size() > 0) {
                         DbTreeNode treeNode = nodes.iterator().next();
-                        if (treeNode != null && DbTree.NODE_TYPE_TABLE.equals(treeNode.getType())) {
+                        if (treeNode != null && treeNode.getType().equals(DbTree.NODE_TYPE_TABLE)) {
                             Table table = treeNode.getTableFor();
                             if (table != null) {
                                 IDb db = dbTree.getDbForNode(treeNode);
@@ -422,6 +432,18 @@ public class SqlExplorer extends HorizontalSplitPanel {
                                 selectContentTab(tableInfoTab);
                                 tableInfoTabs.add(tableInfoTab);
                             }
+                        } else if (treeNode != null && treeNode.getType().equals(DbTree.NODE_TYPE_TRIGGER)) {
+                        	Table table = treeNode.getParent().getTableFor();
+                        	IDdlReader reader = dbTree.getDbForNode(treeNode).getPlatform().getDdlReader();
+                        	Trigger trigger = reader.getTriggerFor(table, treeNode.getName());
+                        	if (trigger != null) {
+                        		IDb db = dbTree.getDbForNode(treeNode);
+	                        	TriggerInfoPanel triggerInfoTab = new TriggerInfoPanel(trigger, table, user, db, settingsProvider.get(), selectedTabCaption);
+	                        	Tab tab = contentTabs.addTab(triggerInfoTab, trigger.getName(), FontAwesome.CROSSHAIRS, 0);
+	                        	tab.setClosable(true);
+	                        	selectContentTab(triggerInfoTab);
+	                        	triggerInfoTabs.add(triggerInfoTab);
+                        	}
                         }
                     }
 
@@ -511,7 +533,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
                     new DbExportDialog(db.getPlatform(), dbTree.getSelectedTables(), findQueryPanelForDb(db)).showAtSize(0.6);
                 }
             }
-        }, DbTree.NODE_TYPE_TABLE);
+        }, DbTree.NODE_TYPE_TABLE, DbTree.NODE_TYPE_TRIGGER);
 
         tree.registerAction(new DbTreeAction("Fill", FontAwesome.BEER) {
             private static final long serialVersionUID = 1L;

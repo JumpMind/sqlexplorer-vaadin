@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jumpmind.db.model.Table;
+import org.jumpmind.db.model.Trigger;
 import org.jumpmind.db.platform.IDatabasePlatform;
 import org.jumpmind.db.platform.IDdlReader;
 import org.jumpmind.vaadin.ui.common.CommonUiUtils;
@@ -41,321 +42,392 @@ import com.vaadin.ui.Tree;
 
 public class DbTree extends Tree {
 
-    public static final String PROPERTY_SCHEMA_NAME = "schemaName";
-    public static final String PROPERTY_CATALOG_NAME = "catalogName";
+	public static final String PROPERTY_SCHEMA_NAME = "schemaName";
+	public static final String PROPERTY_CATALOG_NAME = "catalogName";
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    final Logger log = LoggerFactory.getLogger(getClass());
+	final Logger log = LoggerFactory.getLogger(getClass());
 
-    public final static String[] TABLE_TYPES = new String[] { "TABLE", "SYSTEM TABLE",
-            "SYSTEM VIEW" };
+	public final static String[] TABLE_TYPES = new String[] { "TABLE",
+			"SYSTEM TABLE", "SYSTEM VIEW" };
 
-    public static final String NODE_TYPE_DATABASE = "Database";
-    public static final String NODE_TYPE_CATALOG = "Catalog";
-    public static final String NODE_TYPE_SCHEMA = "Schema";
-    public static final String NODE_TYPE_TABLE = "Table";
+	public static final String NODE_TYPE_DATABASE = "Database";
+	public static final String NODE_TYPE_CATALOG = "Catalog";
+	public static final String NODE_TYPE_SCHEMA = "Schema";
+	public static final String NODE_TYPE_TABLE = "Table";
+	public static final String NODE_TYPE_TRIGGER = "Trigger";
 
-    IDbProvider databaseProvider;
+	IDbProvider databaseProvider;
 
-    ISettingsProvider settingsProvider;
+	ISettingsProvider settingsProvider;
 
-    Set<DbTreeNode> expanded = new HashSet<DbTreeNode>();
+	Set<DbTreeNode> expanded = new HashSet<DbTreeNode>();
 
-    Set<DbTreeNode> hasBeenExpanded = new HashSet<DbTreeNode>();
+	Set<DbTreeNode> hasBeenExpanded = new HashSet<DbTreeNode>();
 
-    Map<String, List<DbTreeAction>> actionsByNodeType = new HashMap<String, List<DbTreeAction>>();
+	Map<String, List<DbTreeAction>> actionsByNodeType = new HashMap<String, List<DbTreeAction>>();
 
-    public DbTree(IDbProvider databaseProvider, ISettingsProvider settingsProvider) {
-        this.databaseProvider = databaseProvider;
-        this.settingsProvider = settingsProvider;
-        setWidth(100, Unit.PERCENTAGE);
-        setImmediate(true);
-        setMultiSelect(true);
-        setSelectable(true);
-        setItemStyleGenerator(new StyleGenerator());
-        Listener listener = new Listener();
-        addCollapseListener(listener);
-        addExpandListener(listener);
-        addActionHandler(new Handler());
-    }
+	public DbTree(IDbProvider databaseProvider,
+			ISettingsProvider settingsProvider) {
+		this.databaseProvider = databaseProvider;
+		this.settingsProvider = settingsProvider;
+		setWidth(100, Unit.PERCENTAGE);
+		setImmediate(true);
+		setMultiSelect(true);
+		setSelectable(true);
+		setItemStyleGenerator(new StyleGenerator());
+		Listener listener = new Listener();
+		addCollapseListener(listener);
+		addExpandListener(listener);
+		addActionHandler(new Handler());
+	}
 
-    public void registerAction(DbTreeAction action, String... nodeTypes) {
-        for (String nodeType : nodeTypes) {
-            List<DbTreeAction> actions = actionsByNodeType.get(nodeType);
-            if (actions == null) {
-                actions = new ArrayList<DbTreeAction>();
-                actionsByNodeType.put(nodeType, actions);
-            }
-            actions.add(action);
-        }
-    }
+	public void registerAction(DbTreeAction action, String... nodeTypes) {
+		for (String nodeType : nodeTypes) {
+			List<DbTreeAction> actions = actionsByNodeType.get(nodeType);
+			if (actions == null) {
+				actions = new ArrayList<DbTreeAction>();
+				actionsByNodeType.put(nodeType, actions);
+			}
+			actions.add(action);
+		}
+	}
 
-    public void refresh() {
-        hasBeenExpanded.clear();
-        List<IDb> databases = databaseProvider.getDatabases();
-        Set<DbTreeNode> expandedItems = new HashSet<DbTreeNode>(expanded);
-        expanded.clear();
-        Set<DbTreeNode> selected = getSelected();
-        removeAllItems();
-        DbTreeNode firstNode = null;
-        for (IDb database : databases) {
-            DbTreeNode databaseNode = new DbTreeNode(this, database.getName(), NODE_TYPE_DATABASE,
-                    FontAwesome.DATABASE, null);
-            addItem(databaseNode);
-            setItemIcon(databaseNode, databaseNode.getIcon());
+	public void refresh() {
+		hasBeenExpanded.clear();
+		List<IDb> databases = databaseProvider.getDatabases();
+		Set<DbTreeNode> expandedItems = new HashSet<DbTreeNode>(expanded);
+		expanded.clear();
+		Set<DbTreeNode> selected = getSelected();
+		removeAllItems();
+		DbTreeNode firstNode = null;
+		for (IDb database : databases) {
+			DbTreeNode databaseNode = new DbTreeNode(this, database.getName(),
+					NODE_TYPE_DATABASE, FontAwesome.DATABASE, null);
+			addItem(databaseNode);
+			setItemIcon(databaseNode, databaseNode.getIcon());
 
-            if (firstNode == null) {
-                firstNode = databaseNode;
-            }
-        }
+			if (firstNode == null) {
+				firstNode = databaseNode;
+			}
+		}
 
-        for (DbTreeNode expandedItem : expandedItems) {
-            expandItem(expandedItem);
-        }
+		for (DbTreeNode expandedItem : expandedItems) {
+			expandItem(expandedItem);
+		}
 
-        if (selected == null || selected.size() == 0) {
-            selected = new HashSet<DbTreeNode>();
-            selected.add(firstNode);
-        }
-        setValue(selected);
-        focus();
+		if (selected == null || selected.size() == 0) {
+			selected = new HashSet<DbTreeNode>();
+			selected.add(firstNode);
+		}
+		setValue(selected);
+		focus();
 
-    }
+	}
 
-    @SuppressWarnings("unchecked")
-    public Set<DbTreeNode> getSelected() {
-        return (Set<DbTreeNode>) getValue();
-    }
+	@SuppressWarnings("unchecked")
+	public Set<DbTreeNode> getSelected() {
+		return (Set<DbTreeNode>) getValue();
+	}
 
-    @SuppressWarnings("unchecked")
-    public Set<DbTreeNode> getSelected(String type) {
-        HashSet<DbTreeNode> nodes = new HashSet<DbTreeNode>();
-        Set<DbTreeNode> selected = (Set<DbTreeNode>) getValue();
-        for (DbTreeNode treeNode : selected) {
-            if (treeNode.getType().equals(type)) {
-                nodes.add(treeNode);
-            }
-        }
-        return nodes;
-    }
-    
-    public Set<Table> getSelectedTables() {
-        Set<Table> tables = new HashSet<Table>();
-        for (DbTreeNode treeNode : getSelected()) {
-            Table table = treeNode.getTableFor();
-            if (table != null) {
-                tables.add(table);
-            }
-        }
-        return tables;
-    }    
+	@SuppressWarnings("unchecked")
+	public Set<DbTreeNode> getSelected(String type) {
+		HashSet<DbTreeNode> nodes = new HashSet<DbTreeNode>();
+		Set<DbTreeNode> selected = (Set<DbTreeNode>) getValue();
+		for (DbTreeNode treeNode : selected) {
+			if (treeNode.getType().equals(type)) {
+				nodes.add(treeNode);
+			}
+		}
+		return nodes;
+	}
 
-    protected IDb getDbForNode(DbTreeNode node) {
-        while (node.getParent() != null) {
-            node = node.getParent();
-        }
-        String databaseName = node.getName();
-        List<IDb> databases = databaseProvider.getDatabases();
-        for (IDb database : databases) {
-            if (database.getName().equals(databaseName)) {
-                return database;
-            }
-        }
-        return null;
-    }
+	public Set<Table> getSelectedTables() {
+		Set<Table> tables = new HashSet<Table>();
+		for (DbTreeNode treeNode : getSelected()) {
+			Table table = treeNode.getTableFor();
+			if (table != null) {
+				tables.add(table);
+			}
+		}
+		return tables;
+	}
 
-    protected void expanded(DbTreeNode treeNode) {
-        if (!hasBeenExpanded.contains(treeNode)) {
-            hasBeenExpanded.add(treeNode);
+	protected IDb getDbForNode(DbTreeNode node) {
+		while (node.getParent() != null) {
+			node = node.getParent();
+		}
+		String databaseName = node.getName();
+		List<IDb> databases = databaseProvider.getDatabases();
+		for (IDb database : databases) {
+			if (database.getName().equals(databaseName)) {
+				return database;
+			}
+		}
+		return null;
+	}
 
-            try {
-                IDatabasePlatform platform = getDbForNode(treeNode).getPlatform();
-                IDdlReader reader = platform.getDdlReader();
+	protected void expanded(DbTreeNode treeNode) {
+		if (!hasBeenExpanded.contains(treeNode)) {
+			hasBeenExpanded.add(treeNode);
 
-                Collection<?> children = getChildren(treeNode);
-                if (children == null || children.size() == 0) {
-                    if (treeNode.getType().equals(NODE_TYPE_DATABASE)) {
-                        List<DbTreeNode> nextLevel = new ArrayList<DbTreeNode>();
-                        List<String> catalogs = reader.getCatalogNames();
-                        if (catalogs.size() > 0) {
-                            if (catalogs.remove(platform.getDefaultCatalog())) {
-                                catalogs.add(0, platform.getDefaultCatalog());
-                            }
-                            for (String catalog : catalogs) {
-                                DbTreeNode catalogNode = new DbTreeNode(this, catalog, NODE_TYPE_CATALOG,
-                                        FontAwesome.BOOK, treeNode);
-                                nextLevel.add(catalogNode);
-                            }
-                        } else {
-                            List<String> schemas = reader.getSchemaNames(null);
-                            if (schemas.remove(platform.getDefaultSchema())) {
-                                schemas.add(0, platform.getDefaultSchema());
-                            }
-                            for (String schema : schemas) {
-                                DbTreeNode schemaNode = new DbTreeNode(this, schema, NODE_TYPE_SCHEMA,
-                                        FontAwesome.BOOK, treeNode);
-                                nextLevel.add(schemaNode);
-                            }
-                        }
+			try {
+				IDatabasePlatform platform = getDbForNode(treeNode)
+						.getPlatform();
+				IDdlReader reader = platform.getDdlReader();
 
-                        if (nextLevel.size() == 0) {
-                            nextLevel.addAll(getTableTreeNodes(reader, treeNode, null, null));
-                        }
+				Collection<?> children = getChildren(treeNode);
+				if (children == null || children.size() == 0) {
+					if (treeNode.getType().equals(NODE_TYPE_DATABASE)) {
+						List<DbTreeNode> nextLevel = new ArrayList<DbTreeNode>();
+						List<String> catalogs = reader.getCatalogNames();
+						if (catalogs.size() > 0) {
+							if (catalogs.remove(platform.getDefaultCatalog())) {
+								catalogs.add(0, platform.getDefaultCatalog());
+							}
+							for (String catalog : catalogs) {
+								DbTreeNode catalogNode = new DbTreeNode(this,
+										catalog, NODE_TYPE_CATALOG,
+										FontAwesome.BOOK, treeNode);
+								nextLevel.add(catalogNode);
+							}
+						} else {
+							List<String> schemas = reader.getSchemaNames(null);
+							if (schemas.remove(platform.getDefaultSchema())) {
+								schemas.add(0, platform.getDefaultSchema());
+							}
+							for (String schema : schemas) {
+								DbTreeNode schemaNode = new DbTreeNode(this,
+										schema, NODE_TYPE_SCHEMA,
+										FontAwesome.BOOK, treeNode);
+								nextLevel.add(schemaNode);
+							}
+						}
 
-                        treeNode.getChildren().addAll(nextLevel);
-                        for (DbTreeNode node : nextLevel) {
-                            addTreeNode(node);
-                        }
-                    } else if (treeNode.getType().equals(NODE_TYPE_CATALOG)) {
-                        List<String> schemas = reader.getSchemaNames(treeNode.getName());
-                        if (schemas.size() > 0) {
-                            if (schemas.remove(platform.getDefaultSchema())) {
-                                schemas.add(0, platform.getDefaultSchema());
-                            }
-                            for (String schema : schemas) {
-                                DbTreeNode schemaNode = new DbTreeNode(this, schema, NODE_TYPE_SCHEMA,
-                                        FontAwesome.BOOK, treeNode);
-                                treeNode.getChildren().add(schemaNode);
-                                addTreeNode(schemaNode);
-                            }
-                        } else {
-                            addTableNodes(reader, treeNode, treeNode.getName(), null);
-                        }
+						if (nextLevel.size() == 0) {
+							nextLevel.addAll(getTableTreeNodes(reader,
+									treeNode, null, null));
+						}
 
-                    } else if (treeNode.getType().equals(NODE_TYPE_SCHEMA)) {
-                        String catalogName = null;
-                        DbTreeNode parent = (DbTreeNode) getParent(treeNode);
-                        if (parent != null && parent.getType().equals(NODE_TYPE_CATALOG)) {
-                            catalogName = parent.getName();
-                        }
-                        addTableNodes(reader, treeNode, catalogName, treeNode.getName());
-                    }
+						treeNode.getChildren().addAll(nextLevel);
+						for (DbTreeNode node : nextLevel) {
+							addTreeNode(node);
+						}
+					} else if (treeNode.getType().equals(NODE_TYPE_CATALOG)) {
+						List<String> schemas = reader.getSchemaNames(treeNode
+								.getName());
+						if (schemas.size() > 0) {
+							if (schemas.remove(platform.getDefaultSchema())) {
+								schemas.add(0, platform.getDefaultSchema());
+							}
+							for (String schema : schemas) {
+								DbTreeNode schemaNode = new DbTreeNode(this,
+										schema, NODE_TYPE_SCHEMA,
+										FontAwesome.BOOK, treeNode);
+								treeNode.getChildren().add(schemaNode);
+								addTreeNode(schemaNode);
+							}
+						} else {
+							addTableNodes(reader, treeNode, treeNode.getName(),
+									null);
+						}
 
-                    setChildrenAllowed(treeNode, treeNode.getChildren().size() > 0);
-                }
-            } catch (Exception ex) {
-                log.error(ex.getMessage(), ex);
-                CommonUiUtils.notify(ex);
-            }
-        }
-    }
+					} else if (treeNode.getType().equals(NODE_TYPE_SCHEMA)) {
+						String catalogName = null;
+						DbTreeNode parent = (DbTreeNode) getParent(treeNode);
+						if (parent != null
+								&& parent.getType().equals(NODE_TYPE_CATALOG)) {
+							catalogName = parent.getName();
+						}
+						addTableNodes(reader, treeNode, catalogName,
+								treeNode.getName());
+					} else if (treeNode.getType().equals(NODE_TYPE_TABLE)) {
+						String catalogName = null, schemaName = null;
+						DbTreeNode parent = (DbTreeNode) getParent(treeNode);
+						if (parent != null
+								&& parent.getType().equals(NODE_TYPE_SCHEMA)) {
+							schemaName = parent.getName();
+							DbTreeNode grandparent = (DbTreeNode) getParent(parent);
+							if (grandparent != null
+									&& grandparent.getType().equals(
+											NODE_TYPE_CATALOG)) {
+								catalogName = grandparent.getName();
+							}
+						} else if (parent != null
+								&& parent.getType().equals(NODE_TYPE_CATALOG)) {
+							catalogName = parent.getName();
+						}
+						addTriggerNodes(reader, treeNode, catalogName, schemaName);
+						System.out.println();
+					}
+					
+					setChildrenAllowed(treeNode,
+							treeNode.getChildren().size() > 0);
+				}
+			} catch (Exception ex) {
+				log.error(ex.getMessage(), ex);
+				CommonUiUtils.notify(ex);
+			}
+		}
+	}
 
-    protected void addTreeNode(DbTreeNode node) {
-        addItem(node);
-        setParent(node, node.getParent());
-        setItemIcon(node, node.getIcon());
-        setChildrenAllowed(node, !node.getType().equals(NODE_TYPE_TABLE));
-    }
+	protected void addTreeNode(DbTreeNode node) {
+		addItem(node);
+		setParent(node, node.getParent());
+		setItemIcon(node, node.getIcon());
+		setChildrenAllowed(node, !node.getType().equals(NODE_TYPE_TRIGGER));
+	}
 
-    protected List<DbTreeNode> getTableTreeNodes(IDdlReader reader, DbTreeNode parent,
-            String catalogName, String schemaName) {
-        List<DbTreeNode> list = new ArrayList<DbTreeNode>();
-        List<String> tables = reader.getTableNames(catalogName, schemaName, TABLE_TYPES);
-        for (String tableName : tables) {
-            String excludeRegex = settingsProvider.get().getProperties()
-                    .get(Settings.SQL_EXPLORER_EXCLUDE_TABLES_REGEX);
-            if (!tableName.matches(excludeRegex) && !tableName.toUpperCase().matches(excludeRegex)
-                    && !tableName.toLowerCase().matches(excludeRegex)) {
+	protected List<DbTreeNode> getTableTreeNodes(IDdlReader reader,
+			DbTreeNode parent, String catalogName, String schemaName) {
+		List<DbTreeNode> list = new ArrayList<DbTreeNode>();
+		List<String> tables = reader.getTableNames(catalogName, schemaName,
+				TABLE_TYPES);
+		for (String tableName : tables) {
+			String excludeRegex = settingsProvider.get().getProperties()
+					.get(Settings.SQL_EXPLORER_EXCLUDE_TABLES_REGEX);
+			if (!tableName.matches(excludeRegex)
+					&& !tableName.toUpperCase().matches(excludeRegex)
+					&& !tableName.toLowerCase().matches(excludeRegex)) {
 
-                DbTreeNode treeNode = new DbTreeNode(this, tableName, NODE_TYPE_TABLE, FontAwesome.TABLE,
-                        parent);
-                if (catalogName != null) {
-                    treeNode.getProperties().setProperty(PROPERTY_CATALOG_NAME, catalogName);
-                }
-                if (schemaName != null) {
-                    treeNode.getProperties().setProperty(PROPERTY_SCHEMA_NAME, schemaName);
-                }
+				DbTreeNode treeNode = new DbTreeNode(this, tableName,
+						NODE_TYPE_TABLE, FontAwesome.TABLE, parent);
+				if (catalogName != null) {
+					treeNode.getProperties().setProperty(PROPERTY_CATALOG_NAME,
+							catalogName);
+				}
+				if (schemaName != null) {
+					treeNode.getProperties().setProperty(PROPERTY_SCHEMA_NAME,
+							schemaName);
+				}
 
-                list.add(treeNode);
-            }
-        }
-        return list;
-    }
+				list.add(treeNode);
+			}
+		}
+		return list;
+	}
 
-    protected void addTableNodes(IDdlReader reader, DbTreeNode parent, String catalogName,
-            String schemaName) {
-        List<DbTreeNode> nodes = getTableTreeNodes(reader, parent, catalogName, schemaName);
-        for (DbTreeNode treeNode : nodes) {
-            parent.getChildren().add(treeNode);
-            addTreeNode(treeNode);
-        }
-    }
+	protected void addTableNodes(IDdlReader reader, DbTreeNode parent,
+			String catalogName, String schemaName) {
+		List<DbTreeNode> nodes = getTableTreeNodes(reader, parent, catalogName,
+				schemaName);
+		for (DbTreeNode treeNode : nodes) {
+			parent.getChildren().add(treeNode);
+			addTreeNode(treeNode);
+		}
+	}
 
-    class Listener implements CollapseListener, ExpandListener {
+	protected List<DbTreeNode> getTriggerTreeNodes(IDdlReader reader,
+			DbTreeNode parent, String catalogName, String schemaName) {
+		List<DbTreeNode> list = new ArrayList<DbTreeNode>();
+		List<Trigger> triggers = reader.getTriggers(catalogName, schemaName,
+				parent.getName());
+		for (Trigger trigger : triggers) {
+			DbTreeNode treeNode = new DbTreeNode(this, trigger.getName(),
+					NODE_TYPE_TRIGGER, FontAwesome.CROSSHAIRS, parent);
+			if (catalogName != null) {
+				treeNode.getProperties().setProperty(PROPERTY_CATALOG_NAME,
+						catalogName);
+			}
+			if (schemaName != null) {
+				treeNode.getProperties().setProperty(PROPERTY_SCHEMA_NAME,
+						schemaName);
+			}
+			list.add(treeNode);
+		}
+		return list;
+	}
 
-        private static final long serialVersionUID = 1L;
+	protected void addTriggerNodes(IDdlReader reader, DbTreeNode parent,
+			String catalogName, String schemaName) {
+		List<DbTreeNode> nodes = getTriggerTreeNodes(reader, parent,
+				catalogName, schemaName);
+		for (DbTreeNode treeNode : nodes) {
+			parent.getChildren().add(treeNode);
+			addTreeNode(treeNode);
+		}
+	}
 
-        @Override
-        public void nodeCollapse(CollapseEvent event) {
-            expanded.remove(event.getItemId());
-        }
+	class Listener implements CollapseListener, ExpandListener {
 
-        @Override
-        public void nodeExpand(ExpandEvent event) {
-            DbTreeNode node = (DbTreeNode) event.getItemId();
-            expanded.add(node);
-            expanded(node);
-        }
+		private static final long serialVersionUID = 1L;
 
-    }
+		@Override
+		public void nodeCollapse(CollapseEvent event) {
+			expanded.remove(event.getItemId());
+		}
 
-    class StyleGenerator implements ItemStyleGenerator {
-        private static final long serialVersionUID = 1L;
+		@Override
+		public void nodeExpand(ExpandEvent event) {
+			DbTreeNode node = (DbTreeNode) event.getItemId();
+			expanded.add(node);
+			expanded(node);
+		}
 
-        public String getStyle(Tree source, Object itemId) {
-            if (itemId instanceof DbTreeNode) {
-                try {
-                    DbTreeNode node = (DbTreeNode) itemId;
-                    if (node.getType().equals(NODE_TYPE_CATALOG)) {
-                        IDatabasePlatform platform = getDbForNode(node).getPlatform();
-                        String catalog = platform.getDefaultCatalog();
-                        if (catalog != null && catalog.equals(node.getName())) {
-                            return "bold";
-                        }
-                    } else if (node.getType().equals(NODE_TYPE_SCHEMA)) {
-                        IDatabasePlatform platform = getDbForNode(node).getPlatform();
-                        String schema = platform.getDefaultSchema();
-                        if (schema != null && schema.equals(node.getName())) {
-                            return "bold";
-                        }
-                    }
-                } catch (Exception e) {
-                    log.error("Failed to see if this node is the default catalog and/or schema", e);
-                }
-            }
-            return null;
+	}
 
-        }
-    }
+	class StyleGenerator implements ItemStyleGenerator {
+		private static final long serialVersionUID = 1L;
 
-    class Handler implements com.vaadin.event.Action.Handler {
+		public String getStyle(Tree source, Object itemId) {
+			if (itemId instanceof DbTreeNode) {
+				try {
+					DbTreeNode node = (DbTreeNode) itemId;
+					if (node.getType().equals(NODE_TYPE_CATALOG)) {
+						IDatabasePlatform platform = getDbForNode(node)
+								.getPlatform();
+						String catalog = platform.getDefaultCatalog();
+						if (catalog != null && catalog.equals(node.getName())) {
+							return "bold";
+						}
+					} else if (node.getType().equals(NODE_TYPE_SCHEMA)) {
+						IDatabasePlatform platform = getDbForNode(node)
+								.getPlatform();
+						String schema = platform.getDefaultSchema();
+						if (schema != null && schema.equals(node.getName())) {
+							return "bold";
+						}
+					}
+				} catch (Exception e) {
+					log.error(
+							"Failed to see if this node is the default catalog and/or schema",
+							e);
+				}
+			}
+			return null;
 
-        private static final long serialVersionUID = 1L;
+		}
+	}
 
-        @Override
-        public Action[] getActions(Object target, Object sender) {
-            if (target instanceof DbTreeNode) {
-                DbTreeNode treeNode = (DbTreeNode) target;
-                List<DbTreeAction> actions = actionsByNodeType.get(treeNode.getType());
-                if (actions != null) {
-                    return actions.toArray(new Action[actions.size()]);
-                }
-            }
-            return new Action[0];
+	class Handler implements com.vaadin.event.Action.Handler {
 
-        }
+		private static final long serialVersionUID = 1L;
 
-        @Override
-        public void handleAction(Action action, Object sender, Object target) {
-            if (action instanceof DbTreeAction) {
-                if (!getSelected().contains(target)) {
-                    select(target);
-                }
-                DbTreeNode node = (DbTreeNode) target;
-                ((DbTreeAction) action).handle(getSelected(node.getType()));
-            }
-        }
-    }
+		@Override
+		public Action[] getActions(Object target, Object sender) {
+			if (target instanceof DbTreeNode) {
+				DbTreeNode treeNode = (DbTreeNode) target;
+				List<DbTreeAction> actions = actionsByNodeType.get(treeNode
+						.getType());
+				if (actions != null) {
+					return actions.toArray(new Action[actions.size()]);
+				}
+			}
+			return new Action[0];
+
+		}
+
+		@Override
+		public void handleAction(Action action, Object sender, Object target) {
+			if (action instanceof DbTreeAction) {
+				if (!getSelected().contains(target)) {
+					select(target);
+				}
+				DbTreeNode node = (DbTreeNode) target;
+				((DbTreeAction) action).handle(getSelected(node.getType()));
+			}
+		}
+	}
 
 }

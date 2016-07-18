@@ -61,7 +61,8 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
     
     String selectedCaption;
 
-    public TableInfoPanel(org.jumpmind.db.model.Table table, String user, IDb db, Settings settings, String selectedTabCaption) {
+    public TableInfoPanel(final org.jumpmind.db.model.Table table, final String user, final IDb db,
+    		final Settings settings, String selectedTabCaption) {
 
         setSizeFull();
 
@@ -74,13 +75,23 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
             @Override
             public void selectedTabChange(SelectedTabChangeEvent event) {
                 selectedCaption = tabSheet.getTab(tabSheet.getSelectedTab()).getCaption();
+                
+                if (tabSheet.getSelectedTab() instanceof AbstractLayout) {
+                	AbstractLayout layout = (AbstractLayout) tabSheet.getSelectedTab();
+                	if (selectedCaption.equals("Data") && layout.getData() != null && layout.getData().equals(true)) {
+                		refreshData(table, user, db, settings, false);
+    				} else if (layout.getData() != null && layout.getData() instanceof AbstractMetaDataTableCreator) {
+    					populate((VerticalLayout) layout);
+    				}
+                } else if (tabSheet.getSelectedTab() instanceof AceEditor &&
+                		((AceEditor) tabSheet.getSelectedTab()).getData().equals(true)) {
+                	populateSource(table, db, (AceEditor) tabSheet.getSelectedTab());
+                }
             }
         });
         addComponent(tabSheet);
 
         JdbcSqlTemplate sqlTemplate = (JdbcSqlTemplate) db.getPlatform().getSqlTemplate();
-
-        refreshData(table, user, db, settings);
 
         tabSheet.addTab(create(new ColumnMetaDataTableCreator(sqlTemplate, table, settings)),
                 "Columns");
@@ -95,20 +106,11 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
                     settings)), "Exported Keys");
         }
         
-        try {
-            DbExport export = new DbExport(db.getPlatform());
-            export.setNoCreateInfo(false);
-            export.setNoData(true);
-            export.setCatalog(table.getCatalog());
-            export.setSchema(table.getSchema());
-            export.setFormat(Format.SQL);
-            AceEditor editor = CommonUiUtils.createAceEditor();
-            editor.setMode(AceMode.sql);
-            editor.setValue(export.exportTables(new org.jumpmind.db.model.Table[] { table }));
-            tabSheet.addTab(editor, "Source");
-        } catch (IOException e) {
-            log.warn("Failed to export the create information", e);
-        }
+        refreshData(table, user, db, settings, true);
+        
+        AceEditor editor = new AceEditor();
+        editor.setData(true);
+        tabSheet.addTab(editor, "Source");
         
         Iterator<Component> i = tabSheet.iterator();
         while (i.hasNext()) {
@@ -119,6 +121,7 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
                 break;
             }            
         }
+        
     }
     
     public String getSelectedTabCaption() {
@@ -126,8 +129,13 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
     }
 
     protected void refreshData(final org.jumpmind.db.model.Table table, final String user, final IDb db,
-            final Settings settings) {
-        IDatabasePlatform platform = db.getPlatform();
+            final Settings settings, boolean isInit) {
+        
+    	if (!isInit) {
+        	tabSheet.removeTab(tabSheet.getTab(1));
+        }
+    	
+    	IDatabasePlatform platform = db.getPlatform();
         DmlStatement dml = platform.createDmlStatement(DmlType.SELECT_ALL, table, null);
 
         final HorizontalLayout executingLayout = new HorizontalLayout();
@@ -137,8 +145,8 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
         final int oldPollInterval = UI.getCurrent().getPollInterval();
         UI.getCurrent().setPollInterval(100);
         executingLayout.addComponent(p);
-        tabSheet.addTab(executingLayout, "Data", FontAwesome.SPINNER, 0);
-        tabSheet.setSelectedTab(executingLayout);
+        executingLayout.setData(isInit);
+        tabSheet.addTab(executingLayout, "Data", isInit ? null : FontAwesome.SPINNER, 1);
 
         SqlRunner runner = new SqlRunner(dml.getSql(), false, user, db, settings,
                 new ISqlRunnerListener() {
@@ -151,8 +159,7 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
 
                     @Override
                     public void reExecute(String sql) {
-                        tabSheet.removeTab(tabSheet.getTab(0));
-                        refreshData(table, user, db, settings);
+                        refreshData(table, user, db, settings, false);
                     }
 
                     @Override
@@ -163,7 +170,6 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
 
                             @Override
                             public void run() {
-                                boolean select = tabSheet.getSelectedTab().equals(executingLayout);
                                 tabSheet.removeComponent(executingLayout);
                                 VerticalLayout layout = new VerticalLayout();
                                 layout.setMargin(true);
@@ -171,28 +177,55 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
                                 if (results.size() > 0) {
                                     layout.addComponent(results.get(0));
                                 }
-                                tabSheet.addTab(layout, "Data", null, 0);
+                                tabSheet.addTab(layout, "Data", null, 1);
                                 UI.getCurrent().setPollInterval(oldPollInterval);
-                                if (select) {
-                                    tabSheet.setSelectedTab(layout);
-                                }
+                                tabSheet.setSelectedTab(layout);
                             }
                         });
                     }
                 });
         runner.setShowSqlOnResults(false);
         runner.setLogAtDebug(true);
-        runner.start();
+        if (!isInit) {
+        	runner.start();
+        }
+        
     }
 
     protected AbstractLayout create(AbstractMetaDataTableCreator creator) {
-        Table table = creator.create();
         VerticalLayout layout = new VerticalLayout();
         layout.setMargin(true);
         layout.setSizeFull();
-        layout.addComponent(table);
-        layout.setExpandRatio(table, 1);
+        layout.setData(creator);
         return layout;
+    }
+    
+    protected void populate(VerticalLayout layout) {
+    	AbstractMetaDataTableCreator creator = (AbstractMetaDataTableCreator) layout.getData();
+    	Table table = creator.create();
+    	layout.addComponent(table);
+    	layout.setExpandRatio(table, 1);
+    	layout.setData(null);
+    }
+    
+    protected void populateSource(org.jumpmind.db.model.Table table, IDb db, AceEditor oldTab) {
+    	try {
+            tabSheet.removeTab(tabSheet.getTab(oldTab));
+    		DbExport export = new DbExport(db.getPlatform());
+            export.setNoCreateInfo(false);
+            export.setNoData(true);
+            export.setCatalog(table.getCatalog());
+            export.setSchema(table.getSchema());
+            export.setFormat(Format.SQL);
+            AceEditor editor = CommonUiUtils.createAceEditor();
+            editor.setMode(AceMode.sql);
+            editor.setValue(export.exportTables(new org.jumpmind.db.model.Table[] { table }));
+            editor.setData(false);
+            tabSheet.addTab(editor, "Source");
+            tabSheet.setSelectedTab(editor);
+        } catch (IOException e) {
+            log.warn("Failed to export the create information", e);
+        }
     }
 
     @Override

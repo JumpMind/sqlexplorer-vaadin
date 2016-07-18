@@ -36,7 +36,7 @@ public class ExportDialog extends ResizableWindow {
 
     private static final long serialVersionUID = 1L;
 
-    private TabularResultLayout panel;
+    private VerticalLayout panel;
 
     private VerticalLayout exportLayout;
 
@@ -46,7 +46,7 @@ public class ExportDialog extends ResizableWindow {
 
     private Button exportButton;
 
-    public ExportDialog(TabularResultLayout panel) {
+    public ExportDialog(VerticalLayout panel) {
         super("Export");
 
         this.panel = panel;
@@ -97,9 +97,17 @@ public class ExportDialog extends ResizableWindow {
 
                     public void buttonClick(ClickEvent event) {
                         if (oGroup.getValue().toString().equals("CSV")) {
-                            panel.csvExport();
+                            if (panel instanceof TabularResultLayout) {
+                            	((TabularResultLayout) panel).csvExport();
+                            } else if (panel instanceof TriggerTableLayout) {
+                            	((TriggerTableLayout) panel).csvExport();
+                            }
                         } else {
-                            panel.excelExport();
+                        	if (panel instanceof TabularResultLayout) {
+                            	((TabularResultLayout) panel).excelExport();
+                            } else if (panel instanceof TriggerTableLayout) {
+                            	((TriggerTableLayout) panel).excelExport();
+                            }
                         }
                         UI.getCurrent().removeWindow(ExportDialog.this);
                     }
