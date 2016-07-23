@@ -187,6 +187,10 @@ public class SqlExplorer extends HorizontalSplitPanel {
             @Override
             public void menuSelected(MenuItem selectedItem) {
                 dbTree.refresh();
+                Component tab = contentTabs.getSelectedTab();
+                if (tab instanceof QueryPanel) {
+                	findQueryPanelForDb(((QueryPanel)tab).db).suggester.clearCaches();
+                }
             }
         });
         refreshButton.setIcon(FontAwesome.REFRESH);

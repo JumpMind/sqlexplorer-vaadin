@@ -39,6 +39,7 @@ import org.vaadin.aceeditor.AceEditor;
 import org.vaadin.aceeditor.AceEditor.SelectionChangeEvent;
 import org.vaadin.aceeditor.AceEditor.SelectionChangeListener;
 import org.vaadin.aceeditor.AceMode;
+import org.vaadin.aceeditor.SuggestionExtension;
 import org.vaadin.aceeditor.TextRange;
 
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -97,6 +98,8 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
     Connection connection;
 
     Label status;
+    
+    SqlSuggester suggester;
 
     transient Set<SqlRunner> runnersInProgress = new HashSet<SqlRunner>();
 
@@ -153,6 +156,9 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                 setButtonsEnabled();
             }
         });
+        
+        suggester = new SqlSuggester(db);
+        new SuggestionExtension(suggester).extend(editor);
 
         selectionChangeListener = new DummyChangeListener();
         return editor;
