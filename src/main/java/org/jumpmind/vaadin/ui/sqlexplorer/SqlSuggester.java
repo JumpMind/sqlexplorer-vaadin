@@ -1,6 +1,7 @@
 package org.jumpmind.vaadin.ui.sqlexplorer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -66,7 +67,7 @@ public class SqlSuggester implements Suggester {
 			suggestions.addAll(getTableNameSuggestions(null, null));
 		}
 		
-//		suggestions.sort(new SuggestionComparitor());
+//		Collections.sort(suggestions, new SuggestionComparitor());
 		return removeRepeats(suggestions);
 	}
 	
@@ -117,7 +118,7 @@ public class SqlSuggester implements Suggester {
 						+ aliases.get(alias), currentWord.length()));
 			}
 		}
-		suggestions.sort(new SuggestionComparitor());
+		Collections.sort(suggestions, new SuggestionComparitor());
 		return suggestions;
 	}
 	
@@ -290,7 +291,7 @@ public class SqlSuggester implements Suggester {
 						currentWord.length()));
 			}
 		}
-		suggestions.sort(new SuggestionComparitor());
+		Collections.sort(suggestions, new SuggestionComparitor());
 		return suggestions;
 	}
 	
@@ -315,7 +316,7 @@ public class SqlSuggester implements Suggester {
 						+ "</i>", currentWord.length()));
 			}
 		}
-		suggestions.sort(new SuggestionComparitor());
+		Collections.sort(suggestions, new SuggestionComparitor());
 		return suggestions;
 	}
 	
@@ -341,7 +342,7 @@ public class SqlSuggester implements Suggester {
 						+ "</i>", currentWord.length()));
 			}
 		}
-		suggestions.sort(new SuggestionComparitor());
+		Collections.sort(suggestions, new SuggestionComparitor());
 		return suggestions;
 	}
 	
@@ -376,7 +377,7 @@ public class SqlSuggester implements Suggester {
 						currentWord.length()));
 			}
 		}
-		suggestions.sort(new SuggestionComparitor());
+		Collections.sort(suggestions, new SuggestionComparitor());
 		return suggestions;
 	}
 	
