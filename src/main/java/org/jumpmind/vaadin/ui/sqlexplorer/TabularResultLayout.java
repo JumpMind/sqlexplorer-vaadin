@@ -223,7 +223,8 @@ public class TabularResultLayout extends VerticalLayout {
 
                 private static final long serialVersionUID = 1L;
 
-                @Override
+                @SuppressWarnings("unchecked")
+				@Override
                 public void itemClick(ItemClickEvent event) {
                     MouseButton button = event.getButton();
                     if (button == MouseButton.LEFT) {
@@ -234,11 +235,13 @@ public class TabularResultLayout extends VerticalLayout {
                                 String header = grid.getColumn(prop).getHeaderCaption();
                                 Property<?> p = event.getItem().getItemProperty(prop);
                                 if (p != null) {
-                                	@SuppressWarnings("unchecked")
-									Object[] primaryKeys = ((HashMap<Object, List<Object>>) grid.getData()).get(p.getValue()).toArray();
                                     String data = String.valueOf(p.getValue());
+                                	Object[] primaryKeys = null;
                                     boolean binary = resultTable != null ? resultTable.getColumnWithName(header).isOfBinaryType() : false;
                                     boolean isLob = resultTable != null ? resultTable.getColumnWithName(header).isLob() : false;
+                                    if (isLob) {
+                                    	primaryKeys = ((HashMap<Object, List<Object>>) grid.getData()).get(p.getValue()).toArray();
+                                    }
                                     if (binary) {
                                         ReadOnlyTextAreaDialog.show(header, data.toUpperCase(), table, primaryKeys, db.getPlatform(), binary, isLob);
                                     } else {
