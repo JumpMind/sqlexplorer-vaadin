@@ -147,6 +147,9 @@ public class TableInfoPanel extends VerticalLayout implements IContentTab {
         executingLayout.addComponent(p);
         executingLayout.setData(isInit);
         tabSheet.addTab(executingLayout, "Data", isInit ? null : FontAwesome.SPINNER, 1);
+        if (!isInit) {
+        	tabSheet.setSelectedTab(executingLayout);
+        }
 
         SqlRunner runner = new SqlRunner(dml.getSql(), false, user, db, settings,
                 new ISqlRunnerListener() {

@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -345,13 +346,15 @@ public final class CommonUiUtils {
         return headers.toArray(new String[headers.size()]);
     }
 
-    public static Grid putResultsInGrid(final ResultSet rs, int maxResultSize, final boolean showRowNumbers, String... excludeValues)
+    @SuppressWarnings("unchecked")
+	public static Grid putResultsInGrid(final ResultSet rs, List<Integer> pkcolumns, int maxResultSize, final boolean showRowNumbers, String... excludeValues)
             throws SQLException {
 
         final Grid grid = new Grid();
         grid.setImmediate(true);
         grid.setSelectionMode(SelectionMode.MULTI);
         grid.setColumnReorderingAllowed(true);
+        grid.setData(new HashMap<Object, List<Object>>());
 
         final ResultSetMetaData meta = rs.getMetaData();
         int columnCount = meta.getColumnCount();
@@ -465,6 +468,15 @@ public final class CommonUiUtils {
                                 o = new Long(castToNumber(o.toString()));
                             }
                             break;
+                        case Types.CLOB:
+                        case Types.BLOB:
+                        case Types.NCLOB:
+                        	List<Object> primaryKeys = new ArrayList<Object>();
+                        	for (Integer pkcolumn : pkcolumns) {
+                        		primaryKeys.add(getObject(rs, pkcolumn+1));
+                        	}
+                        	((HashMap<Object, List<Object>>) grid.getData()).put(o, primaryKeys);
+                        	break;
                         default:
                             break;
                     }

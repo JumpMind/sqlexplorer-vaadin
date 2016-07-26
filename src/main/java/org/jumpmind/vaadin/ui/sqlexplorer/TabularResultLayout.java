@@ -27,13 +27,16 @@ import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_SHOW_ROW_
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.jumpmind.db.model.Column;
+import org.jumpmind.db.model.Table;
 import org.jumpmind.db.platform.DatabaseInfo;
 import org.jumpmind.db.platform.IDdlReader;
 import org.jumpmind.properties.TypedProperties;
@@ -100,6 +103,8 @@ public class TabularResultLayout extends VerticalLayout {
     ISqlRunnerListener listener;
 
     Settings settings;
+    
+    Table table;
 
     boolean showSql = true;
 
@@ -225,17 +230,19 @@ public class TabularResultLayout extends VerticalLayout {
                         Object object = event.getPropertyId();
                         if (object != null && !object.toString().equals("")) {
                             if (event.isDoubleClick()) {
-
                                 Object prop = event.getPropertyId();
                                 String header = grid.getColumn(prop).getHeaderCaption();
                                 Property<?> p = event.getItem().getItemProperty(prop);
                                 if (p != null) {
+                                	@SuppressWarnings("unchecked")
+									Object[] primaryKeys = ((HashMap<Object, List<Object>>) grid.getData()).get(p.getValue()).toArray();
                                     String data = String.valueOf(p.getValue());
                                     boolean binary = resultTable != null ? resultTable.getColumnWithName(header).isOfBinaryType() : false;
+                                    boolean isLob = resultTable != null ? resultTable.getColumnWithName(header).isLob() : false;
                                     if (binary) {
-                                        ReadOnlyTextAreaDialog.show(header, data.toUpperCase(), binary);
+                                        ReadOnlyTextAreaDialog.show(header, data.toUpperCase(), table, primaryKeys, db.getPlatform(), binary, isLob);
                                     } else {
-                                        ReadOnlyTextAreaDialog.show(header, data, binary);
+                                        ReadOnlyTextAreaDialog.show(header, data, table, primaryKeys, db.getPlatform(), binary, isLob);
                                     }
                                 }
 
@@ -539,8 +546,23 @@ public class TabularResultLayout extends VerticalLayout {
             }
         }
 
+        int columnCount = rs.getMetaData().getColumnCount();
+        for (int i=0; i<columnCount; i++) {
+        	int type = rs.getMetaData().getColumnType(i+1);
+        	if (type == Types.BLOB || type == Types.CLOB || type == Types.NCLOB) {
+                table = db.getPlatform().getTableFromCache(catalogName, schemaName, tableName, true);
+                break;
+        	}
+        }
+        List<Integer> pkcolumns = new ArrayList<Integer>();
+        if (table != null) {
+        	for (Column pkcolumn : table.getPrimaryKeyColumns()) {
+        		pkcolumns.add(table.getColumnIndex(pkcolumn));
+        	}
+        }
+        
         TypedProperties properties = settings.getProperties();
-        return CommonUiUtils.putResultsInGrid(rs, properties.getInt(SQL_EXPLORER_MAX_RESULTS), properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS),
+        return CommonUiUtils.putResultsInGrid(rs, pkcolumns, properties.getInt(SQL_EXPLORER_MAX_RESULTS), properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS),
                 getColumnsToExclude());
 
     }

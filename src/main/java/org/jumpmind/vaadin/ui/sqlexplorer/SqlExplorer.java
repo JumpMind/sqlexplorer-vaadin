@@ -57,7 +57,6 @@ import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
@@ -83,7 +82,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
     DbTree dbTree;
 
-    TabSheet contentTabs;
+    SqlExplorerTabPanel contentTabs;
 
     MenuBar contentMenuBar;
 
@@ -146,7 +145,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
         rightMenuWrapper.addComponent(contentMenuBar);
         rightLayout.addComponent(rightMenuWrapper);
 
-        contentTabs = CommonUiUtils.createTabSheet();
+        contentTabs = new SqlExplorerTabPanel();
         contentTabs.addSelectedTabChangeListener(new SelectedTabChangeListener() {
             private static final long serialVersionUID = 1L;
 

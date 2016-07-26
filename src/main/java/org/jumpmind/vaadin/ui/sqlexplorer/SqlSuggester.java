@@ -15,7 +15,7 @@ public class SqlSuggester implements Suggester {
 	public final static String[] TABLE_TYPES = new String[] { "TABLE",
 		"SYSTEM TABLE", "SYSTEM VIEW" };
 	public final static String[] QUERY_INITIALIZERS = {"alter ", "create ", "delete ", "drop ", "insert ",
-		"select ", "truncate ", "update "}; //"if exists"
+		"select ", "truncate ", "update "};
 	
 	private Map<String, List<String>> tableNameCache;
 	private Map<String, List<String>> columnNameCache;
