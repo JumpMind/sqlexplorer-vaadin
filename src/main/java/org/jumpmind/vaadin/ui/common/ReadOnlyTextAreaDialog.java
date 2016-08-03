@@ -85,7 +85,7 @@ public class ReadOnlyTextAreaDialog extends ResizableWindow {
     protected Object[] primaryKeys;
     protected IDatabasePlatform platform;
 
-    public ReadOnlyTextAreaDialog(String title, String value, boolean isEncodedInHex) {
+    public ReadOnlyTextAreaDialog(final String title, final String value, boolean isEncodedInHex) {
     	this(title, value, null, null, null, isEncodedInHex, false);
     }
     
