@@ -17,3 +17,7 @@
 .sqlexplorer .v-menubar-borderless .v-menubar-menuitem.v-menubar-menuitem-red {
     color: #E84855;
 }
+
+.sqlexplorer .v-grid-cell.italics {
+    font-style: italic;
+}

@@ -51,6 +51,7 @@ import org.vaadin.aceeditor.AceEditor;
 
 import com.vaadin.data.Container;
 import com.vaadin.data.Property;
+import com.vaadin.data.util.converter.Converter;
 import com.vaadin.data.util.converter.StringToBigDecimalConverter;
 import com.vaadin.data.util.converter.StringToLongConverter;
 import com.vaadin.server.Page;
@@ -407,8 +408,8 @@ public final class CommonUiUtils {
                         @Override
                         public String convertToPresentation(Long value, Class<? extends String> targetType, Locale locale)
                                 throws com.vaadin.data.util.converter.Converter.ConversionException {
-                            if (value == Long.MIN_VALUE) {
-                                return "<null>";
+                            if (value == null) {
+                                return NULL_TEXT;
                             } else {
                                 return value.toString();
                             }
@@ -421,13 +422,44 @@ public final class CommonUiUtils {
                         @Override
                         public String convertToPresentation(BigDecimal value, Class<? extends String> targetType, Locale locale)
                                 throws com.vaadin.data.util.converter.Converter.ConversionException {
-                            if (value.longValue() == Long.MIN_VALUE) {
-                                return "<null>";
+                            if (value == null) {
+                                return NULL_TEXT;
                             } else {
                                 return value.toString();
                             }
                         }
                     });
+                } else {
+                	column.setConverter(new Converter<String, Object>() {
+						private static final long serialVersionUID = 1L;
+
+						@Override
+						public Object convertToModel(String value, Class<? extends Object> targetType, Locale locale)
+								throws com.vaadin.data.util.converter.Converter.ConversionException {
+							return null;
+						}
+
+						@Override
+						public String convertToPresentation(Object value, Class<? extends String> targetType, Locale locale)
+								throws com.vaadin.data.util.converter.Converter.ConversionException {
+							if (value == null) {
+								return NULL_TEXT;
+							} else {
+								return value.toString();
+							}
+						}
+
+						@Override
+						public Class<Object> getModelType() {
+							return Object.class;
+						}
+
+						@Override
+						public Class<String> getPresentationType() {
+							return String.class;
+						}
+                		
+                	});
                 }
             } else {
                 skipColumnIndexes.add(i - 1);
@@ -449,10 +481,7 @@ public final class CommonUiUtils {
                         case Types.REAL:
                         case Types.NUMERIC:
                         case Types.DECIMAL:
-                            if (o == null) {
-                                o = new BigDecimal(Long.MIN_VALUE);
-                            }
-                            if (!(o instanceof BigDecimal)) {
+                            if (o != null && !(o instanceof BigDecimal)) {
                                 o = new BigDecimal(castToNumber(o.toString()));
                             }
                             break;
@@ -460,27 +489,19 @@ public final class CommonUiUtils {
                         case Types.SMALLINT:
                         case Types.BIGINT:
                         case Types.INTEGER:
-                            if (o == null) {
-                                o = new Long(Long.MIN_VALUE);
-                            }
-
-                            if (!(o instanceof Long)) {
+                            if (o != null && !(o instanceof Long)) {
                                 o = new Long(castToNumber(o.toString()));
                             }
                             break;
-                        case Types.CLOB:
-                        case Types.BLOB:
-                        case Types.NCLOB:
-                        	List<Object> primaryKeys = new ArrayList<Object>();
-                        	for (Integer pkcolumn : pkcolumns) {
-                        		primaryKeys.add(getObject(rs, pkcolumn+1));
-                        	}
-                        	((HashMap<Object, List<Object>>) grid.getData()).put(o, primaryKeys);
-                        	break;
                         default:
                             break;
                     }
-                    row[rowIndex] = o == null ? NULL_TEXT : o;
+                    List<Object> primaryKeys = new ArrayList<Object>();
+                	for (Integer pkcolumn : pkcolumns) {
+                		primaryKeys.add(getObject(rs, pkcolumn+1));
+                	}
+                	((HashMap<Object, List<Object>>) grid.getData()).put(o, primaryKeys);
+                    row[rowIndex] = o;
                     rowIndex++;
                 }
             }

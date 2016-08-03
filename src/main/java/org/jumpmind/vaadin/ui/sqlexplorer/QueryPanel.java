@@ -29,8 +29,10 @@ import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -57,6 +59,8 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
+import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Table;
@@ -115,6 +119,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         resultsLayout.setSizeFull();
 
         resultsTabs = CommonUiUtils.createTabSheet();
+        resultsTabs.setData(new HashMap<Component, String>());
 
         HorizontalLayout statusBar = new HorizontalLayout();
         statusBar.addStyleName(ValoTheme.PANEL_WELL);
@@ -123,6 +128,8 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
         status = new Label("No Results");
         statusBar.addComponent(status);
+        
+        setSelectedTabChangeListener();
 
         resultsLayout.addComponents(resultsTabs, statusBar);
         resultsLayout.setExpandRatio(resultsTabs, 1);
@@ -166,6 +173,18 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
     
     public IButtonBar getButtonBar() {
         return buttonBar;
+    }
+    
+    protected void setSelectedTabChangeListener() {
+    	resultsTabs.addSelectedTabChangeListener(new SelectedTabChangeListener() {
+			private static final long serialVersionUID = 1L;
+
+			@SuppressWarnings("unchecked")
+			@Override
+			public void selectedTabChange(SelectedTabChangeEvent event) {
+				status.setValue(((Map<Component, String>)resultsTabs.getData()).get(resultsTabs.getSelectedTab()));
+			}
+		});
     }
 
     @Override
@@ -323,7 +342,8 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                         final boolean transactionEnded) {
                     VaadinSession.getCurrent().access(new Runnable() {
 
-                        @Override
+                        @SuppressWarnings("unchecked")
+						@Override
                         public void run() {
                             try {
                                 if (transactionEnded) {
@@ -358,9 +378,11 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                                                 .getComponentCount() - 1));
                                     }
 
-                                    status.setValue("Last sql executed in " + executionTimeInMs
+                                    String statusVal = "Sql executed in " + executionTimeInMs
                                             + " ms for " + db.getName() + ".  Finished at "
-                                            + SimpleDateFormat.getTimeInstance().format(new Date()));
+                                            + SimpleDateFormat.getTimeInstance().format(new Date());
+                                    status.setValue(statusVal);
+                                    ((Map<Component, String>) resultsTabs.getData()).put(resultComponent, statusVal);
 
                                     if (icon == FontAwesome.STOP) {
                                         errorTab = tab;

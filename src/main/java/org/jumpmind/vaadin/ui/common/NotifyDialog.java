@@ -86,10 +86,16 @@ public class NotifyDialog extends ResizableWindow {
                     textLabel.setValue(msg);
                     detailsButton.setCaption("Message");
                     messageArea.setMargin(new MarginInfo(false, false, false, true));
+                    setHeight(600, Unit.PIXELS);
+                    setWidth(1000, Unit.PIXELS);
+                    setPosition(getPositionX()-300, getPositionY()-150);
                 } else {
                     textLabel.setValue(message);
                     detailsButton.setCaption("Details");
                     messageArea.setMargin(true);
+                    setWidth(400, Unit.PIXELS);
+                    setHeight(300, Unit.PIXELS);
+                    setPosition(getPositionX()+300, getPositionY()+150);
                 }
             }
         });
