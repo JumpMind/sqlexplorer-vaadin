@@ -93,6 +93,10 @@ public class SqlRunner extends Thread {
     private static final String COMMIT_COMMAND = "commit";
 
     private Settings settings;
+    
+    private boolean isCanceled = false;
+    
+    private PreparedStatement stmt;
 
     public static List<SqlRunner> getSqlRunners() {
         return sqlRunners;
@@ -182,7 +186,7 @@ public class SqlRunner extends Thread {
         try {
             DataSource dataSource = db.getPlatform().getDataSource();
             JdbcSqlTemplate sqlTemplate = (JdbcSqlTemplate) db.getPlatform().getSqlTemplate();
-            PreparedStatement stmt = null;
+            stmt = null;
             StringBuilder results = new StringBuilder();
             try {
                 if (connection == null) {
@@ -298,8 +302,13 @@ public class SqlRunner extends Thread {
                 }
 
             } catch (Throwable ex) {
-                icon = FontAwesome.BAN;
-                resultComponents.add(wrapTextInComponent(buildErrorMessage(ex), "marked"));
+                if (isCanceled) {
+                	String canceledMessage = "Canceled successfully.\n\n"+sqlText;
+                	resultComponents.add(wrapTextInComponent(canceledMessage));
+                } else {
+	            	icon = FontAwesome.BAN;
+	                resultComponents.add(wrapTextInComponent(buildErrorMessage(ex), "marked"));
+                }
             } finally {
                 if (autoCommitBefore) {
                     try {
@@ -467,6 +476,15 @@ public class SqlRunner extends Thread {
 
     public boolean isRunAsScript() {
         return runAsScript;
+    }
+    
+    public void cancel() {
+    	try {
+			stmt.cancel();
+			isCanceled = true;
+		} catch (SQLException e) {
+			log.error("Failed to cancel", e);
+		}
     }
 
     interface ISqlRunnerListener extends Serializable {

@@ -37,6 +37,8 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.jumpmind.vaadin.ui.common.CommonUiUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vaadin.aceeditor.AceEditor;
 import org.vaadin.aceeditor.AceEditor.SelectionChangeEvent;
 import org.vaadin.aceeditor.AceEditor.SelectionChangeListener;
@@ -54,6 +56,9 @@ import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -62,14 +67,16 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
-import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
+import com.vaadin.ui.themes.ValoTheme;
 
 public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
-    private static final long serialVersionUID = 1L;
+	protected static final Logger log = LoggerFactory.getLogger(QueryPanel.class);
+	
+	private static final long serialVersionUID = 1L;
 
     AceEditor sqlArea;
 
@@ -104,6 +111,8 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
     Label status;
     
     SqlSuggester suggester;
+    
+    boolean canceled = false;
 
     transient Set<SqlRunner> runnersInProgress = new HashSet<SqlRunner>();
 
@@ -304,14 +313,14 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
         if (StringUtils.isNotBlank(sqlText)) {
 
-            HorizontalLayout executingLayout = new HorizontalLayout();
+            final HorizontalLayout executingLayout = new HorizontalLayout();
             executingLayout.setMargin(true);
             executingLayout.setSizeFull();
-            Label label = new Label("Executing:\n\n" + StringUtils.abbreviate(sqlText, 250), ContentMode.PREFORMATTED);
+            final Label label = new Label("Executing:\n\n" + StringUtils.abbreviate(sqlText, 250), ContentMode.PREFORMATTED);
             label.setEnabled(false);
             executingLayout.addComponent(label);
             executingLayout.setComponentAlignment(label, Alignment.TOP_LEFT);
-
+            
             final String sql = sqlText;
             final Tab executingTab = resultsTabs.addTab(executingLayout,
                     StringUtils.abbreviate(sql, 20), FontAwesome.SPINNER, tabPosition);
@@ -378,11 +387,19 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                                                 .getComponentCount() - 1));
                                     }
 
-                                    String statusVal = "Sql executed in " + executionTimeInMs
-                                            + " ms for " + db.getName() + ".  Finished at "
-                                            + SimpleDateFormat.getTimeInstance().format(new Date());
+                                    String statusVal;
+                                    if (canceled) {
+                                    	statusVal = "Sql canceled after " + executionTimeInMs
+	                                            + " ms for " + db.getName() + ".  Finished at "
+                                                + SimpleDateFormat.getTimeInstance().format(new Date());
+                                    } else {
+	                                    statusVal = "Sql executed in " + executionTimeInMs
+	                                            + " ms for " + db.getName() + ".  Finished at "
+	                                            + SimpleDateFormat.getTimeInstance().format(new Date());
+                                    }
                                     status.setValue(statusVal);
                                     ((Map<Component, String>) resultsTabs.getData()).put(resultComponent, statusVal);
+                                    canceled = false;
 
                                     if (icon == FontAwesome.STOP) {
                                         errorTab = tab;
@@ -401,6 +418,26 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                 }
 
             });
+            
+            final Button cancel = new Button("Cancel");
+            cancel.addClickListener(new ClickListener() {
+				private static final long serialVersionUID = 1L;
+				
+				@Override
+				public void buttonClick(ClickEvent event) {
+					log.info("Canceling sql: "+sql);
+					label.setValue("Canceling"+label.getValue().substring(9));
+					executingLayout.removeComponent(cancel);
+                    canceled = true;
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							runner.cancel();
+						}
+					}).start();
+				}
+			});
+            executingLayout.addComponent(cancel);
 
             scheduled = true;
             runner.start();
