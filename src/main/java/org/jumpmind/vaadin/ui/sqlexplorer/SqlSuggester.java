@@ -28,6 +28,7 @@ public class SqlSuggester implements Suggester {
 	private String text;
 	private int cursor;
 	private String currentWord;
+	private List<String> referencedTableNames;
 	private Map<String, String> aliases;
 	
 	public SqlSuggester(IDb db) {
@@ -44,6 +45,7 @@ public class SqlSuggester implements Suggester {
 		this.text = text;
 		this.cursor = cursor;
 		this.currentWord = getCurrentWord();
+		this.referencedTableNames = getReferencedTableNames();
 		this.aliases = getAliases();
 		
 		List<Suggestion> suggestions = new ArrayList<Suggestion>();
@@ -57,7 +59,7 @@ public class SqlSuggester implements Suggester {
 		else if (lastDeliminatorIndex > 0 && text.charAt(lastDeliminatorIndex-1) != '.'
 				|| (lastDeliminatorIndex <= 0)) {
 			suggestions.addAll(getAliasSuggestions());
-			for (String fullTableName : getReferencedTableNames()) {
+			for (String fullTableName : referencedTableNames) {
 				String[] fullNameParts = parseFullName(fullTableName);
 				suggestions.addAll(getColumnNameSuggestions(fullNameParts[2],
 						fullNameParts[1], fullNameParts[0]));
@@ -125,19 +127,37 @@ public class SqlSuggester implements Suggester {
 	private Map<String, String> getAliases() {
 		Map<String, String> aliases = new HashMap<String, String>();
 		int lastAliasIndex = 0;
-		while (lastAliasIndex+4 < text.length()) {
-			int aliasIndex = text.toLowerCase().indexOf(" as ", lastAliasIndex);
-			if (aliasIndex==-1) break;
+		String as = " as ";
+		while (lastAliasIndex+as.length() < text.length()) {
+			int asIndex = text.toLowerCase().indexOf(as, lastAliasIndex);
+			if (asIndex==-1) break;
 			
-			int i = aliasIndex + 4;
+			int i = asIndex + as.length();
 			while(i < text.length() && isSqlIdentifier(text.charAt(i))) i++;
-			String key = text.substring(aliasIndex+4, i);
+			String alias = text.substring(asIndex+as.length(), i);
 			
-			i = aliasIndex;
+			i = asIndex;
 			while (i > 0 && (text.charAt(--i)=='.' || isSqlIdentifier(text.charAt(i))));
-			aliases.put(key, text.substring(i+1, aliasIndex));
+			aliases.put(alias, text.substring(i+1, asIndex));
 			
-			lastAliasIndex = aliasIndex+4;
+			lastAliasIndex = asIndex+as.length();
+		}
+		
+		for (String tableName : referencedTableNames) {
+			if (!aliases.containsValue(tableName)) {
+				int tableNameIndex = text.toLowerCase().indexOf(tableName.toLowerCase());
+				if (tableNameIndex==-1) continue;
+				
+				int start = tableNameIndex + tableName.length()+1;
+				while(start < text.length() && Character.isWhitespace(text.charAt(start))) start++;
+				int end = start;
+				while(end < text.length() && isSqlIdentifier(text.charAt(++end)));
+				String alias = text.substring(start, end);
+				
+				int i = tableNameIndex;
+				while (i < text.length() && (text.charAt(i)=='.' || isSqlIdentifier(text.charAt(i)))) i++;
+				aliases.put(alias, text.substring(tableNameIndex, i));
+			}
 		}
 		return aliases;
 	}
@@ -145,11 +165,11 @@ public class SqlSuggester implements Suggester {
 	/* Returns the text of the current query with subqueries removed */
 	private String getCurrentQuery() {
 		List<int[]> queryBlocks = new ArrayList<int[]>();
-		int min = text.lastIndexOf(';', cursor) < 0 ? 0 : text.lastIndexOf(';', cursor);
+		int min = text.lastIndexOf(';', cursor+1);
 		int max = text.indexOf(';', cursor) < 0 ? text.length() : text.indexOf(';', cursor);
 		
 		queryBlocks.add(new int[]{min, max});
-		for (int i=min; i < max; i++) {
+		for (int i=min+1; i < max; i++) {
 			if ((text.charAt(i)=='(' ||
 					(i+5<max && text.regionMatches(true, i, "begin", 0, 5)))) {
 				queryBlocks.add(new int[]{i, -1});
@@ -157,7 +177,7 @@ public class SqlSuggester implements Suggester {
 					(i>3 && text.regionMatches(true, i-3, "end", 0, 3))) {
 				int j = queryBlocks.size()-1;
 				while (j > 0 && queryBlocks.get(j)[1]!=-1) j--;
-				queryBlocks.get(j)[1] = i;
+				if (j > 0) queryBlocks.get(j)[1] = i;
 			}
 		}
 		
@@ -169,8 +189,7 @@ public class SqlSuggester implements Suggester {
 		}
 		if (queryBlocks.get(blockIndex)[1] == -1) {
 			currentBlock[0] = queryBlocks.get(blockIndex)[0];
-			currentBlock[1] = blockIndex<queryBlocks.size() ? max
-					: queryBlocks.get(blockIndex+1)[1];
+			currentBlock[1] = max;
 		} else {
 			for (int[] block : queryBlocks) {
 				if (block[0] > currentBlock[0] && block[0] < cursor &&
@@ -180,6 +199,9 @@ public class SqlSuggester implements Suggester {
 			}
 		}
 		
+		if (currentBlock[1] == -1) {
+			return text.substring(min, max);
+		}
 		String tempText = text.substring(currentBlock[0]+1, currentBlock[1]);
 		int shiftLeft = currentBlock[0]+1, lastRemoval = currentBlock[0]+1;
 		for (int[] block : queryBlocks) {
@@ -187,7 +209,7 @@ public class SqlSuggester implements Suggester {
 					&& block != currentBlock && block[0] > lastRemoval) {
 				for (String word : QUERY_INITIALIZERS) {
 					if (text.substring(block[0]+1, block[1]).trim().startsWith(word)) {
-						tempText = tempText.substring(min, block[0]-shiftLeft) +
+						tempText = tempText.substring(min+1, block[0]-shiftLeft) +
 								tempText.substring(block[1]-shiftLeft+1);
 						shiftLeft += block[1]-block[0];
 						lastRemoval = block[1];
@@ -232,11 +254,11 @@ public class SqlSuggester implements Suggester {
 						} else if (newWord && character == ',') {
 							seenComma = true;
 						} else if (newWord && !seenComma && !Character.isWhitespace(character)) {
-							if (i < tempText.length()-3 && tempText.regionMatches(i-1, " as ", 0, 4)) {
+//							if (i < tempText.length()-3 && tempText.regionMatches(i-1, " as ", 0, 4)) {
 								ignore = true;
-							} else {
-								break;
-							}
+//							} else {
+//								break;
+//							}
 						} else if (!newWord && !isSqlIdentifier(character) && character != '.') {
 							tableNames.add(currentQuery.substring(start, i));
 							newWord = true;
@@ -405,12 +427,11 @@ public class SqlSuggester implements Suggester {
 	/* Returns list of table name, schema name, and catalog name, respectively */
 	private String[] parseFullName(String fullName) {
 		List<String> parsedName = new ArrayList<String>();
-		int i=fullName.length()-1;
-		while (i >= 0 && fullName.lastIndexOf('.', i) >= 0) {
-			parsedName.add(fullName.substring(fullName.lastIndexOf('.', i)+1));
-			i = fullName.lastIndexOf(".", i)-1;
+		while (fullName.lastIndexOf('.') >= 0) {
+			parsedName.add(fullName.substring(fullName.lastIndexOf('.')+1));
+			fullName = fullName.substring(0, fullName.lastIndexOf('.'));
 		}
-		parsedName.add(fullName.substring(0, i+1));
+		parsedName.add(fullName);
 		return parsedName.toArray(new String[3]);
 	}
 	
