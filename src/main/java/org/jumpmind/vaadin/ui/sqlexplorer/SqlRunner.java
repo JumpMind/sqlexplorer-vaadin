@@ -225,9 +225,10 @@ public class SqlRunner extends Thread {
                         }
 
                         if (logAtDebug) {
-                            log.debug("Executing: {}", sql.trim());
+                            log.debug("["+db.getName()+"] Executing: {}", sql.trim());
+                            
                         } else {
-                            log.info("Executing: {}", sql.trim());
+                            log.info("["+db.getName()+"] Executing: {}", sql.trim());
                         }
                         if (sql.replaceAll("\\s", "").equalsIgnoreCase(COMMIT_COMMAND)) {
                             committed = true;
