@@ -149,14 +149,16 @@ public class SqlSuggester implements Suggester {
 				if (tableNameIndex==-1) continue;
 				
 				int start = tableNameIndex + tableName.length()+1;
-				while(start < text.length() && Character.isWhitespace(text.charAt(start))) start++;
-				int end = start;
-				while(end < text.length() && isSqlIdentifier(text.charAt(++end)));
-				String alias = text.substring(start, end);
-				
-				int i = tableNameIndex;
-				while (i < text.length() && (text.charAt(i)=='.' || isSqlIdentifier(text.charAt(i)))) i++;
-				aliases.put(alias, text.substring(tableNameIndex, i));
+				if (start < text.length()) {
+					while(start < text.length() && Character.isWhitespace(text.charAt(start))) start++;
+					int end = start;
+					while(end < text.length() && isSqlIdentifier(text.charAt(++end)));
+					String alias = text.substring(start, end);
+					
+					int i = tableNameIndex;
+					while (i < text.length() && (text.charAt(i)=='.' || isSqlIdentifier(text.charAt(i)))) i++;
+					aliases.put(alias, text.substring(tableNameIndex, i));
+				}
 			}
 		}
 		return aliases;
