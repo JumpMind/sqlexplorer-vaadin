@@ -1,6 +1,5 @@
 package org.jumpmind.vaadin.ui.sqlexplorer;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -180,10 +179,8 @@ public class DatabaseInfoPanel extends VerticalLayout implements IInfoPanel {
 					Object[] row = new Object[] {method.getName(), value};
 	        		table.addItem(row, rowNumber);
 	        		rowNumber++;
-				} catch (IllegalAccessException | IllegalArgumentException e) {
+				} catch (Exception e) {
 					log.debug("Could not invoke method "+method.getName(), e);
-				} catch (InvocationTargetException e) {
-					log.debug("Could not invoke method "+method.getName(), e.getTargetException());
 				}
         	}
         }
