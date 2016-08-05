@@ -173,7 +173,7 @@ public class DatabaseInfoPanel extends VerticalLayout implements IInfoPanel {
         int rowNumber = 1;
         for (Method method : methods) {
         	if ((method.getReturnType().equals(Integer.TYPE) || method.getReturnType().equals(String.class)
-        			|| method.getReturnType().equals(Boolean.TYPE)) && method.getParameterCount() == 0) {
+        			|| method.getReturnType().equals(Boolean.TYPE)) && method.getParameters().length == 0) {
         		try {
 					Object value = method.invoke(instance);
 					Object[] row = new Object[] {method.getName(), value};
