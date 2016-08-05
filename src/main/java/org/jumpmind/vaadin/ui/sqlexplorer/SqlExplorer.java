@@ -92,9 +92,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
     String user;
 
-    Set<TableInfoPanel> tableInfoTabs = new HashSet<TableInfoPanel>();
-    
-    Set<TriggerInfoPanel> triggerInfoTabs = new HashSet<TriggerInfoPanel>();
+    Set<IInfoPanel> infoTabs = new HashSet<IInfoPanel>();
 
     public SqlExplorer(String configDir, IDbProvider databaseProvider, ISettingsProvider settingsProvider, String user) {
         this(configDir, databaseProvider, settingsProvider, user, DEFAULT_SPLIT_POS);
@@ -390,10 +388,10 @@ public class SqlExplorer extends HorizontalSplitPanel {
                         log.warn(msg, e);
                     }
                 }
-                for (TableInfoPanel panel : tableInfoTabs) {
+                for (IContentTab panel : infoTabs) {
                     contentTabs.removeComponent(panel);
                 }
-                tableInfoTabs.clear();
+                infoTabs.clear();
                 dbTree.refresh();
                 return true;
 
@@ -411,20 +409,31 @@ public class SqlExplorer extends HorizontalSplitPanel {
             public void valueChange(ValueChangeEvent event) {
                 Set<DbTreeNode> nodes = dbTree.getSelected();
                 if (nodes != null) {
+                	for (DbTreeNode treeNode : nodes) {
+                        IDb db = dbTree.getDbForNode(treeNode);
+                        QueryPanel panel = getQueryPanelForDb(db);
+                        if (panel == null && db != null) {
+                            openQueryWindow(db);
+                        }
+                    }
+                	
                     String selectedTabCaption = null;
-                    for (TableInfoPanel panel : tableInfoTabs) {
+                    for (IInfoPanel panel : infoTabs) {
                         selectedTabCaption = panel.getSelectedTabCaption();
                         contentTabs.removeComponent(panel);
                     }
-                    for (TriggerInfoPanel panel : triggerInfoTabs) {
-                    	selectedTabCaption = panel.getSelectedTabCaption();
-                    	contentTabs.removeComponent(panel);
-                    }
-                    tableInfoTabs.clear();
-                    triggerInfoTabs.clear();
+                    infoTabs.clear();
                     
                     if (nodes.size() > 0) {
                         DbTreeNode treeNode = nodes.iterator().next();
+                        if (treeNode != null && treeNode.getType().equals(DbTree.NODE_TYPE_DATABASE)) {
+                        	IDb db = dbTree.getDbForNode(treeNode);
+                        	DatabaseInfoPanel databaseInfoTab = new DatabaseInfoPanel(db, settingsProvider.get(), selectedTabCaption);
+                        	Tab tab = contentTabs.addTab(databaseInfoTab, db.getName(), FontAwesome.DATABASE, 0);
+                        	tab.setClosable(true);
+                        	selectContentTab(databaseInfoTab);
+                        	infoTabs.add(databaseInfoTab);
+                        }
                         if (treeNode != null && treeNode.getType().equals(DbTree.NODE_TYPE_TABLE)) {
                             Table table = treeNode.getTableFor();
                             if (table != null) {
@@ -433,7 +442,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
                                 Tab tab = contentTabs.addTab(tableInfoTab, table.getFullyQualifiedTableName(), FontAwesome.TABLE, 0);
                                 tab.setClosable(true);
                                 selectContentTab(tableInfoTab);
-                                tableInfoTabs.add(tableInfoTab);
+                                infoTabs.add(tableInfoTab);
                             }
                         } else if (treeNode != null && treeNode.getType().equals(DbTree.NODE_TYPE_TRIGGER)) {
                         	Table table = treeNode.getParent().getTableFor();
@@ -441,20 +450,12 @@ public class SqlExplorer extends HorizontalSplitPanel {
                         	Trigger trigger = reader.getTriggerFor(table, treeNode.getName());
                         	if (trigger != null) {
                         		IDb db = dbTree.getDbForNode(treeNode);
-	                        	TriggerInfoPanel triggerInfoTab = new TriggerInfoPanel(trigger, table, user, db, settingsProvider.get(), selectedTabCaption);
+	                        	TriggerInfoPanel triggerInfoTab = new TriggerInfoPanel(trigger, db, settingsProvider.get(), selectedTabCaption);
 	                        	Tab tab = contentTabs.addTab(triggerInfoTab, trigger.getName(), FontAwesome.CROSSHAIRS, 0);
 	                        	tab.setClosable(true);
 	                        	selectContentTab(triggerInfoTab);
-	                        	triggerInfoTabs.add(triggerInfoTab);
+	                        	infoTabs.add(triggerInfoTab);
                         	}
-                        }
-                    }
-
-                    for (DbTreeNode treeNode : nodes) {
-                        IDb db = dbTree.getDbForNode(treeNode);
-                        QueryPanel panel = getQueryPanelForDb(db);
-                        if (panel == null && db != null) {
-                            openQueryWindow(db);
                         }
                     }
                 }

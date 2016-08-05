@@ -30,14 +30,6 @@ import com.vaadin.ui.themes.ValoTheme;
 public class TriggerTableLayout extends VerticalLayout{
 
 	private static final long serialVersionUID = 1L;
-
-	final String ACTION_SELECT = "Select From";
-
-    final String ACTION_INSERT = "Insert";
-
-    final String ACTION_UPDATE = "Update";
-
-    final String ACTION_DELETE = "Delete";
     
 	private Trigger trigger;
 	

@@ -51,7 +51,7 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-public class TableInfoPanel extends VerticalLayout implements IContentTab {
+public class TableInfoPanel extends VerticalLayout implements IInfoPanel {
 
     protected static final Logger log = LoggerFactory.getLogger(TableInfoPanel.class);
 

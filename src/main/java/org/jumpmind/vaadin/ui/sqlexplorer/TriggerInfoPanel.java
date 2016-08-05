@@ -3,7 +3,6 @@ package org.jumpmind.vaadin.ui.sqlexplorer;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import org.jumpmind.db.model.Table;
 import org.jumpmind.db.model.Trigger;
 import org.jumpmind.vaadin.ui.common.CommonUiUtils;
 import org.vaadin.aceeditor.AceEditor;
@@ -27,7 +26,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 
 
-public class TriggerInfoPanel extends VerticalLayout implements IContentTab {
+public class TriggerInfoPanel extends VerticalLayout implements IInfoPanel {
 
 	private static final long serialVersionUID = 1L;
 
@@ -37,7 +36,7 @@ public class TriggerInfoPanel extends VerticalLayout implements IContentTab {
 	
 	boolean wrapSourceText;
 
-	public TriggerInfoPanel(Trigger trigger, Table table, String user, IDb db, Settings settings, String selectedTabCaption) {
+	public TriggerInfoPanel(Trigger trigger, IDb db, Settings settings, String selectedTabCaption) {
 
 		setSizeFull();
 
@@ -49,8 +48,7 @@ public class TriggerInfoPanel extends VerticalLayout implements IContentTab {
 
 			@Override
 			public void selectedTabChange(SelectedTabChangeEvent event) {
-				selectedCaption = tabSheet.getTab(tabSheet.getSelectedTab())
-						.getCaption();
+				selectedCaption = tabSheet.getTab(tabSheet.getSelectedTab()).getCaption();
 			}
 		});
 		addComponent(tabSheet);
