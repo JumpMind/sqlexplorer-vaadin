@@ -212,6 +212,9 @@ public class TabularResultLayout extends VerticalLayout {
 
 				@Override
 				public String getStyle(CellReference cell) {
+					if (cell.getPropertyId().equals("#")) {
+						return "rowheader";
+					}
 					if (cell.getValue() == null) {
 						return "italics";
 					}

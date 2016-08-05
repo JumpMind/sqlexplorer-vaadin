@@ -70,6 +70,7 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.Table.CellStyleGenerator;
 import com.vaadin.ui.themes.ValoTheme;
 
 public final class CommonUiUtils {
@@ -130,6 +131,20 @@ public final class CommonUiUtils {
             }
 
         };
+        
+        table.setCellStyleGenerator(new CellStyleGenerator() {
+			
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public String getStyle(Table source, Object itemId, Object propertyId) {
+				if (propertyId != null && propertyId.equals("#")) {
+					return "rowheader";
+				}
+				return null;
+			}
+		});
+        
         return table;
     }
 
@@ -523,6 +538,8 @@ public final class CommonUiUtils {
             grid.setFrozenColumnCount(1);
         }
 
+        
+        
         return grid;
     }
 

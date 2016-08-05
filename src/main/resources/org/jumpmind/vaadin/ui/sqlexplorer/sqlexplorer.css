@@ -21,3 +21,12 @@
 .sqlexplorer .v-grid-cell.italics {
     font-style: italic;
 }
+
+.sqlexplorer .v-grid-cell.rowheader {
+    background: #EAEAEA;
+}
+
+.sqlexplorer .v-table-cell-content-rowheader {
+    background: #DFDFDF;
+    font-weight: bold;
+}
