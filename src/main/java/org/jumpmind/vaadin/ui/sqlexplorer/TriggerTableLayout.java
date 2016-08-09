@@ -3,12 +3,10 @@ package org.jumpmind.vaadin.ui.sqlexplorer;
 import java.util.Map;
 
 import org.jumpmind.db.model.Trigger;
+import org.jumpmind.vaadin.ui.common.ExportDialog;
 import org.jumpmind.vaadin.ui.common.ReadOnlyTextAreaDialog;
 import org.jumpmind.vaadin.ui.sqlexplorer.TriggerInfoPanel.Refresher;
 
-import com.vaadin.addon.tableexport.CsvExport;
-import com.vaadin.addon.tableexport.DefaultTableHolder;
-import com.vaadin.addon.tableexport.ExcelExport;
 import com.vaadin.data.Property;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
@@ -83,7 +81,7 @@ public class TriggerTableLayout extends VerticalLayout{
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                new ExportDialog(TriggerTableLayout.this).show();
+                new ExportDialog(grid, trigger.getFullyQualifiedName(), trigger.getFullyQualifiedName()).show();
             }
         });
         exportButton.setIcon(FontAwesome.UPLOAD);
@@ -154,27 +152,6 @@ public class TriggerTableLayout extends VerticalLayout{
         grid.getColumn("Property").setWidth(250);
         
 		return grid;
-	}
-	
-	public void csvExport() {
-        if (grid != null) {
-            CsvExport csvExport = new CsvExport(new DefaultTableHolder(grid));
-            csvExport.excludeCollapsedColumns();
-            csvExport.setDisplayTotals(false);
-            csvExport.setExportFileName(trigger.getFullyQualifiedName() + "-export.csv");
-            csvExport.export();
-        }
-    }
-
-    public void excelExport() {
-        if (grid != null) {
-            ExcelExport excelExport = new ExcelExport(new DefaultTableHolder(grid));
-            excelExport.excludeCollapsedColumns();
-            excelExport.setDisplayTotals(false);
-            excelExport.setExportFileName(trigger.getFullyQualifiedName() + "-export.xls");
-            excelExport.export();
-        }
-    }
-    
+	}    
     
 }

@@ -50,6 +50,7 @@ import org.jumpmind.db.sql.SqlException;
 import org.jumpmind.properties.TypedProperties;
 import org.jumpmind.util.FormatUtils;
 import org.jumpmind.vaadin.ui.common.CommonUiUtils;
+import org.jumpmind.vaadin.ui.common.ExportDialog;
 import org.jumpmind.vaadin.ui.common.NotifyDialog;
 import org.jumpmind.vaadin.ui.common.ReadOnlyTextAreaDialog;
 import org.jumpmind.vaadin.ui.sqlexplorer.SqlRunner.ISqlRunnerListener;
@@ -57,9 +58,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.addon.contextmenu.ContextMenu;
-import com.vaadin.addon.tableexport.CsvExport;
-import com.vaadin.addon.tableexport.DefaultTableHolder;
-import com.vaadin.addon.tableexport.ExcelExport;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Validator;
@@ -191,7 +189,7 @@ public class TabularResultLayout extends VerticalLayout {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                new ExportDialog(TabularResultLayout.this).show();
+                new ExportDialog(grid, db.getName(), sql).show();
             }
         });
         exportButton.setIcon(FontAwesome.UPLOAD);
@@ -600,28 +598,6 @@ public class TabularResultLayout extends VerticalLayout {
         return new String[0];
     }
 
-    public void csvExport() {
-        if (grid != null) {
-            CsvExport csvExport = new CsvExport(new DefaultTableHolder(grid));
-            csvExport.excludeCollapsedColumns();
-            csvExport.setDisplayTotals(false);
-            csvExport.setExportFileName(db.getName() + "-export.csv");
-            csvExport.setReportTitle(sql);
-            csvExport.export();
-        }
-    }
-
-    public void excelExport() {
-        if (grid != null) {
-            ExcelExport excelExport = new ExcelExport(new DefaultTableHolder(grid));
-            excelExport.excludeCollapsedColumns();
-            excelExport.setDisplayTotals(false);
-            excelExport.setExportFileName(db.getName() + "-export.xls");
-            excelExport.setReportTitle(sql);
-            excelExport.export();
-        }
-    }
-    
     private void initGridEditing() {
 	    if (resultTable != null) {
     		grid.setEditorEnabled(true);
