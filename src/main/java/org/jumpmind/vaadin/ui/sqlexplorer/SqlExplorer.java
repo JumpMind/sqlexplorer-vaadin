@@ -50,6 +50,7 @@ import com.vaadin.annotations.StyleSheet;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Resource;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.MenuBar;
@@ -91,6 +92,8 @@ public class SqlExplorer extends HorizontalSplitPanel {
     float savedSplitPosition = DEFAULT_SPLIT_POS;
 
     String user;
+    
+    IDbMenuItem[] additionalMenuItems;
 
     Set<IInfoPanel> infoTabs = new HashSet<IInfoPanel>();
 
@@ -98,18 +101,19 @@ public class SqlExplorer extends HorizontalSplitPanel {
         this(configDir, databaseProvider, settingsProvider, user, DEFAULT_SPLIT_POS);
     }
 
-    public SqlExplorer(String configDir, IDbProvider databaseProvider, String user) {
-        this(configDir, databaseProvider, new DefaultSettingsProvider(configDir, user), user, DEFAULT_SPLIT_POS);
+    public SqlExplorer(String configDir, IDbProvider databaseProvider, String user, IDbMenuItem... additionalMenuItems) {
+        this(configDir, databaseProvider, new DefaultSettingsProvider(configDir, user), user, DEFAULT_SPLIT_POS, additionalMenuItems);
     }
 
     public SqlExplorer(String configDir, IDbProvider databaseProvider, String user, float leftSplitPos) {
         this(configDir, databaseProvider, new DefaultSettingsProvider(configDir, user), user, leftSplitPos);
     }
 
-    public SqlExplorer(String configDir, IDbProvider databaseProvider, ISettingsProvider settingsProvider, String user, float leftSplitSize) {
+    public SqlExplorer(String configDir, IDbProvider databaseProvider, ISettingsProvider settingsProvider, String user, float leftSplitSize, IDbMenuItem... additionalMenuItems) {
         this.databaseProvider = databaseProvider;
         this.settingsProvider = settingsProvider;
         this.savedSplitPosition = leftSplitSize;
+        this.additionalMenuItems = additionalMenuItems;
 
         setSizeFull();
         addStyleName("sqlexplorer");
@@ -254,10 +258,10 @@ public class SqlExplorer extends HorizontalSplitPanel {
     }
 
     protected QueryPanel openQueryWindow(IDb db) {
-        String dbName = db.getName();
+    	String dbName = db.getName();
         DefaultButtonBar buttonBar = new DefaultButtonBar();
         QueryPanel panel = new QueryPanel(db, settingsProvider, buttonBar, user);
-        buttonBar.init(db, settingsProvider, panel);
+        buttonBar.init(db, settingsProvider, panel, additionalMenuItems);
         Tab tab = contentTabs.addTab(panel, getTabName(dbName));
         tab.setClosable(true);
         tab.setIcon(QUERY_ICON);
@@ -639,4 +643,15 @@ public class SqlExplorer extends HorizontalSplitPanel {
         dbTree.focus();
     }
 
+    public void addResultsTab(String caption, Resource icon, IContentTab panel) {
+    	Tab tab = contentTabs.addTab(panel, caption);
+        tab.setClosable(true);
+        tab.setIcon(icon);
+        selectContentTab(panel);
+    }
+    
+    public void putResultsInQueryTab(String value, IDb db) {
+    	openQueryWindow(db).setSql(value);
+    }
+    
 }

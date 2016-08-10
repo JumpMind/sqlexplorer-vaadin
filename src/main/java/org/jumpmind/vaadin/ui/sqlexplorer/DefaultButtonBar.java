@@ -51,16 +51,19 @@ public class DefaultButtonBar implements IButtonBar, Serializable {
 
     MenuItem fillButton;
     
+    IDbMenuItem[] additionalMenuItems;
+    
     QueryPanel queryPanel;
     
     ISettingsProvider settingsProvider;
     
     IDb db;
     
-    protected void init(IDb db, ISettingsProvider settingsProvider, QueryPanel queryPanel) {
+    protected void init(IDb db, ISettingsProvider settingsProvider, QueryPanel queryPanel, IDbMenuItem... additionalMenuItems) {
         this.db = db;
         this.settingsProvider = settingsProvider;
         this.queryPanel = queryPanel;
+        this.additionalMenuItems = additionalMenuItems;
     }
     
     @Override
@@ -166,7 +169,7 @@ public class DefaultButtonBar implements IButtonBar, Serializable {
                 new DbExportDialog(db.getPlatform(), queryPanel).showAtSize(0.6);
             }
         });
-
+        
         fillButton = optionsButton.addItem("DB Fill", FontAwesome.BEER, new Command() {
 
             private static final long serialVersionUID = 1L;
@@ -177,6 +180,8 @@ public class DefaultButtonBar implements IButtonBar, Serializable {
             }
         });
 
-
+        for (IDbMenuItem item : additionalMenuItems) {
+        	optionsButton.addItem(item.getCaption(), item.getIcon(), item.getCommand());
+        }
     }
 }

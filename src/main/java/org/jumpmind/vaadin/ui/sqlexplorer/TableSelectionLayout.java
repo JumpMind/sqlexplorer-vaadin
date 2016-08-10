@@ -71,14 +71,21 @@ public class TableSelectionLayout extends VerticalLayout {
     private TextField filterField;
 
     private IDatabasePlatform databasePlatform;
+    
+    private List<String> excludedTables;
 
     public TableSelectionLayout(IDatabasePlatform databasePlatform,
             Set<org.jumpmind.db.model.Table> selectedSet) {
-        this("Please select from the following tables", databasePlatform, selectedSet);
+        this("Please select from the following tables", databasePlatform, selectedSet, null);
+    }
+    
+    public TableSelectionLayout(String titleKey, IDatabasePlatform databasePlatform,
+            Set<org.jumpmind.db.model.Table> selectedSet) {
+    	this(titleKey, databasePlatform, selectedSet, null);
     }
 
     public TableSelectionLayout(String titleKey, IDatabasePlatform databasePlatform,
-            Set<org.jumpmind.db.model.Table> selectedSet) {
+            Set<org.jumpmind.db.model.Table> selectedSet, List<String> excludedTables) {
         super();
         this.setSizeFull();
         this.setMargin(true);
@@ -86,13 +93,14 @@ public class TableSelectionLayout extends VerticalLayout {
 
         this.selectedTablesSet = selectedSet;
         this.databasePlatform = databasePlatform;
+        this.excludedTables = excludedTables;
 
-        createTableSelectionLayout();
+        createTableSelectionLayout(titleKey);
     }
 
-    protected void createTableSelectionLayout() {
+    protected void createTableSelectionLayout(String titleKey) {
 
-        this.addComponent(new Label("Please select from the following tables"));
+        this.addComponent(new Label(titleKey));
 
         HorizontalLayout schemaChooserLayout = new HorizontalLayout();
         schemaChooserLayout.setWidth(100, Unit.PERCENTAGE);
@@ -203,7 +211,7 @@ public class TableSelectionLayout extends VerticalLayout {
         String filter = filterField.getValue();
 
         for (String table : tables) {
-            if (display(getSelectedCatalog(), getSelectedSchema(), table)) {
+            if ((excludedTables == null || !excludedTables.contains(table.toLowerCase())) && display(getSelectedCatalog(), getSelectedSchema(), table)) {
                 if (!filter.equals("")) {
                     if (containsIgnoreCase(table, filter)) {
                         populateTable(table);
@@ -298,6 +306,14 @@ public class TableSelectionLayout extends VerticalLayout {
     public List<String> getTables() {
         return databasePlatform.getDdlReader().getTableNames((String) catalogSelect.getValue(),
                 (String) schemaSelect.getValue(), new String[] { "TABLE" });
+    }
+    
+    public List<String> getExcludedTables() {
+    	return excludedTables;
+    }
+    
+    public void setExcludedTables(List<String> excludedTables) {
+    	this.excludedTables = excludedTables;
     }
 
     protected boolean display(String catalog, String schema, String table) {
