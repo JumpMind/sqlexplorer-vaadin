@@ -165,7 +165,7 @@ public class DatabaseInfoPanel extends VerticalLayout implements IInfoPanel {
         
         table.addContainerProperty(1, String.class, null);
         table.setColumnHeader(1, "Property");
-        table.setColumnWidth(1, 390);
+        table.setColumnWidth(1, 400);
         table.addContainerProperty(2, Object.class, null);
         table.setColumnHeader(2, "Value");
         
@@ -176,7 +176,7 @@ public class DatabaseInfoPanel extends VerticalLayout implements IInfoPanel {
         			|| method.getReturnType().equals(Boolean.TYPE)) && method.getParameters().length == 0) {
         		try {
 					Object value = method.invoke(instance);
-					Object[] row = new Object[] {method.getName(), value};
+					Object[] row = new Object[] {cleanMethodName(method.getName()), value};
 	        		table.addItem(row, rowNumber);
 	        		rowNumber++;
 				} catch (Exception e) {
@@ -186,6 +186,27 @@ public class DatabaseInfoPanel extends VerticalLayout implements IInfoPanel {
         }
 		
 		return table;
+	}
+	
+	private String cleanMethodName(String methodName) {
+		if (methodName.startsWith("get")) {
+			methodName = methodName.substring(3);
+		} else if (methodName.startsWith("is")) {
+			methodName = methodName.substring(2);
+		}
+		
+		if (!methodName.isEmpty()) {
+			methodName = methodName.substring(0, 1).toUpperCase() + methodName.substring(1);
+			for (int i=0; i<methodName.length()-1; i++) {
+				if (Character.isUpperCase(methodName.charAt(i)) && (Character.isLowerCase(methodName.charAt(i+1))
+						|| (i > 0 && Character.isLowerCase(methodName.charAt(i-1))))) {
+					methodName = methodName.substring(0, i) + " " + methodName.substring(i);
+					i++;
+				}
+			}
+		}
+		
+		return methodName;
 	}
 	
 	private Table createTableFromString(String data, String columnName) {
