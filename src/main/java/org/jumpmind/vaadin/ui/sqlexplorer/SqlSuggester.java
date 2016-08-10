@@ -152,7 +152,7 @@ public class SqlSuggester implements Suggester {
 				if (start < text.length()) {
 					while(start < text.length() && Character.isWhitespace(text.charAt(start))) start++;
 					int end = start;
-					while(end < text.length() && isSqlIdentifier(text.charAt(++end)));
+					while(end < text.length() && isSqlIdentifier(text.charAt(end))) end++;
 					String alias = text.substring(start, end);
 					
 					int i = tableNameIndex;
