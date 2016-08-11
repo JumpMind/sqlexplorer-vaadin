@@ -26,6 +26,7 @@ import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_MAX_RESUL
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_SHOW_ROW_NUMBERS;
 
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -40,8 +41,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.apache.commons.lang.StringUtils;
 import org.jumpmind.db.model.Column;
+import org.jumpmind.db.model.ForeignKey;
+import org.jumpmind.db.model.Reference;
 import org.jumpmind.db.model.Table;
 import org.jumpmind.db.platform.DatabaseInfo;
 import org.jumpmind.db.platform.IDdlReader;
@@ -58,6 +63,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.addon.contextmenu.ContextMenu;
+import com.vaadin.addon.contextmenu.MenuItem;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Validator;
@@ -87,7 +93,6 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
-import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextField;
@@ -107,6 +112,8 @@ public class TabularResultLayout extends VerticalLayout {
     final String ACTION_DELETE = "Delete";
 
     final Logger log = LoggerFactory.getLogger(getClass());
+    
+    SqlExplorer explorer;
 
     String tableName;
 
@@ -125,18 +132,29 @@ public class TabularResultLayout extends VerticalLayout {
     IDb db;
 
     ISqlRunnerListener listener;
+    
+    String user;
 
     Settings settings;
 
     boolean showSql = true;
-
+    
+    MenuItem followToMenu;
+    
     public TabularResultLayout(IDb db, String sql, ResultSet rs, ISqlRunnerListener listener, Settings settings, boolean showSql)
             throws SQLException {
-        this.sql = sql;
+    	this(null, db, sql, rs, listener, null, settings, showSql);
+    }
+
+    public TabularResultLayout(SqlExplorer explorer, IDb db, String sql, ResultSet rs, ISqlRunnerListener listener, String user, Settings settings, boolean showSql)
+            throws SQLException {
+        this.explorer = explorer;
+    	this.sql = sql;
         this.showSql = showSql;
         this.db = db;
         this.rs = rs;
         this.listener = listener;
+        this.user = user;
         this.settings = settings;
         createTabularResultLayout();
     }
@@ -174,21 +192,21 @@ public class TabularResultLayout extends VerticalLayout {
         rightBar.addStyleName(ValoTheme.MENUBAR_BORDERLESS);
         rightBar.addStyleName(ValoTheme.MENUBAR_SMALL);
 
-        MenuItem refreshButton = rightBar.addItem("", new Command() {
+        MenuBar.MenuItem refreshButton = rightBar.addItem("", new Command() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void menuSelected(MenuItem selectedItem) {
+            public void menuSelected(MenuBar.MenuItem selectedItem) {
                 listener.reExecute(sql);
             }
         });
         refreshButton.setIcon(FontAwesome.REFRESH);
 
-        MenuItem exportButton = rightBar.addItem("", new Command() {
+        MenuBar.MenuItem exportButton = rightBar.addItem("", new Command() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void menuSelected(MenuItem selectedItem) {
+            public void menuSelected(MenuBar.MenuItem selectedItem) {
                 new ExportDialog(grid, db.getName(), sql).show();
             }
         });
@@ -210,7 +228,7 @@ public class TabularResultLayout extends VerticalLayout {
 
 				@Override
 				public String getStyle(CellReference cell) {
-					if (cell.getPropertyId().equals("#")) {
+					if (cell.getPropertyId().equals("#") && !grid.getSelectedRows().contains(cell.getItemId())) {
 						return "rowheader";
 					}
 					if (cell.getValue() == null) {
@@ -257,6 +275,10 @@ public class TabularResultLayout extends VerticalLayout {
                     handleAction(ACTION_DELETE);
                 }
             });
+            if (resultTable.getForeignKeyCount() > 0) {
+	            followToMenu = menu.addItem("Follow to", null);
+	            buildFollowToMenu();
+            }
             
             grid.addItemClickListener(new ItemClickListener() {
 
@@ -486,6 +508,107 @@ public class TabularResultLayout extends VerticalLayout {
             value = "";
         }
         return value;
+    }
+    
+    protected void buildFollowToMenu() {
+    	ForeignKey[] foreignKeys = resultTable.getForeignKeys();
+    	for (final ForeignKey foreignKey : foreignKeys) {
+	    	String optionTitle = foreignKey.getForeignTableName() + " (";
+	    	for (Reference ref : foreignKey.getReferences()) {
+	    		optionTitle += ref.getLocalColumnName() + ", ";
+	    	}
+	    	optionTitle = optionTitle.substring(0, optionTitle.length()-2) + ")";
+    		followToMenu.addItem(optionTitle, new ContextMenu.Command() {
+				
+				private static final long serialVersionUID = 1L;
+	
+				@Override
+				public void menuSelected(MenuItem selectedItem) {
+		    		followTo(foreignKey);
+				}
+			});
+    	}
+    }
+    
+    protected void followTo(ForeignKey foreignKey) {
+    	Collection<Object> selectedRows = grid.getSelectedRows();
+    	if (selectedRows.size() > 0) {
+	    	log.info("Following foreign key to "+foreignKey.getForeignTableName());
+			
+			QueryPanel queryPanel = null;
+			if (this.getParent() != null && this.getParent().getParent() != null
+					&& this.getParent().getParent().getParent() instanceof QueryPanel) {
+				queryPanel = (QueryPanel) this.getParent().getParent().getParent();
+			} else if (explorer != null) {
+				queryPanel = explorer.openQueryWindow(db);
+			} else {
+				log.error("Failed to find current or make new query tab");
+			}
+			
+	    	Table foreignTable = foreignKey.getForeignTable();
+			if (foreignTable == null) {
+				foreignTable = db.getPlatform().getTableFromCache(foreignKey.getForeignTableName(), false);
+			}
+			
+			Reference[] references = foreignKey.getReferences();
+			for (Reference ref : references) {
+				if (ref.getForeignColumn() == null) {
+					ref.setForeignColumn(foreignTable.getColumnWithName(ref.getForeignColumnName()));
+				}
+			}
+			
+			String sql = createFollowSql(foreignTable, references, selectedRows.size());
+			
+			try {
+				PreparedStatement ps = ((DataSource) db.getPlatform().getDataSource()).getConnection().prepareStatement(sql);
+				int i = 1;
+				for (Object row : selectedRows) {
+					for (Reference ref : references) {
+						Object targetObject = grid.getContainerDataSource().getItem(row).getItemProperty(ref.getLocalColumnName()).getValue();
+						int targetType = ref.getForeignColumn().getMappedTypeCode();
+						ps.setObject(i, targetObject, targetType);
+						i++;
+					}
+				}
+				sql = ps.toString().substring(ps.toString().indexOf("select "));
+				queryPanel.executeSql(sql, false);
+			} catch (SQLException e) {
+				log.error("Failed to follow foreign key", e);
+			}
+    	}
+    }
+    
+    protected String createFollowSql(Table foreignTable, Reference[] references, int selectedRowCount) {
+		DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
+		String quote = db.getPlatform().getDdlBuilder().isDelimitedIdentifierModeOn() ? dbInfo.getDelimiterToken() : "";
+    	
+    	StringBuilder sql = new StringBuilder("select ");
+		for (Column col : foreignTable.getColumns()) {
+			sql.append(quote);
+			sql.append(col.getName());
+			sql.append(quote);
+			sql.append(", ");
+		}
+		sql.delete(sql.length()-2, sql.length());
+		sql.append(" from ");
+		sql.append(foreignTable.getQualifiedTableName(quote, dbInfo.getCatalogSeparator(), 
+                dbInfo.getSchemaSeparator()));
+		sql.append(" where ");
+		
+		StringBuilder whereClause = new StringBuilder("(");
+		for (Reference ref : references) {
+			whereClause.append(ref.getForeignColumnName());
+			whereClause.append("=? and ");
+		}
+		whereClause.delete(whereClause.length()-5, whereClause.length());
+		whereClause.append(") or ");
+		
+		for (int i=0; i<selectedRowCount; i++) {
+			sql.append(whereClause.toString());
+		}
+		sql.delete(sql.length()-4, sql.length());
+		
+		return sql.toString();
     }
 
     protected Grid putResultsInGrid(int maxResultSize) throws SQLException {

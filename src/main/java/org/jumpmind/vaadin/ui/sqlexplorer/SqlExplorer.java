@@ -442,7 +442,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
                             Table table = treeNode.getTableFor();
                             if (table != null) {
                                 IDb db = dbTree.getDbForNode(treeNode);
-                                TableInfoPanel tableInfoTab = new TableInfoPanel(table, user, db, settingsProvider.get(), selectedTabCaption);
+                                TableInfoPanel tableInfoTab = new TableInfoPanel(table, user, db, settingsProvider.get(), SqlExplorer.this, selectedTabCaption);
                                 Tab tab = contentTabs.addTab(tableInfoTab, table.getFullyQualifiedTableName(), FontAwesome.TABLE, 0);
                                 tab.setClosable(true);
                                 selectContentTab(tableInfoTab);
@@ -651,7 +651,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
     }
     
     public void putResultsInQueryTab(String value, IDb db) {
-    	openQueryWindow(db).setSql(value);
+    	openQueryWindow(db).appendSql(value);
     }
     
 }

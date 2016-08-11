@@ -61,6 +61,8 @@ import com.vaadin.ui.VerticalLayout;
 public class SqlRunner extends Thread {
 
     protected static final Logger log = LoggerFactory.getLogger(SqlRunner.class);
+    
+    private SqlExplorer explorer;
 
     private static List<SqlRunner> sqlRunners = new ArrayList<SqlRunner>();
 
@@ -101,12 +103,20 @@ public class SqlRunner extends Thread {
     public static List<SqlRunner> getSqlRunners() {
         return sqlRunners;
     }
+    
+    public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings, SqlExplorer explorer) {
+        this(sqlText, runAsScript, user, db, settings, explorer, null);
+    }
 
     public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings) {
-        this(sqlText, runAsScript, user, db, settings, null);
+        this(sqlText, runAsScript, user, db, settings, null, null);
     }
 
     public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings, ISqlRunnerListener listener) {
+    	this(sqlText, runAsScript, user, db, settings, null, listener);
+    }
+
+    public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings, SqlExplorer explorer, ISqlRunnerListener listener) {
         this.setName("sql-runner-" + getId());
         this.sqlText = sqlText;
         this.runAsScript = runAsScript;
@@ -115,6 +125,7 @@ public class SqlRunner extends Thread {
         this.settings = settings;
         this.autoCommit = settings.getProperties().is(SQL_EXPLORER_AUTO_COMMIT);
         this.user = user;
+        this.explorer = explorer;
         sqlRunners.add(0, this);
     }
 
@@ -258,7 +269,7 @@ public class SqlRunner extends Thread {
                                     rs = stmt.getResultSet();
                                     if (!runAsScript) {
                                         if (!resultsAsText) {
-                                            resultComponents.add(new TabularResultLayout(db, sql, rs, listener, settings, showSqlOnResults));
+                                            resultComponents.add(new TabularResultLayout(explorer, db, sql, rs, listener, user, settings, showSqlOnResults));
                                         } else {
                                             resultComponents.add(putResultsInArea(stmt, maxResultsSize));
                                         }

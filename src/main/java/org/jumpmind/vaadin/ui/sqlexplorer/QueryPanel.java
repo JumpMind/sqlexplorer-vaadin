@@ -284,10 +284,6 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         }
     }
     
-    protected void setSql(String sql) {
-    	sqlArea.setValue(sql);
-    }
-    
     public String getSql() {
         return sqlArea.getValue();
     }

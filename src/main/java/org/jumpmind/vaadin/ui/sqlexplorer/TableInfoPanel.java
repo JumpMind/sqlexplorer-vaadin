@@ -56,14 +56,22 @@ public class TableInfoPanel extends VerticalLayout implements IInfoPanel {
     protected static final Logger log = LoggerFactory.getLogger(TableInfoPanel.class);
 
     private static final long serialVersionUID = 1L;
+    
+    SqlExplorer explorer;
 
     TabSheet tabSheet;
     
     String selectedCaption;
-
+    
     public TableInfoPanel(final org.jumpmind.db.model.Table table, final String user, final IDb db,
     		final Settings settings, String selectedTabCaption) {
+    	this(table, user, db, settings, null, selectedTabCaption);
+    }
 
+    public TableInfoPanel(final org.jumpmind.db.model.Table table, final String user, final IDb db,
+    		final Settings settings, SqlExplorer explorer, String selectedTabCaption) {
+    	this.explorer = explorer;
+    	
         setSizeFull();
 
         tabSheet = CommonUiUtils.createTabSheet();
@@ -151,13 +159,14 @@ public class TableInfoPanel extends VerticalLayout implements IInfoPanel {
         	tabSheet.setSelectedTab(executingLayout);
         }
 
-        SqlRunner runner = new SqlRunner(dml.getSql(), false, user, db, settings,
+        SqlRunner runner = new SqlRunner(dml.getSql(), false, user, db, settings, explorer,
                 new ISqlRunnerListener() {
 
                     private static final long serialVersionUID = 1L;
 
                     @Override
                     public void writeSql(String sql) {
+                    	explorer.openQueryWindow(db).appendSql(sql);
                     }
 
                     @Override
