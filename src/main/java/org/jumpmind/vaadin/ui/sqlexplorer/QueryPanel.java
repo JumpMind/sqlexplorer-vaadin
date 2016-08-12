@@ -332,15 +332,19 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
     }
 
     protected boolean reExecute(String sql) {
-        Component comp = resultsTabs.getSelectedTab();
+    	Component comp = resultsTabs.getSelectedTab();
         Tab tab = resultsTabs.getTab(comp);
         int tabPosition = resultsTabs.getTabPosition(tab);
-        resultsTabs.removeTab(tab);
-        return execute(false, sql, tabPosition);
+        if (generalResultsTab != null && generalResultsTab == tab) {
+    		return execute(false, sql, tabPosition);
+        } else {
+	        resultsTabs.removeTab(tab);
+	        return execute(false, sql, tabPosition, true);
+        }
     }
 
     public boolean execute(final boolean runAsScript) {
-        return execute(runAsScript, null, 0);
+        return execute(runAsScript, null, resultsTabs.getComponentCount());
     }
 
     public void appendSql(String sql) {
@@ -357,10 +361,14 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         if (writeToQueryWindow) {
             appendSql(sql);
         }
-        execute(false, sql, 0);
+        execute(false, sql, resultsTabs.getComponentCount());
     }
 
     protected boolean execute(final boolean runAsScript, String sqlText, final int tabPosition) {
+    	return execute(runAsScript, sqlText, tabPosition, false);
+    }
+    
+    protected boolean execute(final boolean runAsScript, String sqlText, final int tabPosition, final boolean forceNewTab) {
         boolean scheduled = false;
         if (runnersInProgress == null) {
             runnersInProgress = new HashSet<SqlRunner>();
@@ -388,12 +396,12 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
             
             final String sql = sqlText;
             final Tab executingTab;
-            if (generalResultsTab != null) {
+            if (!forceNewTab && generalResultsTab != null) {
             	replaceGeneralResultsWith(executingLayout, FontAwesome.SPINNER);
             	executingTab = null;
             } else {
             	executingTab = resultsTabs.addTab(executingLayout,
-                        StringUtils.abbreviate(sql, 20), FontAwesome.SPINNER);
+                        StringUtils.abbreviate(sql, 20), FontAwesome.SPINNER, tabPosition);
             }
             
             if (executingTab != null) {
@@ -441,11 +449,11 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                                 for (Component resultComponent : results) {
                                     resultComponent.setSizeFull();
                                     
-                                    if (generalResultsTab == null || results.size() > 1) {
+                                    if (forceNewTab || generalResultsTab == null || results.size() > 1) {
                                     	if (resultComponent instanceof TabularResultLayout) {
                                     		resultComponent = ((TabularResultLayout) resultComponent).refreshWithoutSaveButton();
                                     	}
-                                    	addResultsTab(resultComponent, StringUtils.abbreviate(sql, 20), icon);
+                                    	addResultsTab(resultComponent, StringUtils.abbreviate(sql, 20), icon, tabPosition);
                                 	} else {
                                     	replaceGeneralResultsWith(resultComponent, icon);
                                     	resultsTabs.setSelectedTab(generalResultsTab.getComponent());
