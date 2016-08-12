@@ -209,9 +209,12 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
 			@Override
 			public void selectedTabChange(SelectedTabChangeEvent event) {
-				String st = resultStatuses.get(resultsTabs.getSelectedTab());
-				if (st == null && resultsTabs.getSelectedTab() instanceof VerticalLayout) {
-					st = resultStatuses.get(((VerticalLayout) resultsTabs.getSelectedTab()).getComponent(0));
+				Component tab = resultsTabs.getSelectedTab();
+				String st = resultStatuses.get(tab);
+				if (st == null && tab instanceof VerticalLayout) {
+					if (((VerticalLayout) tab).getComponentCount() > 0) {
+						st = resultStatuses.get(((VerticalLayout) tab).getComponent(0));
+					}
 				}
 				if (st == null) {
 					st = "No Results";
