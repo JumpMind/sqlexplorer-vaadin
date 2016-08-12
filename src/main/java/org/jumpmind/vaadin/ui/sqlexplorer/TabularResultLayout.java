@@ -114,6 +114,8 @@ public class TabularResultLayout extends VerticalLayout {
     final Logger log = LoggerFactory.getLogger(getClass());
     
     SqlExplorer explorer;
+    
+    QueryPanel queryPanel;
 
     String tableName;
 
@@ -139,14 +141,20 @@ public class TabularResultLayout extends VerticalLayout {
 
     boolean showSql = true;
     
+    boolean isInQueryGeneralResults;
+    
     MenuItem followToMenu;
+    
+    MenuBar.MenuItem toggleKeepResultsButton;
+    
+    Label resultLabel;
     
     public TabularResultLayout(IDb db, String sql, ResultSet rs, ISqlRunnerListener listener, Settings settings, boolean showSql)
             throws SQLException {
-    	this(null, db, sql, rs, listener, null, settings, showSql);
+    	this(null, db, sql, rs, listener, null, settings, null, showSql, false);
     }
 
-    public TabularResultLayout(SqlExplorer explorer, IDb db, String sql, ResultSet rs, ISqlRunnerListener listener, String user, Settings settings, boolean showSql)
+    public TabularResultLayout(SqlExplorer explorer, IDb db, String sql, ResultSet rs, ISqlRunnerListener listener, String user, Settings settings, QueryPanel queryPanel, boolean showSql, boolean isInQueryGeneralResults)
             throws SQLException {
         this.explorer = explorer;
     	this.sql = sql;
@@ -156,6 +164,8 @@ public class TabularResultLayout extends VerticalLayout {
         this.listener = listener;
         this.user = user;
         this.settings = settings;
+        this.queryPanel = queryPanel;
+        this.isInQueryGeneralResults = isInQueryGeneralResults;
         createTabularResultLayout();
     }
 
@@ -171,51 +181,7 @@ public class TabularResultLayout extends VerticalLayout {
         this.setSizeFull();
         this.setSpacing(false);
 
-        HorizontalLayout resultBar = new HorizontalLayout();
-        resultBar.setWidth(100, Unit.PERCENTAGE);
-        resultBar.setMargin(new MarginInfo(false, true, false, true));
-
-        HorizontalLayout leftBar = new HorizontalLayout();
-        leftBar.setSpacing(true);
-        final Label resultLabel = new Label("", ContentMode.HTML);
-        leftBar.addComponent(resultLabel);
-
-        final Label sqlLabel = new Label("", ContentMode.TEXT);
-        sqlLabel.setWidth(800, Unit.PIXELS);
-        leftBar.addComponent(sqlLabel);
-
-        resultBar.addComponent(leftBar);
-        resultBar.setComponentAlignment(leftBar, Alignment.MIDDLE_LEFT);
-        resultBar.setExpandRatio(leftBar, 1);
-
-        MenuBar rightBar = new MenuBar();
-        rightBar.addStyleName(ValoTheme.MENUBAR_BORDERLESS);
-        rightBar.addStyleName(ValoTheme.MENUBAR_SMALL);
-
-        MenuBar.MenuItem refreshButton = rightBar.addItem("", new Command() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuBar.MenuItem selectedItem) {
-                listener.reExecute(sql);
-            }
-        });
-        refreshButton.setIcon(FontAwesome.REFRESH);
-
-        MenuBar.MenuItem exportButton = rightBar.addItem("", new Command() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuBar.MenuItem selectedItem) {
-                new ExportDialog(grid, db.getName(), sql).show();
-            }
-        });
-        exportButton.setIcon(FontAwesome.UPLOAD);
-
-        resultBar.addComponent(rightBar);
-        resultBar.setComponentAlignment(rightBar, Alignment.MIDDLE_RIGHT);
-
-        this.addComponent(resultBar);
+        createMenuBar();
 
         try {
             grid = putResultsInGrid(settings.getProperties().getInt(SQL_EXPLORER_MAX_RESULTS));
@@ -332,10 +298,80 @@ public class TabularResultLayout extends VerticalLayout {
             CommonUiUtils.notify(ex);
         }
 
+    }
+    
+    private void createMenuBar() {
+    	HorizontalLayout resultBar = new HorizontalLayout();
+        resultBar.setWidth(100, Unit.PERCENTAGE);
+        resultBar.setMargin(new MarginInfo(false, true, false, true));
+
+        HorizontalLayout leftBar = new HorizontalLayout();
+        leftBar.setSpacing(true);
+        resultLabel = new Label("", ContentMode.HTML);
+        leftBar.addComponent(resultLabel);
+
+        final Label sqlLabel = new Label("", ContentMode.TEXT);
+        sqlLabel.setWidth(800, Unit.PIXELS);
+        leftBar.addComponent(sqlLabel);
+
+        resultBar.addComponent(leftBar);
+        resultBar.setComponentAlignment(leftBar, Alignment.MIDDLE_LEFT);
+        resultBar.setExpandRatio(leftBar, 1);
+        
+        MenuBar rightBar = new MenuBar();
+        rightBar.addStyleName(ValoTheme.MENUBAR_BORDERLESS);
+        rightBar.addStyleName(ValoTheme.MENUBAR_SMALL);
+
+        MenuBar.MenuItem refreshButton = rightBar.addItem("", new Command() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void menuSelected(MenuBar.MenuItem selectedItem) {
+                listener.reExecute(sql);
+            }
+        });
+        refreshButton.setIcon(FontAwesome.REFRESH);
+
+        MenuBar.MenuItem exportButton = rightBar.addItem("", new Command() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void menuSelected(MenuBar.MenuItem selectedItem) {
+                new ExportDialog(grid, db.getName(), sql).show();
+            }
+        });
+        exportButton.setIcon(FontAwesome.UPLOAD);
+        
+        if (isInQueryGeneralResults) {
+        	MenuBar.MenuItem keepResultsButton = rightBar.addItem("", new Command() {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void menuSelected(com.vaadin.ui.MenuBar.MenuItem selectedItem) {
+					queryPanel.addResultsTab(refreshWithoutSaveButton(), StringUtils.abbreviate(sql, 20),
+							queryPanel.getGeneralResultsTab().getIcon());
+					queryPanel.resetGeneralResultsTab();
+				}
+			});
+        	keepResultsButton.setIcon(FontAwesome.CLONE);
+        	keepResultsButton.setDescription("Save these results to a new tab");
+        }
+
         if (showSql) {
             sqlLabel.setValue(StringUtils.abbreviate(sql, 200));
         }
 
+        resultBar.addComponent(rightBar);
+        resultBar.setComponentAlignment(rightBar, Alignment.MIDDLE_RIGHT);
+
+        this.addComponent(resultBar, 0);
+    }
+    
+    protected TabularResultLayout refreshWithoutSaveButton() {
+    	isInQueryGeneralResults = false;
+    	this.removeComponent(this.getComponent(0));
+    	createMenuBar();
+    	return this;
     }
 
     protected void handleAction(String action) {
@@ -535,15 +571,13 @@ public class TabularResultLayout extends VerticalLayout {
     	if (selectedRows.size() > 0) {
 	    	log.info("Following foreign key to "+foreignKey.getForeignTableName());
 			
-			QueryPanel queryPanel = null;
-			if (this.getParent() != null && this.getParent().getParent() != null
-					&& this.getParent().getParent().getParent() instanceof QueryPanel) {
-				queryPanel = (QueryPanel) this.getParent().getParent().getParent();
-			} else if (explorer != null) {
-				queryPanel = explorer.openQueryWindow(db);
-			} else {
-				log.error("Failed to find current or make new query tab");
-			}
+	    	if (queryPanel == null) {
+				if (explorer != null) {
+					queryPanel = explorer.openQueryWindow(db);
+				} else {
+					log.error("Failed to find current or create new query tab");
+				}
+	    	}
 			
 	    	Table foreignTable = foreignKey.getForeignTable();
 			if (foreignTable == null) {

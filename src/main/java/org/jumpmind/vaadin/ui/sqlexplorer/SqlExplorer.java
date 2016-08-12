@@ -20,6 +20,8 @@
  */
 package org.jumpmind.vaadin.ui.sqlexplorer;
 
+import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -213,7 +215,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                SettingsDialog dialog = new SettingsDialog(settingsProvider);
+                SettingsDialog dialog = new SettingsDialog(SqlExplorer.this);
                 dialog.showAtSize(.5);
             }
         });
@@ -279,6 +281,19 @@ public class SqlExplorer extends HorizontalSplitPanel {
                 openQueryWindow(node);
             }
         }
+    }
+    
+    public void refreshQueryPanels() {
+    	for (Component panel : contentTabs) {
+    		if (panel instanceof QueryPanel) {
+    			QueryPanel queryPanel = ((QueryPanel) panel);
+    			if (settingsProvider.get().getProperties().is(SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS)) {
+    				queryPanel.removeGeneralResultsTab();
+    			} else if (!settingsProvider.get().getProperties().is(SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS)) {
+    				queryPanel.createGeneralResultsTab();
+    			}
+    		}
+    	}
     }
 
     public QueryPanel findQueryPanelForDb(IDb db) {

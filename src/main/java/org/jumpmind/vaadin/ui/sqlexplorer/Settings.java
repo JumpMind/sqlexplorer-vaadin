@@ -45,6 +45,8 @@ public class Settings implements Serializable {
     public static final String SQL_EXPLORER_MAX_RESULTS = "sql.explorer.max.results";
     
     public static final String SQL_EXPLORER_MAX_HISTORY = "sql.explorer.max.history";
+    
+    public static final String SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS = "sql.explorer.show.results.in.new.tabs";
 
     List<SqlHistory> sqlHistory = new ArrayList<SqlHistory>();
 
@@ -59,6 +61,7 @@ public class Settings implements Serializable {
         properties.put(SQL_EXPLORER_MAX_RESULTS, "1000");
         properties.put(SQL_EXPLORER_MAX_HISTORY, "100");
         properties.put(SQL_EXPLORER_IGNORE_ERRORS_WHEN_RUNNING_SCRIPTS, "false");
+        properties.put(SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS, "false");
     }
 
     public TypedProperties getProperties() {

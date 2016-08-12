@@ -67,6 +67,10 @@ public class SqlRunner extends Thread {
     private static List<SqlRunner> sqlRunners = new ArrayList<SqlRunner>();
 
     private ISqlRunnerListener listener;
+    
+    private QueryPanel queryPanel;
+    
+    private boolean isInQueryGeneralResults;
 
     private boolean runAsScript;
 
@@ -103,10 +107,6 @@ public class SqlRunner extends Thread {
     public static List<SqlRunner> getSqlRunners() {
         return sqlRunners;
     }
-    
-    public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings, SqlExplorer explorer) {
-        this(sqlText, runAsScript, user, db, settings, explorer, null);
-    }
 
     public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings) {
         this(sqlText, runAsScript, user, db, settings, null, null);
@@ -115,8 +115,20 @@ public class SqlRunner extends Thread {
     public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings, ISqlRunnerListener listener) {
     	this(sqlText, runAsScript, user, db, settings, null, listener);
     }
-
+    
+    public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings, SqlExplorer explorer) {
+        this(sqlText, runAsScript, user, db, settings, explorer, null);
+    }
+    
     public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings, SqlExplorer explorer, ISqlRunnerListener listener) {
+        this(sqlText, runAsScript, user, db, settings, explorer, listener, null, false);
+    }
+    
+    public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings, QueryPanel queryPanel, boolean isInQueryGeneralResults) {
+        this(sqlText, runAsScript, user, db, settings, null, null, queryPanel, isInQueryGeneralResults);
+    }
+
+    public SqlRunner(String sqlText, boolean runAsScript, String user, IDb db, Settings settings, SqlExplorer explorer, ISqlRunnerListener listener, QueryPanel queryPanel, boolean isInQueryGeneralResults) {
         this.setName("sql-runner-" + getId());
         this.sqlText = sqlText;
         this.runAsScript = runAsScript;
@@ -126,6 +138,8 @@ public class SqlRunner extends Thread {
         this.autoCommit = settings.getProperties().is(SQL_EXPLORER_AUTO_COMMIT);
         this.user = user;
         this.explorer = explorer;
+        this.queryPanel = queryPanel;
+        this.isInQueryGeneralResults = isInQueryGeneralResults;
         sqlRunners.add(0, this);
     }
 
@@ -269,7 +283,7 @@ public class SqlRunner extends Thread {
                                     rs = stmt.getResultSet();
                                     if (!runAsScript) {
                                         if (!resultsAsText) {
-                                            resultComponents.add(new TabularResultLayout(explorer, db, sql, rs, listener, user, settings, showSqlOnResults));
+                                            resultComponents.add(new TabularResultLayout(explorer, db, sql, rs, listener, user, settings, queryPanel, showSqlOnResults, isInQueryGeneralResults));
                                         } else {
                                             resultComponents.add(putResultsInArea(stmt, maxResultsSize));
                                         }

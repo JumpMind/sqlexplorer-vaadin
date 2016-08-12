@@ -23,6 +23,7 @@ package org.jumpmind.vaadin.ui.sqlexplorer;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_AUTO_COMMIT;
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_DELIMITER;
+import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -52,6 +53,7 @@ import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.ShortcutAction.ModifierKey;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Resource;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.label.ContentMode;
@@ -113,6 +115,12 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
     SqlSuggester suggester;
     
     boolean canceled = false;
+    
+    VerticalLayout emptyResults;
+    
+    Map<Component, String> resultStatuses;
+    
+    Tab generalResultsTab;
 
     transient Set<SqlRunner> runnersInProgress = new HashSet<SqlRunner>();
 
@@ -128,7 +136,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         resultsLayout.setSizeFull();
 
         resultsTabs = CommonUiUtils.createTabSheet();
-        resultsTabs.setData(new HashMap<Component, String>());
+        resultStatuses = new HashMap<Component, String>();
 
         HorizontalLayout statusBar = new HorizontalLayout();
         statusBar.addStyleName(ValoTheme.PANEL_WELL);
@@ -146,7 +154,18 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         addComponents(sqlArea, resultsLayout);
 
         setSplitPosition(400, Unit.PIXELS);
-
+        
+        emptyResults = new VerticalLayout();
+        emptyResults.setSizeFull();
+		Label label = new Label("New results will appear here");
+		label.setWidthUndefined();
+		emptyResults.addComponent(label);
+		emptyResults.setComponentAlignment(label, Alignment.MIDDLE_CENTER);
+		resultStatuses.put(emptyResults, "No Results");
+        
+        if (!settingsProvider.get().getProperties().is(SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS)) {
+        	createGeneralResultsTab();
+        }
     }
     
     public IDb getDb() {
@@ -188,12 +207,56 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
     	resultsTabs.addSelectedTabChangeListener(new SelectedTabChangeListener() {
 			private static final long serialVersionUID = 1L;
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public void selectedTabChange(SelectedTabChangeEvent event) {
-				status.setValue(((Map<Component, String>)resultsTabs.getData()).get(resultsTabs.getSelectedTab()));
+				String st = resultStatuses.get(resultsTabs.getSelectedTab());
+				if (st == null && resultsTabs.getSelectedTab() instanceof VerticalLayout) {
+					st = resultStatuses.get(((VerticalLayout) resultsTabs.getSelectedTab()).getComponent(0));
+				}
+				if (st == null) {
+					st = "No Results";
+				}
+				status.setValue(st);
 			}
 		});
+    }
+    
+    public Tab getGeneralResultsTab() {
+    	return generalResultsTab;
+    }
+    
+    public void createGeneralResultsTab() {
+    	if (generalResultsTab == null) {
+    		VerticalLayout generalResultsPanel = new VerticalLayout();
+	        generalResultsPanel.setSizeFull();
+	        generalResultsTab = resultsTabs.addTab(generalResultsPanel, "Results", null, 0);
+	        resetGeneralResultsTab();
+    	}
+    }
+    
+    public void removeGeneralResultsTab() {
+    	if (generalResultsTab != null) {
+	    	Component content = ((VerticalLayout) generalResultsTab.getComponent()).getComponent(0);
+    		if (content instanceof TabularResultLayout) {
+	    		addResultsTab(((TabularResultLayout) content).refreshWithoutSaveButton(),
+	    				StringUtils.abbreviate(((TabularResultLayout) content).getSql(), 20),
+	    				generalResultsTab.getIcon(), 0);
+	    	}
+    		resultsTabs.removeComponent(generalResultsTab.getComponent());
+	    	generalResultsTab = null;
+    	}
+    }
+    
+    public void resetGeneralResultsTab() {
+    	if (generalResultsTab != null) {
+    		replaceGeneralResultsWith(emptyResults, null);
+    	}
+    }
+    
+    public void replaceGeneralResultsWith(Component newComponent, FontAwesome icon) {
+    	((VerticalLayout) generalResultsTab.getComponent()).removeAllComponents();
+    	((VerticalLayout) generalResultsTab.getComponent()).addComponent(newComponent);
+    	generalResultsTab.setIcon(icon);
     }
 
     @Override
@@ -206,7 +269,6 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         }
 
         setButtonsEnabled();
-
         sqlArea.focus();
     }
 
@@ -322,14 +384,21 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
             executingLayout.setComponentAlignment(label, Alignment.TOP_LEFT);
             
             final String sql = sqlText;
-            final Tab executingTab = resultsTabs.addTab(executingLayout,
-                    StringUtils.abbreviate(sql, 20), FontAwesome.SPINNER, tabPosition);
+            final Tab executingTab;
+            if (generalResultsTab != null) {
+            	replaceGeneralResultsWith(executingLayout, FontAwesome.SPINNER);
+            	executingTab = null;
+            } else {
+            	executingTab = resultsTabs.addTab(executingLayout,
+                        StringUtils.abbreviate(sql, 20), FontAwesome.SPINNER);
+            }
+            
+            if (executingTab != null) {
+	            executingTab.setClosable(true);
+	            resultsTabs.setSelectedTab(executingTab);
+            }
 
-            executingTab.setClosable(true);
-            resultsTabs.setSelectedTab(executingTab);
-
-            final SqlRunner runner = new SqlRunner(sql, runAsScript, user, db,
-                    settingsProvider.get());
+            final SqlRunner runner = new SqlRunner(sql, runAsScript, user, db, settingsProvider.get(), this, generalResultsTab != null);
             runnersInProgress.add(runner);
             runner.setConnection(connection);
             runner.setListener(new SqlRunner.ISqlRunnerListener() {
@@ -351,7 +420,6 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                         final boolean transactionEnded) {
                     VaadinSession.getCurrent().access(new Runnable() {
 
-                        @SuppressWarnings("unchecked")
 						@Override
                         public void run() {
                             try {
@@ -369,24 +437,17 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
                                 for (Component resultComponent : results) {
                                     resultComponent.setSizeFull();
-                                    Tab tab = resultsTabs.addTab(resultComponent,
-                                            StringUtils.abbreviate(sql, 20), icon, tabPosition);
-
-                                    tab.setClosable(true);
-
-                                    resultsTabs.setSelectedTab(tab.getComponent());
-
-                                    if (errorTab != null) {
-                                        resultsTabs.removeTab(errorTab);
-                                        errorTab = null;
+                                    
+                                    if (generalResultsTab == null || results.size() > 1) {
+                                    	if (resultComponent instanceof TabularResultLayout) {
+                                    		resultComponent = ((TabularResultLayout) resultComponent).refreshWithoutSaveButton();
+                                    	}
+                                    	addResultsTab(resultComponent, StringUtils.abbreviate(sql, 20), icon);
+                                	} else {
+                                    	replaceGeneralResultsWith(resultComponent, icon);
+                                    	resultsTabs.setSelectedTab(generalResultsTab.getComponent());
                                     }
-
-                                    if (maxNumberOfResultTabs > 0
-                                            && resultsTabs.getComponentCount() > maxNumberOfResultTabs) {
-                                        resultsTabs.removeTab(resultsTabs.getTab(resultsTabs
-                                                .getComponentCount() - 1));
-                                    }
-
+                                    
                                     String statusVal;
                                     if (canceled) {
                                     	statusVal = "Sql canceled after " + executionTimeInMs
@@ -398,17 +459,16 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 	                                            + SimpleDateFormat.getTimeInstance().format(new Date());
                                     }
                                     status.setValue(statusVal);
-                                    ((Map<Component, String>) resultsTabs.getData()).put(resultComponent, statusVal);
+                                    resultStatuses.put(resultComponent, statusVal);
                                     canceled = false;
-
-                                    if (icon == FontAwesome.STOP) {
-                                        errorTab = tab;
-                                    }
-
                                 }
                             } finally {
                                 setButtonsEnabled();
-                                resultsTabs.removeTab(executingTab);
+                                if (executingTab != null) {
+                                	resultsTabs.removeTab(executingTab);
+                                } else if (results.size() > 1) {
+                                	resetGeneralResultsTab();
+                                }
                                 runnersInProgress.remove(runner);
                                 runner.setListener(null);
                             }
@@ -445,6 +505,33 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         }
         setButtonsEnabled();
         return scheduled;
+    }
+    
+    public void addResultsTab(Component resultComponent, String title, Resource icon) {
+    	addResultsTab(resultComponent, title, icon, resultsTabs.getComponentCount());
+    }
+    
+    public void addResultsTab(Component resultComponent, String title, Resource icon, int position) {
+    	Tab tab = resultsTabs.addTab(resultComponent, title, icon, position);
+
+        tab.setClosable(true);
+
+        resultsTabs.setSelectedTab(tab.getComponent());
+
+        if (errorTab != null) {
+            resultsTabs.removeTab(errorTab);
+            errorTab = null;
+        }
+
+        if (maxNumberOfResultTabs > 0
+                && resultsTabs.getComponentCount() > maxNumberOfResultTabs) {
+            resultsTabs.removeTab(resultsTabs.getTab(resultsTabs
+                    .getComponentCount() - 1));
+        }
+
+        if (icon == FontAwesome.STOP) {
+            errorTab = tab;
+        }
     }
 
     public void commit() {

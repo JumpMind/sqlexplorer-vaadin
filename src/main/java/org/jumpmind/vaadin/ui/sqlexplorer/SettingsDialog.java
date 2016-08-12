@@ -64,12 +64,17 @@ public class SettingsDialog extends ResizableWindow {
     private CheckBox ignoreErrorsWhenRunningScript;
 
     private CheckBox showRowNumbersBox;
+    
+    private CheckBox showResultsInNewTabsBox;
 
     ISettingsProvider settingsProvider;
+    
+    SqlExplorer explorer;
 
-    public SettingsDialog(ISettingsProvider settingsProvider) {
+    public SettingsDialog(SqlExplorer explorer) {
         super("Settings");
-        this.settingsProvider = settingsProvider;
+        this.explorer = explorer;
+        this.settingsProvider = explorer.getSettingsProvider();
         setWidth(400, Unit.PIXELS);
         addComponent(createSettingsLayout(), 1);
         addComponent(createButtonLayout());
@@ -136,6 +141,16 @@ public class SettingsDialog extends ResizableWindow {
             showRowNumbersBox.setValue(false);
         }
         settingsLayout.addComponent(showRowNumbersBox);
+        
+        showResultsInNewTabsBox = new CheckBox("Always Put Results In New Tabs");
+        String showResultsInNewTabsValue = (properties.getProperty(SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS, "false"));
+        if (showResultsInNewTabsValue.equals("true")) {
+        	showResultsInNewTabsBox.setValue(true);
+        } else {
+        	showResultsInNewTabsBox.setValue(false);
+        }
+        settingsLayout.addComponent(showResultsInNewTabsBox);
+        
         layout.addComponent(settingsLayout);
         return layout;
 
@@ -171,7 +186,9 @@ public class SettingsDialog extends ResizableWindow {
             properties.setProperty(SQL_EXPLORER_EXCLUDE_TABLES_REGEX,
                     excludeTablesWithPrefixField.getValue());
             properties.setProperty(SQL_EXPLORER_IGNORE_ERRORS_WHEN_RUNNING_SCRIPTS, String.valueOf(ignoreErrorsWhenRunningScript.getValue()));
+            properties.setProperty(SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS, String.valueOf(showResultsInNewTabsBox.getValue()));
             settingsProvider.save(settings);
+            explorer.refreshQueryPanels();
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
             CommonUiUtils.notify(ex);
