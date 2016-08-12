@@ -54,7 +54,7 @@ public class SqlSuggester implements Suggester {
 		if (lastDeliminatorIndex > 0
 				&& text.charAt(lastDeliminatorIndex) == '.'
 				&& isSqlIdentifier(text.charAt(lastDeliminatorIndex-1))) {
-			suggestions.addAll(getHeirarchySuggestions());
+			suggestions.addAll(getHierarchySuggestions());
 		}
 		else if (lastDeliminatorIndex > 0 && text.charAt(lastDeliminatorIndex-1) != '.'
 				|| (lastDeliminatorIndex <= 0)) {
@@ -69,7 +69,6 @@ public class SqlSuggester implements Suggester {
 			suggestions.addAll(getTableNameSuggestions(null, null));
 		}
 		
-//		Collections.sort(suggestions, new SuggestionComparitor());
 		return removeRepeats(suggestions);
 	}
 	
@@ -278,7 +277,7 @@ public class SqlSuggester implements Suggester {
 	}
 	
 	/* Returns list of suggestions for the catalog.schema.table.column format */
-	private List<Suggestion> getHeirarchySuggestions() {
+	private List<Suggestion> getHierarchySuggestions() {
 		List<Suggestion> suggestions = new ArrayList<Suggestion>();
 		
 		String prevWord = getPrevWord(cursor), prevWord2 = null, prevWord3 = null;
