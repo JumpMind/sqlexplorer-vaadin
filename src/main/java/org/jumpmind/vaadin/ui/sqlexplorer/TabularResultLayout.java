@@ -241,7 +241,8 @@ public class TabularResultLayout extends VerticalLayout {
                     handleAction(ACTION_DELETE);
                 }
             });
-            if (resultTable.getForeignKeyCount() > 0) {
+            
+            if (resultTable != null && resultTable.getForeignKeyCount() > 0) {
 	            followToMenu = menu.addItem("Follow to", null);
 	            buildFollowToMenu();
             }
