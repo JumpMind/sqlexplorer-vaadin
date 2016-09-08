@@ -251,11 +251,18 @@ public class ReadOnlyTextAreaDialog extends ResizableWindow {
     protected byte[] getLobData(String title) {
     	ISqlTemplate sqlTemplate = platform.getSqlTemplate();
     	String sql = buildLobSelect(table.getPrimaryKeyColumns());
+    	byte[] array;
     	if (platform.isBlob(column.getMappedTypeCode())) {
-    		return sqlTemplate.queryForBlob(sql, column.getJdbcTypeCode(), column.getJdbcTypeName(), primaryKeys);
+    	    array = sqlTemplate.queryForBlob(sql, column.getJdbcTypeCode(), column.getJdbcTypeName(), primaryKeys);
     	} else {
-    		return sqlTemplate.queryForClob(sql, column.getJdbcTypeCode(), column.getJdbcTypeName(), primaryKeys).getBytes();
+    		String results = sqlTemplate.queryForClob(sql, column.getJdbcTypeCode(), column.getJdbcTypeName(), primaryKeys);
+    		if (results != null) {
+    		    array = results.getBytes();
+    		} else {
+    		    array = null;
+    		}
     	}
+        return array;
     }
     
     protected String buildLobSelect(Column[] pkColumns) {

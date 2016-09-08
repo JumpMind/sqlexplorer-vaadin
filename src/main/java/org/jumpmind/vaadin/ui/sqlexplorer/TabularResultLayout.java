@@ -738,16 +738,9 @@ public class TabularResultLayout extends VerticalLayout {
                 log.debug("Failed to lookup table: " + tableName, e);
             }
         }
-
-        List<Integer> pkcolumns = new ArrayList<Integer>();
-        if (resultTable != null) {
-        	for (Column pkcolumn : resultTable.getPrimaryKeyColumns()) {
-        		pkcolumns.add(resultTable.getColumnIndex(pkcolumn));
-        	}
-        }
         
         TypedProperties properties = settings.getProperties();
-        return CommonUiUtils.putResultsInGrid(rs, pkcolumns, properties.getInt(SQL_EXPLORER_MAX_RESULTS), properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS),
+        return CommonUiUtils.putResultsInGrid(rs, resultTable, properties.getInt(SQL_EXPLORER_MAX_RESULTS), properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS),
                 getColumnsToExclude());
 
     }
@@ -769,7 +762,7 @@ public class TabularResultLayout extends VerticalLayout {
 	    			gridColumn.setEditable(false);
 	    		}
 	    		else if (tableColumn != null && db.getPlatform().isLob(tableColumn.getMappedTypeCode())) {
-	    			gridColumn.setEditorField(new lobEditorField(header));
+	    			gridColumn.setEditorField(new LobEditorField(header));
 	    		}
 	    		else if (tableColumn != null) {
 	    			setEditor(gridColumn, tableColumn, primaryKeyEditors);
@@ -908,6 +901,22 @@ public class TabularResultLayout extends VerticalLayout {
     	});
     }
     
+    protected Object[] getPrimaryKeys() {
+        String[] columnNames = resultTable.getPrimaryKeyColumnNames();
+        Object[] pks = new Object[columnNames.length];
+        Item row = grid.getContainerDataSource().getItem(grid.getEditedItemId());
+        int index = 0;
+        for (String columnName : columnNames) {
+            Property<?> p = row.getItemProperty(columnName);
+            if (p != null) {
+                pks[index++] = p.getValue();
+            } else {
+                return null;
+            }
+        }
+        return pks;
+    }
+    
     protected String buildUpdate(Table table, String columnName, String[] pkColumnNames) {
     	StringBuilder sql = new StringBuilder("update ");
     	DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
@@ -929,13 +938,13 @@ public class TabularResultLayout extends VerticalLayout {
     	return sql.toString();
     }
     
-    class lobEditorField extends CustomField<String> {
+    class LobEditorField extends CustomField<String> {
 
 		private static final long serialVersionUID = 1L;
 		
 		String header;
     	
-    	lobEditorField(String header) {
+    	LobEditorField(String header) {
     		super();
     		this.header = header;
     	}
@@ -947,18 +956,15 @@ public class TabularResultLayout extends VerticalLayout {
 				
 				private static final long serialVersionUID = 1L;
 
-				@SuppressWarnings("unchecked")
 				public void buttonClick(ClickEvent event) {
 					Property<?> p = grid.getContainerDataSource().getItem(grid.getEditedItemId()).getItemProperty(header);
 					if (p != null) {
 						String data = p.getValue() == null ? null : String.valueOf(p.getValue());
-	                	Object[] primaryKeys = null;
 	                    boolean binary = resultTable != null ? resultTable.getColumnWithName(header).isOfBinaryType() : false;
-	                    primaryKeys = ((HashMap<Object, List<Object>>) grid.getData()).get(p.getValue()).toArray();
 	                    if (binary) {
-	                        ReadOnlyTextAreaDialog.show(header, data == null ? null : data.toUpperCase(), resultTable, primaryKeys, db.getPlatform(), binary, true);
+	                        ReadOnlyTextAreaDialog.show(header, data == null ? null : data.toUpperCase(), resultTable, getPrimaryKeys(), db.getPlatform(), binary, true);
 	                    } else {
-	                        ReadOnlyTextAreaDialog.show(header, data, resultTable, primaryKeys, db.getPlatform(), binary, true);
+	                        ReadOnlyTextAreaDialog.show(header, data, resultTable, getPrimaryKeys(), db.getPlatform(), binary, true);
 	                    }
 					}
 				}
