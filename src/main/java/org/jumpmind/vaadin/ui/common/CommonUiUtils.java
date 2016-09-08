@@ -362,8 +362,7 @@ public final class CommonUiUtils {
         return headers.toArray(new String[headers.size()]);
     }
 
-    @SuppressWarnings("unchecked")
-	public static Grid putResultsInGrid(final ResultSet rs, List<Integer> pkcolumns, int maxResultSize, final boolean showRowNumbers, String... excludeValues)
+	public static Grid putResultsInGrid(final ResultSet rs, org.jumpmind.db.model.Table resultTable, int maxResultSize, final boolean showRowNumbers, String... excludeValues)
             throws SQLException {
 
         final Grid grid = new Grid();
@@ -511,11 +510,6 @@ public final class CommonUiUtils {
                         default:
                             break;
                     }
-                    List<Object> primaryKeys = new ArrayList<Object>();
-                	for (Integer pkcolumn : pkcolumns) {
-                		primaryKeys.add(getObject(rs, pkcolumn+1));
-                	}
-                	((HashMap<Object, List<Object>>) grid.getData()).put(o, primaryKeys);
                     row[rowIndex] = o;
                     rowIndex++;
                 }
