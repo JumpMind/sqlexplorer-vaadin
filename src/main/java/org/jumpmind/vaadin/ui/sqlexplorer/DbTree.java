@@ -182,6 +182,7 @@ public class DbTree extends Tree {
 					if (treeNode.getType().equals(NODE_TYPE_DATABASE)) {
 						List<DbTreeNode> nextLevel = new ArrayList<DbTreeNode>();
 						List<String> catalogs = reader.getCatalogNames();
+						Collections.sort(catalogs);
 						if (catalogs.size() > 0) {
 							if (catalogs.remove(platform.getDefaultCatalog())) {
 								catalogs.add(0, platform.getDefaultCatalog());
@@ -192,6 +193,7 @@ public class DbTree extends Tree {
 							}
 						} else {
 							List<String> schemas = reader.getSchemaNames(null);
+							Collections.sort(schemas);
 							if (schemas.remove(platform.getDefaultSchema())) {
 								schemas.add(0, platform.getDefaultSchema());
 							}
@@ -211,6 +213,7 @@ public class DbTree extends Tree {
 						}
 					} else if (treeNode.getType().equals(NODE_TYPE_CATALOG)) {
 						List<String> schemas = reader.getSchemaNames(treeNode.getName());
+						Collections.sort(schemas);
 						if (schemas.size() > 0) {
 							if (schemas.remove(platform.getDefaultSchema())) {
 								schemas.add(0, platform.getDefaultSchema());
@@ -245,7 +248,6 @@ public class DbTree extends Tree {
 							catalogName = parent.getName();
 						}
 						addTriggerNodes(reader, treeNode, catalogName, schemaName);
-						System.out.println();
 					}
 					
 					setChildrenAllowed(treeNode,
@@ -268,8 +270,7 @@ public class DbTree extends Tree {
 	protected List<DbTreeNode> getTableTreeNodes(IDdlReader reader,
 			DbTreeNode parent, String catalogName, String schemaName) {
 		List<DbTreeNode> list = new ArrayList<DbTreeNode>();
-		List<String> tables = reader.getTableNames(catalogName, schemaName, TABLE_TYPES);
-		
+		List<String> tables = reader.getTableNames(catalogName, schemaName, TABLE_TYPES);		
 		Collections.sort(tables, new Comparator<String>() {
 			@Override
 			public int compare(String o1, String o2) {
