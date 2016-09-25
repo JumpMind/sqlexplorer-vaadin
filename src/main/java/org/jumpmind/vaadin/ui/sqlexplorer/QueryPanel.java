@@ -434,6 +434,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 						@Override
                         public void run() {
                             try {
+                                Thread.currentThread().setContextClassLoader(QueryPanel.class.getClassLoader());
                                 if (transactionEnded) {
                                     transactionEnded();
                                 } else if (transactionStarted) {
