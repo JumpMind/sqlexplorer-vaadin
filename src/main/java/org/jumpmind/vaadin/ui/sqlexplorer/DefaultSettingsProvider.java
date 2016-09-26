@@ -67,6 +67,7 @@ public class DefaultSettingsProvider implements ISettingsProvider, Serializable 
         synchronized (getClass()) {
             File file = getSettingsFile();
             FileOutputStream os = null;
+            ClassLoader classloader = setContextClassloader();
             try {
                 os = new FileOutputStream(file, false);
                 XMLEncoder encoder = new XMLEncoder(os);
@@ -77,6 +78,7 @@ public class DefaultSettingsProvider implements ISettingsProvider, Serializable 
                 log.error(ex.getMessage(), ex);
             } finally {
                 IOUtils.closeQuietly(os);
+                restoreContextClassloader(classloader);
             }
         }
     }
@@ -86,8 +88,9 @@ public class DefaultSettingsProvider implements ISettingsProvider, Serializable 
             File file = getSettingsFile();
             if (file.exists() && file.length() > 0) {
                 FileInputStream is = null;
+                ClassLoader classloader = setContextClassloader();
                 try {
-                    is = new FileInputStream(file);
+                    is = new FileInputStream(file);                    
                     XMLDecoder decoder = new XMLDecoder(is);
                     Settings settings = (Settings) decoder.readObject();
                     decoder.close();
@@ -97,9 +100,28 @@ public class DefaultSettingsProvider implements ISettingsProvider, Serializable 
                     FileUtils.deleteQuietly(file);
                 } finally {
                     IOUtils.closeQuietly(is);
+                    restoreContextClassloader(classloader);
                 }
             }
             return new Settings();
+        }
+    }
+    
+    protected ClassLoader setContextClassloader() {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        try {            
+            Thread.currentThread().setContextClassLoader(Settings.class.getClassLoader());
+        } catch (Exception e) {
+            log.warn("", e);
+        }
+        return classLoader;
+    }
+    
+    protected void restoreContextClassloader(ClassLoader classloader) {
+        try {            
+            Thread.currentThread().setContextClassLoader(classloader);
+        } catch (Exception e) {
+            log.warn("", e);
         }
     }
 
