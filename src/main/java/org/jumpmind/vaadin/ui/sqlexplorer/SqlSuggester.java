@@ -8,10 +8,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.jumpmind.db.platform.IDdlReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vaadin.aceeditor.Suggester;
 import org.vaadin.aceeditor.Suggestion;
 
 public class SqlSuggester implements Suggester {
+    
+    static final protected Logger logger = LoggerFactory.getLogger(SqlSuggester.class);
 
 	public final static String[] TABLE_TYPES = new String[] { "TABLE",
 		"SYSTEM TABLE", "SYSTEM VIEW" };
@@ -210,10 +214,14 @@ public class SqlSuggester implements Suggester {
 					&& block != currentBlock && block[0] > lastRemoval) {
 				for (String word : QUERY_INITIALIZERS) {
 					if (text.substring(block[0]+1, block[1]).trim().startsWith(word)) {
-						tempText = tempText.substring(min+1, block[0]-shiftLeft) +
-								tempText.substring(block[1]-shiftLeft+1);
-						shiftLeft += block[1]-block[0];
-						lastRemoval = block[1];
+						try {
+                            tempText = tempText.substring(min+1, block[0]-shiftLeft) +
+                            		(tempText.length() > block[1]-shiftLeft+1 ? tempText.substring(block[1]-shiftLeft+1) : "");
+                            shiftLeft += block[1]-block[0];
+                            lastRemoval = block[1];
+                        } catch (Exception e) {
+                            logger.warn("", e);
+                        }
 						break;
 					}
 				}
