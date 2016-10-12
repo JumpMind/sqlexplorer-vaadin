@@ -275,7 +275,8 @@ public class SqlRunner extends Thread {
                             }
                         }
                         int updateCount = stmt.getUpdateCount();
-                        while (hasResults || updateCount != -1) {
+                        boolean firstTimeThrough = true;
+                        while (hasResults || updateCount != -1 || firstTimeThrough) {
                             ResultSet rs = null;
                             try {
                                 if (hasResults) {
@@ -315,6 +316,7 @@ public class SqlRunner extends Thread {
                                 updateCount = stmt.getUpdateCount();
                             } finally {
                                 JdbcSqlTemplate.close(rs);
+                                firstTimeThrough = false;
                             }
                         }
 
