@@ -48,7 +48,6 @@ import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.Table;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 public class TableInfoPanel extends VerticalLayout implements IInfoPanel {
@@ -150,8 +149,6 @@ public class TableInfoPanel extends VerticalLayout implements IInfoPanel {
         executingLayout.setSizeFull();
         final ProgressBar p = new ProgressBar();
         p.setIndeterminate(true);
-        final int oldPollInterval = UI.getCurrent().getPollInterval();
-        UI.getCurrent().setPollInterval(100);
         executingLayout.addComponent(p);
         executingLayout.setData(isInit);
         tabSheet.addTab(executingLayout, "Data", isInit ? null : FontAwesome.SPINNER, 1);
@@ -190,7 +187,6 @@ public class TableInfoPanel extends VerticalLayout implements IInfoPanel {
                                     layout.addComponent(results.get(0));
                                 }
                                 tabSheet.addTab(layout, "Data", null, 1);
-                                UI.getCurrent().setPollInterval(oldPollInterval);
                                 tabSheet.setSelectedTab(layout);
                             }
                         });

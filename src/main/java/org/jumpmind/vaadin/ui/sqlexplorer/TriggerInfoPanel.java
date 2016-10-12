@@ -285,8 +285,6 @@ public class TriggerInfoPanel extends VerticalLayout implements IInfoPanel {
         executingLayout.setSizeFull();
         final ProgressBar p = new ProgressBar();
         p.setIndeterminate(true);
-        final int oldPollInterval = UI.getCurrent().getPollInterval();
-        UI.getCurrent().setPollInterval(100);
         executingLayout.addComponent(p);
         tabSheet.addTab(executingLayout, "Details", FontAwesome.SPINNER, 0);
         tabSheet.setSelectedTab(executingLayout);
@@ -305,7 +303,6 @@ public class TriggerInfoPanel extends VerticalLayout implements IInfoPanel {
         layout.setSizeFull();
         layout.addComponent(triggerTable);
         tabSheet.addTab(layout, "Details", null, 0);
-        UI.getCurrent().setPollInterval(oldPollInterval);
         if (select) {
             tabSheet.setSelectedTab(layout);
         }
