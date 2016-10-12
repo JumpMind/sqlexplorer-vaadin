@@ -33,7 +33,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -285,7 +284,7 @@ public class SqlRunner extends Thread {
                                         if (!resultsAsText) {
                                             resultComponents.add(new TabularResultLayout(explorer, db, sql, rs, listener, user, settings, queryPanel, showSqlOnResults, isInQueryGeneralResults));
                                         } else {
-                                            resultComponents.add(putResultsInArea(stmt, maxResultsSize));
+                                            resultComponents.add(putResultsInArea(rs, maxResultsSize));
                                         }
                                     } else {
                                         int rowsRetrieved = 0;
@@ -408,14 +407,11 @@ public class SqlRunner extends Thread {
         return panel;
     }
 
-    protected Component putResultsInArea(Statement stmt, int maxResultSize) throws SQLException {
-        return wrapTextInComponent(resultsAsText(stmt, maxResultSize));
+    protected Component putResultsInArea(ResultSet rs, int maxResultSize) throws SQLException {
+        return wrapTextInComponent(resultsAsText(rs, maxResultSize));
     }
 
-    protected String resultsAsText(Statement stmt, int maxResultSize) throws SQLException {
-        ResultSet rs = null;
-        try {
-            rs = stmt.getResultSet();
+    protected String resultsAsText(ResultSet rs, int maxResultSize) throws SQLException {
             ResultSetMetaData meta = rs.getMetaData();
             int columns = meta.getColumnCount();
             int[] maxColumnSizes = new int[columns];
@@ -464,9 +460,7 @@ public class SqlRunner extends Thread {
             }
 
             return text.toString();
-        } finally {
-            JdbcSqlTemplate.close(rs);
-        }
+
     }
 
     public void setListener(ISqlRunnerListener listener) {
