@@ -133,7 +133,7 @@ public class DbFillDialog extends ResizableWindow {
         });
         nextButton.setEnabled(tableSelectionLayout.getSelectedTables().size() > 0);
 
-        cancelButton = new Button("Cancel", new Button.ClickListener() {
+        cancelButton = new Button("Close", new Button.ClickListener() {
             private static final long serialVersionUID = 1L;
 
             public void buttonClick(ClickEvent event) {
@@ -310,7 +310,6 @@ public class DbFillDialog extends ResizableWindow {
     }
 
     protected void confirm() {
-
         ConfirmDialog
                 .show("Confirm",
                         "Are you sure?  Please note that this will effect data in the selected tables.  Make sure you have a backup of your data.",
@@ -331,7 +330,6 @@ public class DbFillDialog extends ResizableWindow {
         String[] tables = new String[temp.size()];
         temp.toArray(tables);
         dbFill.fillTables(tables);
-        UI.getCurrent().removeWindow(DbFillDialog.this);
     }
 
     protected void createDbFill() {

@@ -88,6 +88,12 @@ public class DemoUI extends UI implements IDbProvider {
                 ds.setDriverClassName(Driver.class.getName());
                 ds.setUrl("jdbc:h2:mem:" + name);
                 databasePlatform = JdbcDatabasePlatformFactory.createNewPlatformInstance(ds, new SqlTemplateSettings(), true, false);
+                StringBuilder bigTable = new StringBuilder("create table big (id integer");
+                for (int i = 0; i < 300; i++) {
+                    bigTable.append(",col").append(Integer.toString(i)).append(" text");
+                }
+                bigTable.append(")");
+                databasePlatform.getSqlTemplate().update(bigTable.toString());
             }
             return databasePlatform;
         }
