@@ -588,13 +588,25 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         String delimiter = settingsProvider.get().getProperties().get(SQL_EXPLORER_DELIMITER);
         String sql = sqlArea.getValue();
         TextRange range = sqlArea.getSelection();
-        if (!range.isZeroLength()) {
+        boolean selected = !range.isZeroLength();
+        if (selected) {
             if (range.isBackwards()) {
-                sql = sql.substring(range.getEnd(), range.getStart());
+                if (sql.length() > range.getStart()) {
+                    sql = sql.substring(range.getEnd(), range.getStart());    
+                } else {
+                    selected = false;
+                }
+                
             } else {
-                sql = sql.substring(range.getStart(), range.getEnd());
+                if (sql.length() > range.getEnd()) {
+                    sql = sql.substring(range.getStart(), range.getEnd());
+                } else {
+                    selected = false;
+                }
             }
-        } else {
+        } 
+
+        if (!selected){
             StringBuilder sqlBuffer = new StringBuilder();
             String[] lines = sql.split("\n");
             int charCount = 0;
