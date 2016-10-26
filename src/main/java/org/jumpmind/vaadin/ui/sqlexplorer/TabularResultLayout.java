@@ -20,10 +20,8 @@
  */
 package org.jumpmind.vaadin.ui.sqlexplorer;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_MAX_RESULTS;
-import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_SHOW_ROW_NUMBERS;
+import static org.apache.commons.lang.StringUtils.*;
+import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.*;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -50,7 +48,6 @@ import org.jumpmind.db.model.Reference;
 import org.jumpmind.db.model.Table;
 import org.jumpmind.db.platform.DatabaseInfo;
 import org.jumpmind.db.platform.IDdlReader;
-import org.jumpmind.db.sql.LogSqlBuilder;
 import org.jumpmind.db.sql.SqlException;
 import org.jumpmind.properties.TypedProperties;
 import org.jumpmind.util.FormatUtils;
@@ -886,9 +883,7 @@ public class TabularResultLayout extends VerticalLayout {
 							}
 						}
 						try {
-							long startTime = System.nanoTime();
 							db.getPlatform().getSqlTemplate().update(sql, params, types);
-							new LogSqlBuilder().logSql(log, sql, params, types, System.nanoTime()-startTime);
 						} catch (SqlException e) {
 							NotifyDialog.show("Error", "<b>The table could not be updated.</b><br>" +
 									"Cause: the sql update statement failed to execute.<br><br>" +
