@@ -302,12 +302,22 @@ public class SqlRunner extends Thread {
                                 } else {
                                     rowsUpdated = updateCount > 0 ? true : false;
                                     if (!runAsScript) {
-                                        resultComponents.add(wrapTextInComponent(String.format("%d rows affected", updateCount)));
+                                        String message = null;
+                                        if (updateCount > 0) {
+                                            message = String.format("%d rows affected", updateCount);
+                                        } else {
+                                            message = "Statement(s) executed";
+                                        }
+                                        resultComponents.add(wrapTextInComponent(message));
                                     } else {
                                         results.append(sql);
                                         results.append("\n");
-                                        results.append("Rows Affected: ");
-                                        results.append(updateCount);
+                                        if (updateCount > 0) {
+                                            results.append("Rows Affected: ");
+                                            results.append(updateCount);
+                                        } else {
+                                            results.append("Statement executed");
+                                        }
                                         results.append("\n");
                                         results.append("\n");
                                     }
