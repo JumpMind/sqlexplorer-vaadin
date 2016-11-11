@@ -141,7 +141,7 @@ dependencies {
     compile ("com.vaadin.addon:tableexport-for-vaadin:1.6.2") {
        exclude (group:"org.vaadin.addons",module:"filteringtable")
     }
-    compile "org.vaadin.teemusa:gridextensionpack:1.0.0"
+    //compile "org.vaadin.teemusa:gridextensionpack:1.0.0"
     compile "com.vaadin.addon:vaadin-context-menu:0.7.3"
 
     provided ("com.vaadin:vaadin-client-compiler:$vaadinVersion") {
