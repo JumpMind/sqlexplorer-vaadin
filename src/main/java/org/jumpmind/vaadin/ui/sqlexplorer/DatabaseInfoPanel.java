@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.jumpmind.db.sql.JdbcSqlTemplate;
 import org.jumpmind.vaadin.ui.common.CommonUiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +57,9 @@ public class DatabaseInfoPanel extends VerticalLayout implements IInfoPanel {
 		});
 		addComponent(tabSheet);
 		
+		Connection c = null;
 		try {
-			Connection c = ((DataSource) db.getPlatform().getDataSource()).getConnection();
+			c = ((DataSource) db.getPlatform().getDataSource()).getConnection();
 			DatabaseMetaData metaData = c.getMetaData();
 			
 			tabSheet.addTab(createTabData(createTableWithReflection(DatabaseMetaData.class, metaData)), "Meta Data");
@@ -133,7 +135,9 @@ public class DatabaseInfoPanel extends VerticalLayout implements IInfoPanel {
 				log.debug("Could not create Keywords tab", e);
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			log.error("",e);
+		} finally {
+		    JdbcSqlTemplate.close(c);
 		}
 		
 		Iterator<Component> i = tabSheet.iterator();
