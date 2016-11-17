@@ -204,31 +204,34 @@ public class SqlSuggester implements Suggester {
 			}
 		}
 		
-		if (currentBlock[1] == -1) {
+		if (currentBlock[1] == -1 || text.length()-1 < currentBlock[1]) {
 			return text.substring(min, max);
 		}
-		String tempText = text.substring(currentBlock[0]+1, currentBlock[1]);
-		int shiftLeft = currentBlock[0]+1, lastRemoval = currentBlock[0]+1;
-		for (int[] block : queryBlocks) {
-			if (block[1] > 0 && block[0] >= currentBlock[0] && block[1] <= currentBlock[1]
-					&& block != currentBlock && block[0] > lastRemoval) {
-				for (String word : QUERY_INITIALIZERS) {
-					if (text.substring(block[0]+1, block[1]).trim().startsWith(word)) {
-						try {
-                            tempText = tempText.substring(min+1, block[0]-shiftLeft) +
-                            		(tempText.length() > block[1]-shiftLeft+1 ? tempText.substring(block[1]-shiftLeft+1) : "");
-                            shiftLeft += block[1]-block[0];
+
+        try {
+            String tempText = text.substring(currentBlock[0] + 1, currentBlock[1]);
+            int shiftLeft = currentBlock[0] + 1, lastRemoval = currentBlock[0] + 1;
+            for (int[] block : queryBlocks) {
+                if (block[1] > 0 && block[0] >= currentBlock[0] && block[1] <= currentBlock[1] && block != currentBlock
+                        && block[0] > lastRemoval) {
+                    for (String word : QUERY_INITIALIZERS) {
+                        if (text.substring(block[0] + 1, block[1]).trim().startsWith(word)) {
+                            tempText = tempText.substring(min + 1, block[0] - shiftLeft)
+                                    + (tempText.length() > block[1] - shiftLeft + 1 ? tempText.substring(block[1] - shiftLeft + 1) : "");
+                            shiftLeft += block[1] - block[0];
                             lastRemoval = block[1];
-                        } catch (Exception e) {
-                            logger.warn("", e);
+
+                            break;
                         }
-						break;
-					}
-				}
-			}
-		}
+                    }
+                }
+            }
+            return tempText;
+        } catch (Exception e) {
+            logger.warn("", e);
+            return "";
+        }
 		
-		return tempText;
 	}
 	
 	private List<String> getReferencedTableNames() {
