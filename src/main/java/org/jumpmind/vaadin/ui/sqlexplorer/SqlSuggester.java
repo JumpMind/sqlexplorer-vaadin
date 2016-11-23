@@ -204,7 +204,7 @@ public class SqlSuggester implements Suggester {
 			}
 		}
 		
-		if (currentBlock[1] == -1 || text.length()-1 < currentBlock[1]) {
+		if (currentBlock[1] == -1 || text.length()-1 < currentBlock[1] && min >= 0) {
 			return text.substring(min, max);
 		}
 
