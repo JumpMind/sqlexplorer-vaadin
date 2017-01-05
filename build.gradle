@@ -54,7 +54,7 @@ ext {
     javaMailVersion = '1.4.7'
     jdomVersion = '2.0.5'
     springVersion = '4.2.6.RELEASE'
-    symmetricVersion = '3.8.x-SNAPSHOT'
+    symmetricVersion = '3.8.12'
     servletVersion = '3.0.1'
     h2Version='1.4.191'
     mysqlVersion = '5.1.29'
