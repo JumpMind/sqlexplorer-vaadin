@@ -21,6 +21,7 @@
 package org.jumpmind.vaadin.ui.sqlexplorer;
 
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS;
+import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_AUTO_COMPLETE;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -94,7 +95,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
     float savedSplitPosition = DEFAULT_SPLIT_POS;
 
     String user;
-    
+
     IDbMenuItem[] additionalMenuItems;
 
     Set<IInfoPanel> infoTabs = new HashSet<IInfoPanel>();
@@ -111,7 +112,8 @@ public class SqlExplorer extends HorizontalSplitPanel {
         this(configDir, databaseProvider, new DefaultSettingsProvider(configDir, user), user, leftSplitPos);
     }
 
-    public SqlExplorer(String configDir, IDbProvider databaseProvider, ISettingsProvider settingsProvider, String user, float leftSplitSize, IDbMenuItem... additionalMenuItems) {
+    public SqlExplorer(String configDir, IDbProvider databaseProvider, ISettingsProvider settingsProvider, String user, float leftSplitSize,
+            IDbMenuItem... additionalMenuItems) {
         this.databaseProvider = databaseProvider;
         this.settingsProvider = settingsProvider;
         this.savedSplitPosition = leftSplitSize;
@@ -192,7 +194,9 @@ public class SqlExplorer extends HorizontalSplitPanel {
                 dbTree.refresh();
                 Component tab = contentTabs.getSelectedTab();
                 if (tab instanceof QueryPanel) {
-                	findQueryPanelForDb(((QueryPanel)tab).db).suggester.clearCaches();
+                    if (findQueryPanelForDb(((QueryPanel) tab).db).suggester != null) {
+                        findQueryPanelForDb(((QueryPanel) tab).db).suggester.clearCaches();
+                    }
                 }
             }
         });
@@ -260,7 +264,7 @@ public class SqlExplorer extends HorizontalSplitPanel {
     }
 
     protected QueryPanel openQueryWindow(IDb db) {
-    	String dbName = db.getName();
+        String dbName = db.getName();
         DefaultButtonBar buttonBar = new DefaultButtonBar();
         QueryPanel panel = new QueryPanel(db, settingsProvider, buttonBar, user);
         buttonBar.init(db, settingsProvider, panel, additionalMenuItems);
@@ -282,18 +286,21 @@ public class SqlExplorer extends HorizontalSplitPanel {
             }
         }
     }
-    
+
     public void refreshQueryPanels() {
-    	for (Component panel : contentTabs) {
-    		if (panel instanceof QueryPanel) {
-    			QueryPanel queryPanel = ((QueryPanel) panel);
-    			if (settingsProvider.get().getProperties().is(SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS)) {
-    				queryPanel.removeGeneralResultsTab();
-    			} else if (!settingsProvider.get().getProperties().is(SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS)) {
-    				queryPanel.createGeneralResultsTab();
-    			}
-    		}
-    	}
+        for (Component panel : contentTabs) {
+            if (panel instanceof QueryPanel) {
+                QueryPanel queryPanel = ((QueryPanel) panel);
+
+                if (settingsProvider.get().getProperties().is(SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS)) {
+                    queryPanel.removeGeneralResultsTab();
+                } else if (!settingsProvider.get().getProperties().is(SQL_EXPLORER_SHOW_RESULTS_IN_NEW_TABS)) {
+                    queryPanel.createGeneralResultsTab();
+                }
+                boolean autoCompleteEnabled = settingsProvider.get().getProperties().is(SQL_EXPLORER_AUTO_COMPLETE);
+                queryPanel.setAutoCompleteEnabled(autoCompleteEnabled);
+            }
+        }
     }
 
     public QueryPanel findQueryPanelForDb(IDb db) {
@@ -428,53 +435,55 @@ public class SqlExplorer extends HorizontalSplitPanel {
             public void valueChange(ValueChangeEvent event) {
                 Set<DbTreeNode> nodes = dbTree.getSelected();
                 if (nodes != null) {
-                	for (DbTreeNode treeNode : nodes) {
+                    for (DbTreeNode treeNode : nodes) {
                         IDb db = dbTree.getDbForNode(treeNode);
                         QueryPanel panel = getQueryPanelForDb(db);
                         if (panel == null && db != null) {
                             openQueryWindow(db);
                         }
                     }
-                	
+
                     String selectedTabCaption = null;
                     for (IInfoPanel panel : infoTabs) {
                         selectedTabCaption = panel.getSelectedTabCaption();
                         contentTabs.removeComponent(panel);
                     }
                     infoTabs.clear();
-                    
+
                     if (nodes.size() > 0) {
                         DbTreeNode treeNode = nodes.iterator().next();
                         if (treeNode != null && treeNode.getType().equals(DbTree.NODE_TYPE_DATABASE)) {
-                        	IDb db = dbTree.getDbForNode(treeNode);
-                        	DatabaseInfoPanel databaseInfoTab = new DatabaseInfoPanel(db, settingsProvider.get(), selectedTabCaption);
-                        	Tab tab = contentTabs.addTab(databaseInfoTab, db.getName(), FontAwesome.DATABASE, 0);
-                        	tab.setClosable(true);
-                        	selectContentTab(databaseInfoTab);
-                        	infoTabs.add(databaseInfoTab);
+                            IDb db = dbTree.getDbForNode(treeNode);
+                            DatabaseInfoPanel databaseInfoTab = new DatabaseInfoPanel(db, settingsProvider.get(), selectedTabCaption);
+                            Tab tab = contentTabs.addTab(databaseInfoTab, db.getName(), FontAwesome.DATABASE, 0);
+                            tab.setClosable(true);
+                            selectContentTab(databaseInfoTab);
+                            infoTabs.add(databaseInfoTab);
                         }
                         if (treeNode != null && treeNode.getType().equals(DbTree.NODE_TYPE_TABLE)) {
                             Table table = treeNode.getTableFor();
                             if (table != null) {
                                 IDb db = dbTree.getDbForNode(treeNode);
-                                TableInfoPanel tableInfoTab = new TableInfoPanel(table, user, db, settingsProvider.get(), SqlExplorer.this, selectedTabCaption);
+                                TableInfoPanel tableInfoTab = new TableInfoPanel(table, user, db, settingsProvider.get(), SqlExplorer.this,
+                                        selectedTabCaption);
                                 Tab tab = contentTabs.addTab(tableInfoTab, table.getFullyQualifiedTableName(), FontAwesome.TABLE, 0);
                                 tab.setClosable(true);
                                 selectContentTab(tableInfoTab);
                                 infoTabs.add(tableInfoTab);
                             }
                         } else if (treeNode != null && treeNode.getType().equals(DbTree.NODE_TYPE_TRIGGER)) {
-                        	Table table = treeNode.getParent().getTableFor();
-                        	IDdlReader reader = dbTree.getDbForNode(treeNode).getPlatform().getDdlReader();
-                        	Trigger trigger = reader.getTriggerFor(table, treeNode.getName());
-                        	if (trigger != null) {
-                        		IDb db = dbTree.getDbForNode(treeNode);
-	                        	TriggerInfoPanel triggerInfoTab = new TriggerInfoPanel(trigger, db, settingsProvider.get(), selectedTabCaption);
-	                        	Tab tab = contentTabs.addTab(triggerInfoTab, trigger.getName(), FontAwesome.CROSSHAIRS, 0);
-	                        	tab.setClosable(true);
-	                        	selectContentTab(triggerInfoTab);
-	                        	infoTabs.add(triggerInfoTab);
-                        	}
+                            Table table = treeNode.getParent().getTableFor();
+                            IDdlReader reader = dbTree.getDbForNode(treeNode).getPlatform().getDdlReader();
+                            Trigger trigger = reader.getTriggerFor(table, treeNode.getName());
+                            if (trigger != null) {
+                                IDb db = dbTree.getDbForNode(treeNode);
+                                TriggerInfoPanel triggerInfoTab = new TriggerInfoPanel(trigger, db, settingsProvider.get(),
+                                        selectedTabCaption);
+                                Tab tab = contentTabs.addTab(triggerInfoTab, trigger.getName(), FontAwesome.CROSSHAIRS, 0);
+                                tab.setClosable(true);
+                                selectContentTab(triggerInfoTab);
+                                infoTabs.add(triggerInfoTab);
+                            }
                         }
                     }
                 }
@@ -659,14 +668,14 @@ public class SqlExplorer extends HorizontalSplitPanel {
     }
 
     public void addResultsTab(String caption, Resource icon, IContentTab panel) {
-    	Tab tab = contentTabs.addTab(panel, caption);
+        Tab tab = contentTabs.addTab(panel, caption);
         tab.setClosable(true);
         tab.setIcon(icon);
         selectContentTab(panel);
     }
-    
+
     public void putResultsInQueryTab(String value, IDb db) {
-    	openQueryWindow(db).appendSql(value);
+        openQueryWindow(db).appendSql(value);
     }
-    
+
 }
