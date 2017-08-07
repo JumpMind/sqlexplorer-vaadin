@@ -138,6 +138,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         this.buttonBar = buttonBar;
         this.sqlArea = buildSqlEditor();
         this.shortCutListeners.add(createExecuteSqlShortcutListener());
+        this.shortCutListeners.add(createExecuteSqlScriptShortcutListener());
 
         VerticalLayout resultsLayout = new VerticalLayout();
         resultsLayout.setSizeFull();
@@ -310,6 +311,28 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
                 } else if (target instanceof AceEditor) {
                     if (executeAtCursorButtonValue) {
                         if (execute(false) && !settingsProvider.get().getProperties().is(SQL_EXPLORER_AUTO_COMMIT)) {
+                            setButtonsEnabled();
+                        }
+                    }
+                }
+            }
+        };
+    }
+    
+    protected ShortcutListener createExecuteSqlScriptShortcutListener(){
+        return new ShortcutListener("", KeyCode.ENTER, new int[] {ModifierKey.CTRL, ModifierKey.SHIFT}){
+            
+            private static final long serialVersionUID = 1L;
+            
+            @Override
+            public void handleAction(Object sender, Object target){
+                if (target instanceof Table) {
+                    Table table = (Table) target;
+                    TabularResultLayout layout = (TabularResultLayout) table.getParent();
+                    reExecute(layout.getSql());
+                }else if (target instanceof AceEditor){
+                    if(executeScriptButtonValue){
+                        if(execute(true) && !settingsProvider.get().getProperties().is(SQL_EXPLORER_AUTO_COMMIT)){
                             setButtonsEnabled();
                         }
                     }
