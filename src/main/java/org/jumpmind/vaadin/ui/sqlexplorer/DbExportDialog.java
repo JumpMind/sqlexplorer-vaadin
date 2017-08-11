@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.server.FileDownloader;
 import com.vaadin.server.Resource;
 import com.vaadin.server.StreamResource;
@@ -140,6 +141,9 @@ public class DbExportDialog extends ResizableWindow {
         addComponent(tableSelectionLayout, 1);
 
         addButtons();
+        
+        nextButton.setClickShortcut(KeyCode.ENTER);
+        nextButton.focus();
     }
 
     protected void addButtons() {
@@ -192,7 +196,15 @@ public class DbExportDialog extends ResizableWindow {
         });
         previousButton.setVisible(false);
 
-        exportFileButton = CommonUiUtils.createPrimaryButton("Export");
+        exportFileButton = CommonUiUtils.createPrimaryButton("Export", new Button.ClickListener(){
+            private static final long serialVersionUID = 1L;
+
+            public void buttonClick(ClickEvent event) {
+                exportFileButton.removeClickShortcut();
+                doneButton.setClickShortcut(KeyCode.ENTER);
+                doneButton.focus();
+            }
+        });
         buildFileDownloader();
         exportFileButton.setVisible(false);
 
@@ -201,6 +213,7 @@ public class DbExportDialog extends ResizableWindow {
 
             public void buttonClick(ClickEvent event) {
                 exportToEditor();
+                close();
             }
         });
         exportEditorButton.setVisible(false);
@@ -356,9 +369,13 @@ public class DbExportDialog extends ResizableWindow {
         if (exportFormatOptionGroup.getValue().equals(EXPORT_AS_A_FILE)) {
             exportEditorButton.setVisible(false);
             exportFileButton.setVisible(true);
+            exportFileButton.setClickShortcut(KeyCode.ENTER);
+            exportFileButton.focus();
         } else {
             exportFileButton.setVisible(false);
             exportEditorButton.setVisible(true);
+            exportEditorButton.setClickShortcut(KeyCode.ENTER);
+            exportEditorButton.focus();
         }
         doneButton.setVisible(true);
         cancelButton.setVisible(false);
@@ -368,11 +385,16 @@ public class DbExportDialog extends ResizableWindow {
         content.removeComponent(optionLayout);
         content.addComponent(tableSelectionLayout, 0);
         content.setExpandRatio(tableSelectionLayout, 1);
-        nextButton.setVisible(true);
         previousButton.setVisible(false);
         exportEditorButton.setVisible(false);
+        exportEditorButton.removeClickShortcut();
         exportFileButton.setVisible(false);
+        exportFileButton.removeClickShortcut();
         doneButton.setVisible(false);
+        doneButton.removeClickShortcut();
+        nextButton.setVisible(true);
+        nextButton.setClickShortcut(KeyCode.ENTER);
+        nextButton.focus();
         selectAllLink.setVisible(true);
         selectNoneLink.setVisible(true);
         cancelButton.setVisible(true);
@@ -383,6 +405,7 @@ public class DbExportDialog extends ResizableWindow {
         content.addComponent(optionLayout, 0);
         content.setExpandRatio(optionLayout, 1);
         nextButton.setVisible(false);
+        nextButton.removeClickShortcut();
         previousButton.setVisible(true);
         setExportButtonsEnabled();
         selectAllLink.setVisible(false);
