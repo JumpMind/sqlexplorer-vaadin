@@ -60,7 +60,7 @@ public class DemoUI extends UI implements IDbProvider {
     }
 
     @WebServlet(urlPatterns = "/*")
-    @VaadinServletConfiguration(ui = DemoUI.class, productionMode = false, widgetset = "org.jumpmind.vaadin.ui.sqlexplorer.AppWidgetSet")
+    @VaadinServletConfiguration(ui = DemoUI.class, productionMode = false, widgetset = "AppWidgetset")
     public static class DemoUIServlet extends VaadinServlet {
         private static final long serialVersionUID = 1L;
     }

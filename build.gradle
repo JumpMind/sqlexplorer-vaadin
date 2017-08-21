@@ -13,9 +13,11 @@ buildscript {
     }
 
     dependencies { 
-        classpath "org.springframework.build.gradle:propdeps-plugin:0.0.7"
+        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
         classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'     
-        classpath "com.devsoap.plugin:gradle-vaadin-plugin:1.2.2"    
+        classpath 'com.devsoap.plugin:gradle-vaadin-plugin:1.2.2'    
+        classpath 'com.vaadin:vaadin-compatibility-server:8.1.2'
+        classpath 'com.vaadin:vaadin-compatibility-client-compiled:8.1.2'
     }    
 }
 
@@ -100,13 +102,13 @@ eclipse {
 }
 
 vaadin.version = vaadinVersion
-vaadin.manageDependencies = true
+vaadin.manageDependencies = false
 vaadin.manageRepositories = false
 vaadin.logToConsole = true
 vaadinSourcesJar.enabled=false
 vaadinJavadocJar.enabled=false
 vaadin.push = true
-
+vaadinCompile.gwtSdkFirstInClasspath=false
 artifacts {
    archives file("$buildDir/libs/${jar.baseName}-${jar.version}.${jar.extension}")
 }
@@ -137,9 +139,12 @@ dependencies {
     compile "org.springframework:spring-webmvc:$springVersion"
     
     compile group: 'com.vaadin', name: 'vaadin-compatibility-server', version: "$vaadinVersion"
+    compile group: 'com.vaadin', name: 'vaadin-compatibility-client-compiled', version: "$vaadinVersion"
+    compile group: 'com.vaadin', name: 'vaadin-compatibility-client', version: "$vaadinVersion"
+    
     //compile "com.vaadin:vaadin-server:$vaadinVersion"
-    //compile "com.vaadin:vaadin-push:$vaadinVersion"
-    //compile "com.vaadin:vaadin-themes:$vaadinVersion"
+    compile "com.vaadin:vaadin-push:$vaadinVersion"
+    compile "com.vaadin:vaadin-themes:$vaadinVersion"
     compile "org.vaadin.addons:aceeditor:0.8.15"
     compile "com.vaadin:vaadin-context-menu:2.0.0"
 

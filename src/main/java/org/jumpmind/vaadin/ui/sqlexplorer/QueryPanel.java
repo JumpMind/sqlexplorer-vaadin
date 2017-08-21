@@ -72,6 +72,7 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
+import com.vaadin.ui.UI;
 import com.vaadin.v7.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
@@ -451,7 +452,7 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
 
                 public void finished(final FontAwesome icon, final List<Component> results, final long executionTimeInMs,
                         final boolean transactionStarted, final boolean transactionEnded) {
-                    VaadinSession.getCurrent().access(new Runnable() {
+                    getUI().access(new Runnable() {
 
                         @Override
                         public void run() {
