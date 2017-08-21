@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.event.Action;
 import com.vaadin.server.FontAwesome;
-import com.vaadin.ui.Tree;
+import com.vaadin.v7.ui.Tree;
 
 public class DbTree extends Tree {
 

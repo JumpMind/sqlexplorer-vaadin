@@ -49,28 +49,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vaadin.aceeditor.AceEditor;
 
-import com.vaadin.data.Container;
-import com.vaadin.data.Property;
-import com.vaadin.data.util.converter.Converter;
-import com.vaadin.data.util.converter.StringToBigDecimalConverter;
-import com.vaadin.data.util.converter.StringToLongConverter;
+import com.vaadin.v7.data.Container;
+import com.vaadin.v7.data.Property;
+import com.vaadin.v7.data.util.converter.Converter;
+import com.vaadin.v7.data.util.converter.StringToBigDecimalConverter;
+import com.vaadin.v7.data.util.converter.StringToLongConverter;
 import com.vaadin.server.Page;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.Position;
-import com.vaadin.ui.AbstractSelect;
-import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
+import com.vaadin.v7.ui.AbstractSelect;
+import com.vaadin.v7.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.Column;
-import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.v7.ui.Grid;
+import com.vaadin.v7.ui.Grid.Column;
+import com.vaadin.v7.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.NativeSelect;
+import com.vaadin.v7.ui.NativeSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.Table.CellStyleGenerator;
+import com.vaadin.v7.ui.Table;
+import com.vaadin.v7.ui.Table.CellStyleGenerator;
 import com.vaadin.ui.themes.ValoTheme;
 
 public final class CommonUiUtils {
@@ -151,7 +151,6 @@ public final class CommonUiUtils {
     public static AceEditor createAceEditor() {
         AceEditor editor = new AceEditor();
         editor.setSizeFull();
-        editor.setImmediate(true);
         ServletContext context = VaadinServlet.getCurrent().getServletContext();
         if (context.getRealPath("/VAADIN/ace") != null) {
             String acePath = context.getContextPath() + "/VAADIN/ace";
@@ -162,7 +161,6 @@ public final class CommonUiUtils {
             log.warn("Could not find a local version of the ace editor.  " + "You might want to consider installing the ace web artifacts at "
                     + context.getRealPath(""));
         }
-        editor.setTextChangeEventMode(TextChangeEventMode.EAGER);
         editor.setHighlightActiveLine(true);
         editor.setShowPrintMargin(false);
         return editor;
@@ -369,7 +367,6 @@ public final class CommonUiUtils {
             throws SQLException {
 
         final Grid grid = new Grid();
-        grid.setImmediate(true);
         grid.setSelectionMode(SelectionMode.MULTI);
         grid.setColumnReorderingAllowed(true);
         grid.setData(new HashMap<Object, List<Object>>());
@@ -424,7 +421,7 @@ public final class CommonUiUtils {
 
                         @Override
                         public String convertToPresentation(Long value, Class<? extends String> targetType, Locale locale)
-                                throws com.vaadin.data.util.converter.Converter.ConversionException {
+                                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
                             if (value == null) {
                                 return NULL_TEXT;
                             } else {
@@ -438,7 +435,7 @@ public final class CommonUiUtils {
 
                         @Override
                         public String convertToPresentation(BigDecimal value, Class<? extends String> targetType, Locale locale)
-                                throws com.vaadin.data.util.converter.Converter.ConversionException {
+                                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
                             if (value == null) {
                                 return NULL_TEXT;
                             } else {
@@ -452,13 +449,13 @@ public final class CommonUiUtils {
 
 						@Override
 						public Object convertToModel(String value, Class<? extends Object> targetType, Locale locale)
-								throws com.vaadin.data.util.converter.Converter.ConversionException {
+								throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
 							return null;
 						}
 
 						@Override
 						public String convertToPresentation(Object value, Class<? extends String> targetType, Locale locale)
-								throws com.vaadin.data.util.converter.Converter.ConversionException {
+								throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
 							if (value == null) {
 								return NULL_TEXT;
 							} else {

@@ -22,10 +22,10 @@ package org.jumpmind.vaadin.ui.common;
 
 import java.util.Set;
 
-import com.vaadin.event.ItemClickEvent;
-import com.vaadin.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.v7.event.ItemClickEvent;
+import com.vaadin.v7.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.shared.MouseEventDetails.MouseButton;
-import com.vaadin.ui.Table;
+import com.vaadin.v7.ui.Table;
 
 public class MultiSelectTable extends Table {
 
@@ -41,7 +41,7 @@ public class MultiSelectTable extends Table {
             private static final long serialVersionUID = 1L;
             @SuppressWarnings("unchecked")
             @Override
-            public void valueChange(com.vaadin.data.Property.ValueChangeEvent event) {
+            public void valueChange(com.vaadin.v7.data.Property.ValueChangeEvent event) {
                 lastSelected = (Set<Object>) getValue();
             }
         });

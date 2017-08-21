@@ -22,10 +22,10 @@ package org.jumpmind.vaadin.ui.common;
 
 import java.util.Date;
 
-import com.vaadin.data.Property;
+import com.vaadin.v7.data.Property;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Table;
+import com.vaadin.v7.ui.Table;
 
 public class DateColumnFormatter implements Table.ColumnGenerator {
 

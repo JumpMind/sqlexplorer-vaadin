@@ -22,9 +22,9 @@ package org.jumpmind.vaadin.ui.common;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.vaadin.event.FieldEvents.TextChangeEvent;
-import com.vaadin.event.FieldEvents.TextChangeListener;
-import com.vaadin.ui.TextArea;
+import com.vaadin.v7.event.FieldEvents.TextChangeEvent;
+import com.vaadin.v7.event.FieldEvents.TextChangeListener;
+import com.vaadin.v7.ui.TextArea;
 
 public abstract class ImmediateUpdateTextArea extends TextArea {
 

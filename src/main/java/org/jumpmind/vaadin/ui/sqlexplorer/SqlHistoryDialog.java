@@ -32,23 +32,23 @@ import org.jumpmind.vaadin.ui.common.CommonUiUtils;
 import org.jumpmind.vaadin.ui.common.DurationConverter;
 import org.jumpmind.vaadin.ui.common.ResizableWindow;
 
-import com.vaadin.data.util.BeanContainer;
-import com.vaadin.data.util.filter.SimpleStringFilter;
-import com.vaadin.event.FieldEvents.TextChangeEvent;
-import com.vaadin.event.FieldEvents.TextChangeListener;
-import com.vaadin.event.ItemClickEvent;
+import com.vaadin.v7.data.util.BeanContainer;
+import com.vaadin.v7.data.util.filter.SimpleStringFilter;
+import com.vaadin.v7.event.FieldEvents.TextChangeEvent;
+import com.vaadin.v7.event.FieldEvents.TextChangeListener;
+import com.vaadin.v7.event.ItemClickEvent;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.HeaderCell;
-import com.vaadin.ui.Grid.HeaderRow;
-import com.vaadin.ui.Grid.RowDescriptionGenerator;
-import com.vaadin.ui.Grid.RowReference;
-import com.vaadin.ui.Grid.SelectionMode;
-import com.vaadin.ui.TextField;
+import com.vaadin.v7.ui.Grid;
+import com.vaadin.v7.ui.Grid.HeaderCell;
+import com.vaadin.v7.ui.Grid.HeaderRow;
+import com.vaadin.v7.ui.Grid.RowDescriptionGenerator;
+import com.vaadin.v7.ui.Grid.RowReference;
+import com.vaadin.v7.ui.Grid.SelectionMode;
+import com.vaadin.v7.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.renderers.DateRenderer;
+import com.vaadin.v7.ui.renderers.DateRenderer;
 import com.vaadin.ui.themes.ValoTheme;
 
 public class SqlHistoryDialog extends ResizableWindow {
@@ -75,7 +75,6 @@ public class SqlHistoryDialog extends ResizableWindow {
         final Set<SqlHistory> sqlHistories = new TreeSet<SqlHistory>(settingsProvider.get().getSqlHistory());
 
         table = new Grid();
-        table.setImmediate(true);
 
         table.addColumn("sqlStatement", String.class).setHeaderCaption("SQL").setConverter(new AbbreviatorConverter(50));
 

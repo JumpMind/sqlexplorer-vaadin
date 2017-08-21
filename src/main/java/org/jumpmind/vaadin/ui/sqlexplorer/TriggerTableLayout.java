@@ -3,22 +3,21 @@ package org.jumpmind.vaadin.ui.sqlexplorer;
 import java.util.Map;
 
 import org.jumpmind.db.model.Trigger;
-import org.jumpmind.vaadin.ui.common.ExportDialog;
 import org.jumpmind.vaadin.ui.common.ReadOnlyTextAreaDialog;
 import org.jumpmind.vaadin.ui.sqlexplorer.TriggerInfoPanel.Refresher;
 
-import com.vaadin.data.Property;
-import com.vaadin.event.ItemClickEvent;
-import com.vaadin.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.v7.data.Property;
+import com.vaadin.v7.event.ItemClickEvent;
+import com.vaadin.v7.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.MouseEventDetails.MouseButton;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.v7.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.v7.ui.Grid;
+import com.vaadin.v7.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
+import com.vaadin.v7.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
@@ -76,16 +75,6 @@ public class TriggerTableLayout extends VerticalLayout{
         });
         refreshButton.setIcon(FontAwesome.REFRESH);
 
-        MenuItem exportButton = rightBar.addItem("", new Command() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                new ExportDialog(grid, trigger.getFullyQualifiedName(), trigger.getFullyQualifiedName()).show();
-            }
-        });
-        exportButton.setIcon(FontAwesome.UPLOAD);
-
         bar.addComponent(rightBar);
         bar.setComponentAlignment(rightBar, Alignment.MIDDLE_RIGHT);
         
@@ -134,7 +123,6 @@ public class TriggerTableLayout extends VerticalLayout{
 	
 	private Grid fillGrid(Settings settings) {
 		Grid grid = new Grid();
-		grid.setImmediate(true);
         grid.setSelectionMode(SelectionMode.MULTI);
         grid.setColumnReorderingAllowed(false);
 		

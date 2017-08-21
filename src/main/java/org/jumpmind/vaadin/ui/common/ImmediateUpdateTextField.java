@@ -20,9 +20,9 @@
  */
 package org.jumpmind.vaadin.ui.common;
 
-import com.vaadin.event.FieldEvents.TextChangeEvent;
-import com.vaadin.event.FieldEvents.TextChangeListener;
-import com.vaadin.ui.TextField;
+import com.vaadin.v7.event.FieldEvents.TextChangeEvent;
+import com.vaadin.v7.event.FieldEvents.TextChangeListener;
+import com.vaadin.v7.ui.TextField;
 
 public abstract class ImmediateUpdateTextField extends TextField {
 

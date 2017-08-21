@@ -20,9 +20,9 @@
  */
 package org.jumpmind.vaadin.ui.common;
 
-import com.vaadin.event.FieldEvents.TextChangeEvent;
-import com.vaadin.event.FieldEvents.TextChangeListener;
-import com.vaadin.ui.PasswordField;
+import com.vaadin.v7.event.FieldEvents.TextChangeEvent;
+import com.vaadin.v7.event.FieldEvents.TextChangeListener;
+import com.vaadin.v7.ui.PasswordField;
 
 public abstract class ImmediateUpdatePasswordField extends PasswordField {
 

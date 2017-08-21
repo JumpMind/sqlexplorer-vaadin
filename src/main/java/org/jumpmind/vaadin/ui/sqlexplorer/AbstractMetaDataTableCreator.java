@@ -34,7 +34,7 @@ import org.jumpmind.vaadin.ui.common.CommonUiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.ui.Table;
+import com.vaadin.v7.ui.Table;
 
 abstract public class AbstractMetaDataTableCreator {
 
@@ -60,9 +60,9 @@ abstract public class AbstractMetaDataTableCreator {
     }
 
     public Table create() {
-        return sqlTemplate.execute(new IConnectionCallback<com.vaadin.ui.Table>() {
+        return sqlTemplate.execute(new IConnectionCallback<com.vaadin.v7.ui.Table>() {
 
-            public com.vaadin.ui.Table execute(Connection con) throws SQLException {
+            public com.vaadin.v7.ui.Table execute(Connection con) throws SQLException {
                 TypedProperties properties = settings.getProperties();
                 ResultSet rs = null;
                 Table t = null;

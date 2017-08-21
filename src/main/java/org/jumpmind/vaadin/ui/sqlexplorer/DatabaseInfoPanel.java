@@ -21,7 +21,7 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
-import com.vaadin.ui.Table;
+import com.vaadin.v7.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 
 public class DatabaseInfoPanel extends VerticalLayout implements IInfoPanel {
@@ -45,7 +45,6 @@ public class DatabaseInfoPanel extends VerticalLayout implements IInfoPanel {
 		setSizeFull();
 		
 		tabSheet = CommonUiUtils.createTabSheet();
-		tabSheet.setImmediate(true);
 		tabSheet.addSelectedTabChangeListener(new SelectedTabChangeListener() {
 
 			private static final long serialVersionUID = 1L;

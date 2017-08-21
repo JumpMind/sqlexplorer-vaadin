@@ -20,8 +20,10 @@
  */
 package org.jumpmind.vaadin.ui.sqlexplorer;
 
-import static org.apache.commons.lang.StringUtils.*;
-import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.*;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_MAX_RESULTS;
+import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_SHOW_ROW_NUMBERS;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -52,49 +54,48 @@ import org.jumpmind.db.sql.SqlException;
 import org.jumpmind.properties.TypedProperties;
 import org.jumpmind.util.FormatUtils;
 import org.jumpmind.vaadin.ui.common.CommonUiUtils;
-import org.jumpmind.vaadin.ui.common.ExportDialog;
 import org.jumpmind.vaadin.ui.common.NotifyDialog;
 import org.jumpmind.vaadin.ui.common.ReadOnlyTextAreaDialog;
 import org.jumpmind.vaadin.ui.sqlexplorer.SqlRunner.ISqlRunnerListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.addon.contextmenu.ContextMenu;
-import com.vaadin.addon.contextmenu.MenuItem;
-import com.vaadin.data.Item;
-import com.vaadin.data.Property;
-import com.vaadin.data.Validator;
-import com.vaadin.data.fieldgroup.FieldGroup.CommitEvent;
-import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
-import com.vaadin.data.fieldgroup.FieldGroup.CommitHandler;
-import com.vaadin.data.util.converter.Converter;
-import com.vaadin.data.util.converter.StringToBigDecimalConverter;
-import com.vaadin.data.util.converter.StringToBooleanConverter;
-import com.vaadin.data.util.converter.StringToLongConverter;
-import com.vaadin.event.ItemClickEvent;
-import com.vaadin.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.contextmenu.ContextMenu;
+import com.vaadin.contextmenu.MenuItem;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.MouseEventDetails.MouseButton;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.CustomField;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.CellReference;
-import com.vaadin.ui.Grid.CellStyleGenerator;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
+import com.vaadin.v7.data.Item;
+import com.vaadin.v7.data.Property;
+import com.vaadin.v7.data.Validator;
+import com.vaadin.v7.data.fieldgroup.FieldGroup.CommitEvent;
+import com.vaadin.v7.data.fieldgroup.FieldGroup.CommitException;
+import com.vaadin.v7.data.fieldgroup.FieldGroup.CommitHandler;
+import com.vaadin.v7.data.util.converter.Converter;
+import com.vaadin.v7.data.util.converter.StringToBigDecimalConverter;
+import com.vaadin.v7.data.util.converter.StringToBooleanConverter;
+import com.vaadin.v7.data.util.converter.StringToLongConverter;
+import com.vaadin.v7.event.ItemClickEvent;
+import com.vaadin.v7.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.v7.shared.ui.label.ContentMode;
+import com.vaadin.v7.ui.CustomField;
+import com.vaadin.v7.ui.Grid;
+import com.vaadin.v7.ui.Grid.CellReference;
+import com.vaadin.v7.ui.Grid.CellStyleGenerator;
+import com.vaadin.v7.ui.Label;
+import com.vaadin.v7.ui.TextField;
 
 public class TabularResultLayout extends VerticalLayout {
 
@@ -207,7 +208,7 @@ public class TabularResultLayout extends VerticalLayout {
                 private static final long serialVersionUID = 1L;
 
                 @Override
-                public void menuSelected(com.vaadin.addon.contextmenu.MenuItem selectedItem) {
+                public void menuSelected(com.vaadin.contextmenu.MenuItem selectedItem) {
                     handleAction(ACTION_SELECT);
                 }
             });
@@ -216,7 +217,7 @@ public class TabularResultLayout extends VerticalLayout {
                 private static final long serialVersionUID = 1L;
 
                 @Override
-                public void menuSelected(com.vaadin.addon.contextmenu.MenuItem selectedItem) {
+                public void menuSelected(com.vaadin.contextmenu.MenuItem selectedItem) {
                     handleAction(ACTION_INSERT);
                 }
             });
@@ -225,7 +226,7 @@ public class TabularResultLayout extends VerticalLayout {
                 private static final long serialVersionUID = 1L;
 
                 @Override
-                public void menuSelected(com.vaadin.addon.contextmenu.MenuItem selectedItem) {
+                public void menuSelected(com.vaadin.contextmenu.MenuItem selectedItem) {
                     handleAction(ACTION_UPDATE);
                 }
             });
@@ -234,7 +235,7 @@ public class TabularResultLayout extends VerticalLayout {
                 private static final long serialVersionUID = 1L;
 
                 @Override
-                public void menuSelected(com.vaadin.addon.contextmenu.MenuItem selectedItem) {
+                public void menuSelected(com.vaadin.contextmenu.MenuItem selectedItem) {
                     handleAction(ACTION_DELETE);
                 }
             });
@@ -329,16 +330,6 @@ public class TabularResultLayout extends VerticalLayout {
             }
         });
         refreshButton.setIcon(FontAwesome.REFRESH);
-
-        MenuBar.MenuItem exportButton = rightBar.addItem("", new Command() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void menuSelected(MenuBar.MenuItem selectedItem) {
-                new ExportDialog(grid, db.getName(), sql).show();
-            }
-        });
-        exportButton.setIcon(FontAwesome.UPLOAD);
         
         if (isInQueryGeneralResults) {
         	MenuBar.MenuItem keepResultsButton = rightBar.addItem("", new Command() {
@@ -749,9 +740,9 @@ public class TabularResultLayout extends VerticalLayout {
     private void initGridEditing() {
 	    if (resultTable != null) {
     		grid.setEditorEnabled(true);
-	    	List<com.vaadin.ui.Grid.Column> columns = grid.getColumns();
+	    	List<com.vaadin.v7.ui.Grid.Column> columns = grid.getColumns();
 	    	List<TextField> primaryKeyEditors = new ArrayList<TextField>();
-	    	for (com.vaadin.ui.Grid.Column gridColumn : columns) {
+	    	for (com.vaadin.v7.ui.Grid.Column gridColumn : columns) {
 	    		String header = gridColumn.getHeaderCaption();
 	    		Column tableColumn = resultTable.getColumnWithName(header);
 	    		if (columns.get(0).equals(gridColumn) || (tableColumn != null && tableColumn.isAutoIncrement()
@@ -989,7 +980,7 @@ public class TabularResultLayout extends VerticalLayout {
 		
 		@Override
 		public Object convertToModel(String value, Class<? extends Object> targetType, Locale locale)
-				throws com.vaadin.data.util.converter.Converter.ConversionException {
+				throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
 			if (value == null || value.isEmpty() || value.equals("<null>")) {
 				return null;
 			}
@@ -1007,7 +998,7 @@ public class TabularResultLayout extends VerticalLayout {
 		
 		@Override
 		public String convertToPresentation(Object value, Class<? extends String> targetType,
-				Locale locale) throws com.vaadin.data.util.converter.Converter.ConversionException {
+				Locale locale) throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
 			if (value == null || value.equals("") || value.equals("<null>"))
 				return "";
 			return String.valueOf(value);

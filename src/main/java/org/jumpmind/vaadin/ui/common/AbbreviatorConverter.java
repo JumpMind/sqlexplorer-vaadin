@@ -4,7 +4,7 @@ import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.vaadin.data.util.converter.Converter;
+import com.vaadin.v7.data.util.converter.Converter;
 
 public class AbbreviatorConverter implements Converter<String, String> {
 
@@ -18,13 +18,13 @@ public class AbbreviatorConverter implements Converter<String, String> {
     
     @Override
     public String convertToModel(String value, Class<? extends String> targetType, Locale locale)
-            throws com.vaadin.data.util.converter.Converter.ConversionException {
+            throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
         return value;
     }
     
     @Override
     public String convertToPresentation(String value, Class<? extends String> targetType, Locale locale)
-            throws com.vaadin.data.util.converter.Converter.ConversionException {
+            throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
         return StringUtils.abbreviate(value, maxWidth);
     }
     

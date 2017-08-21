@@ -8,15 +8,18 @@ buildscript {
     repositories { 
        jcenter()
        maven { url 'http://repo.spring.io/plugins-release' } 
+       maven { url 'https://plugins.gradle.org/m2/' }
+       maven { url "http://maven.vaadin.com/vaadin-addons" }         
     }
 
     dependencies { 
         classpath "org.springframework.build.gradle:propdeps-plugin:0.0.7"
         classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'     
-        classpath 'fi.jasoft.plugin:gradle-vaadin-plugin:0.10.7'        
+        classpath "com.devsoap.plugin:gradle-vaadin-plugin:1.2.2"    
     }    
 }
 
+apply plugin: 'com.devsoap.plugin.vaadin'
 apply plugin: 'java'
 apply plugin: 'eclipse-wtp'
 apply plugin: 'maven'
@@ -24,10 +27,9 @@ apply plugin: 'propdeps'
 apply plugin: 'propdeps-maven'
 apply plugin: 'propdeps-eclipse'
 apply plugin: 'license'
-apply plugin: 'fi.jasoft.plugin.vaadin'
 
-sourceCompatibility=1.6
-targetCompatibility=1.6
+sourceCompatibility=1.8
+targetCompatibility=1.8
 
 version = version + '.' + ('d'.equals(buildNumber) ? ('d' + new SimpleDateFormat("yyyyMMddHHmmSS").format(new Date())) : buildNumber)
 
@@ -35,6 +37,7 @@ repositories {
     mavenCentral()
     maven { url "http://maven.jumpmind.com/repo" }
     maven { url "http://maven.vaadin.com/vaadin-addons" }
+    maven { url 'https://plugins.gradle.org/m2/' }
 }
 
 compileJava { options.bootClasspath = "${System.getProperty('java.home')}/lib/rt.jar" }
@@ -43,8 +46,8 @@ ext {
 
     log4jVersion = '1.2.17'
     slf4jVersion = '1.7.21'
-    vaadinVersion = '7.6.5'
-    jettyVersion = '9.3.8.v20160314'
+    vaadinVersion = '8.1.2'
+    jettyVersion = '9.4.5.v20170502'
     commonsLangVersion = '2.6'
     commonsDbcpVersion = '1.4'
     commonsIoVersion = '2.4'
@@ -54,7 +57,7 @@ ext {
     javaMailVersion = '1.4.7'
     jdomVersion = '2.0.5'
     springVersion = '4.2.6.RELEASE'
-    symmetricVersion = '3.8.12'
+    symmetricVersion = '3.8.29'
     servletVersion = '3.0.1'
     h2Version='1.4.191'
     mysqlVersion = '5.1.29'
@@ -96,14 +99,13 @@ eclipse {
     }
 }
 
-
 vaadin.version = vaadinVersion
-vaadin.widgetset = 'org.jumpmind.vaadin.ui.sqlexplorer.AppWidgetSet'
-vaadin.manageWidgetset = true
-vaadin.manageDependencies = false
-vaadin.plugin.logToConsole = true
+vaadin.manageDependencies = true
+vaadin.manageRepositories = false
+vaadin.logToConsole = true
+vaadinSourcesJar.enabled=false
+vaadinJavadocJar.enabled=false
 vaadin.push = true
-sourceSets.main.compileClasspath += [configurations.provided]
 
 artifacts {
    archives file("$buildDir/libs/${jar.baseName}-${jar.version}.${jar.extension}")
@@ -134,19 +136,16 @@ dependencies {
     
     compile "org.springframework:spring-webmvc:$springVersion"
     
-    compile "com.vaadin:vaadin-server:$vaadinVersion"
-    compile "com.vaadin:vaadin-push:$vaadinVersion"
-    compile "com.vaadin:vaadin-themes:$vaadinVersion"
-    compile "org.vaadin.addons:aceeditor:0.8.14"
-    compile ("com.vaadin.addon:tableexport-for-vaadin:1.6.2") {
-       exclude (group:"org.vaadin.addons",module:"filteringtable")
-    }
-    //compile "org.vaadin.teemusa:gridextensionpack:1.0.0"
-    compile "com.vaadin.addon:vaadin-context-menu:0.7.3"
+    compile group: 'com.vaadin', name: 'vaadin-compatibility-server', version: "$vaadinVersion"
+    //compile "com.vaadin:vaadin-server:$vaadinVersion"
+    //compile "com.vaadin:vaadin-push:$vaadinVersion"
+    //compile "com.vaadin:vaadin-themes:$vaadinVersion"
+    compile "org.vaadin.addons:aceeditor:0.8.15"
+    compile "com.vaadin:vaadin-context-menu:2.0.0"
 
-    provided ("com.vaadin:vaadin-client-compiler:$vaadinVersion") {
-       exclude group:'org.eclipse.jetty'
-    }
+//    provided ("com.vaadin:vaadin-client-compiler:$vaadinVersion") {
+//       exclude group:'org.eclipse.jetty'
+//    }
     
     testCompile "com.h2database:h2:$h2Version"
     testCompile "junit:junit:4.11"
@@ -173,7 +172,7 @@ dependencies {
 
 task develop {
     description 'Generates Eclipse artifacts and sets up your development environment'
-    dependsOn tasks.cleanEclipse, tasks.cleanEclipseWtp, tasks.eclipse, tasks.eclipseWtp, vaadinCompileWidgetset
+    dependsOn tasks.cleanEclipse, tasks.cleanEclipseWtp, tasks.eclipse, tasks.eclipseWtp, vaadinCompile, vaadinThemeCompile
 }
 
 task deploy {

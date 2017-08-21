@@ -21,7 +21,6 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 
@@ -41,7 +40,6 @@ public class TriggerInfoPanel extends VerticalLayout implements IInfoPanel {
 		setSizeFull();
 
 		tabSheet = CommonUiUtils.createTabSheet();
-		tabSheet.setImmediate(true);
 		tabSheet.addSelectedTabChangeListener(new SelectedTabChangeListener() {
 
 			private static final long serialVersionUID = 1L;
