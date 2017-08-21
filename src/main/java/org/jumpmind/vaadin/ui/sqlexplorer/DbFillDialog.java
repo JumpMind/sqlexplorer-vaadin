@@ -38,6 +38,7 @@ import com.vaadin.v7.data.Item;
 import com.vaadin.v7.event.FieldEvents.TextChangeEvent;
 import com.vaadin.v7.event.FieldEvents.TextChangeListener;
 import com.vaadin.v7.ui.AbstractTextField.TextChangeEventMode;
+import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -119,6 +120,8 @@ public class DbFillDialog extends ResizableWindow {
 
         addComponent(tableSelectionLayout, 1);
         addButtons();
+        nextButton.setClickShortcut(KeyCode.ENTER);
+        nextButton.focus();
     }
 
     protected void addButtons() {
@@ -319,6 +322,7 @@ public class DbFillDialog extends ResizableWindow {
                             @Override
                             public boolean onOk() {
                                 fill();
+                                close();
                                 return true;
                             }
                         });
@@ -361,9 +365,12 @@ public class DbFillDialog extends ResizableWindow {
         content.removeComponent(optionLayout);
         content.addComponent(tableSelectionLayout, 0);
         content.setExpandRatio(tableSelectionLayout, 1);
-        nextButton.setVisible(true);
-        previousButton.setVisible(false);
         fillButton.setVisible(false);
+        fillButton.removeClickShortcut();
+        previousButton.setVisible(false);
+        nextButton.setVisible(true);
+        nextButton.setClickShortcut(KeyCode.ENTER);
+        nextButton.focus();
     }
 
     protected void next() {
@@ -371,8 +378,11 @@ public class DbFillDialog extends ResizableWindow {
         content.addComponent(optionLayout, 0);
         content.setExpandRatio(optionLayout, 1);
         nextButton.setVisible(false);
+        nextButton.removeClickShortcut();
         previousButton.setVisible(true);
         fillButton.setVisible(true);
+        fillButton.setClickShortcut(KeyCode.ENTER);
+        fillButton.focus();
     }
 
     protected boolean enableFillButton() {

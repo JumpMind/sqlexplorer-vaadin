@@ -180,51 +180,23 @@ public class DbTree extends Tree {
 				Collection<?> children = getChildren(treeNode);
 				if (children == null || children.size() == 0) {
 					if (treeNode.getType().equals(NODE_TYPE_DATABASE)) {
-						List<DbTreeNode> nextLevel = new ArrayList<DbTreeNode>();
 						List<String> catalogs = reader.getCatalogNames();
-						Collections.sort(catalogs);
 						if (catalogs.size() > 0) {
-							if (catalogs.remove(platform.getDefaultCatalog())) {
-								catalogs.add(0, platform.getDefaultCatalog());
-							}
-							for (String catalog : catalogs) {
-								DbTreeNode catalogNode = new DbTreeNode(this, catalog, NODE_TYPE_CATALOG, FontAwesome.BOOK, treeNode);
-								nextLevel.add(catalogNode);
-							}
+						    addCatalogNodes(reader,treeNode,platform,catalogs);
 						} else {
 							List<String> schemas = reader.getSchemaNames(null);
-							Collections.sort(schemas);
-							if (schemas.remove(platform.getDefaultSchema())) {
-								schemas.add(0, platform.getDefaultSchema());
-							}
-							for (String schema : schemas) {
-								DbTreeNode schemaNode = new DbTreeNode(this, schema, NODE_TYPE_SCHEMA, FontAwesome.BOOK, treeNode);
-								nextLevel.add(schemaNode);
-							}
+						    addSchemaNodes(reader,treeNode,platform,schemas);
 						}
 
-						if (nextLevel.size() == 0) {
-							nextLevel.addAll(getTableTreeNodes(reader, treeNode, null, null));
-						}
-
-						treeNode.getChildren().addAll(nextLevel);
-						for (DbTreeNode node : nextLevel) {
-							addTreeNode(node);
+						if (treeNode.getChildren().size() == 0) {
+						    addTableNodes(reader,treeNode,null,null);
 						}
 					} else if (treeNode.getType().equals(NODE_TYPE_CATALOG)) {
 						List<String> schemas = reader.getSchemaNames(treeNode.getName());
-						Collections.sort(schemas);
-						if (schemas.size() > 0) {
-							if (schemas.remove(platform.getDefaultSchema())) {
-								schemas.add(0, platform.getDefaultSchema());
-							}
-							for (String schema : schemas) {
-								DbTreeNode schemaNode = new DbTreeNode(this, schema, NODE_TYPE_SCHEMA, FontAwesome.BOOK, treeNode);
-								treeNode.getChildren().add(schemaNode);
-								addTreeNode(schemaNode);
-							}
-						} else {
-							addTableNodes(reader, treeNode, treeNode.getName(), null);
+						addSchemaNodes(reader,treeNode,platform,schemas);
+						
+						if(treeNode.getChildren().size() == 0){
+						    addTableNodes(reader, treeNode, treeNode.getName(), null);
 						}
 
 					} else if (treeNode.getType().equals(NODE_TYPE_SCHEMA)) {
@@ -266,6 +238,13 @@ public class DbTree extends Tree {
 		setItemIcon(node, node.getIcon());
 		setChildrenAllowed(node, !node.getType().equals(NODE_TYPE_TRIGGER));
 	}
+	
+	protected void addTreeNode(DbTreeNode node, boolean hasChildren) {
+        addItem(node);
+        setParent(node, node.getParent());
+        setItemIcon(node, node.getIcon());
+        setChildrenAllowed(node, hasChildren);
+    }
 
 	protected List<DbTreeNode> getTableTreeNodes(IDdlReader reader,
 			DbTreeNode parent, String catalogName, String schemaName) {
@@ -304,7 +283,13 @@ public class DbTree extends Tree {
 		List<DbTreeNode> nodes = getTableTreeNodes(reader, parent, catalogName, schemaName);
 		for (DbTreeNode treeNode : nodes) {
 			parent.getChildren().add(treeNode);
-			addTreeNode(treeNode);
+			
+			List<DbTreeNode> tableTriggers = getTriggerTreeNodes(reader,treeNode,catalogName,schemaName);
+			if(tableTriggers.size() == 0){
+			    addTreeNode(treeNode,false);
+			}else{
+		         addTreeNode(treeNode,true);
+			}
 		}
 	}
 
@@ -331,6 +316,45 @@ public class DbTree extends Tree {
 			parent.getChildren().add(treeNode);
 			addTreeNode(treeNode);
 		}
+	}
+	
+	protected void addCatalogNodes(IDdlReader reader, DbTreeNode parent, IDatabasePlatform platform, List<String> catalogs){
+	    Collections.sort(catalogs);
+	    if (catalogs.remove(platform.getDefaultCatalog())) {
+            catalogs.add(0, platform.getDefaultCatalog());
+        }
+        for (String catalog : catalogs) {
+            DbTreeNode catalogNode = new DbTreeNode(this, catalog, NODE_TYPE_CATALOG, FontAwesome.BOOK, parent);
+            parent.getChildren().add(catalogNode);
+            
+            List<String> catalogSchemaChildren = reader.getSchemaNames(catalogNode.getName());
+            if(catalogSchemaChildren.size() == 0){
+                List<DbTreeNode> catalogTableChildren = getTableTreeNodes(reader,catalogNode,catalogNode.getName(),null);
+                if(catalogTableChildren.size() == 0){
+                    addTreeNode(catalogNode,false);
+                }
+            }else{
+                addTreeNode(catalogNode,true);
+            }
+        }
+	}
+	
+	protected void addSchemaNodes(IDdlReader reader, DbTreeNode parent, IDatabasePlatform platform,List<String> schemas){
+        Collections.sort(schemas);
+        if (schemas.remove(platform.getDefaultSchema())) {
+            schemas.add(0, platform.getDefaultSchema());
+        }
+        for (String schema : schemas) {
+            DbTreeNode schemaNode = new DbTreeNode(this, schema, NODE_TYPE_SCHEMA, FontAwesome.BOOK, parent);
+            parent.getChildren().add(schemaNode);
+            
+            List<DbTreeNode> schemaTableChildren = getTableTreeNodes(reader,schemaNode,parent.getName(),null);
+            if(schemaTableChildren.size() == 0){
+                addTreeNode(schemaNode,false);
+            }else{
+                addTreeNode(schemaNode,true);
+            }
+        }
 	}
 
 	class Listener implements CollapseListener, ExpandListener {

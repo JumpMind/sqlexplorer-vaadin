@@ -79,7 +79,7 @@ public class SqlHistoryDialog extends ResizableWindow {
         table.addColumn("sqlStatement", String.class).setHeaderCaption("SQL").setConverter(new AbbreviatorConverter(50));
 
         table.addColumn("lastExecuteTime", Date.class).setHeaderCaption("Time").setWidth(150).setMaximumWidth(200)
-                .setRenderer(new DateRenderer("%1$tk:%1$tM:%1$tS:%1$tL"));
+                .setRenderer(new DateRenderer("%1$tY-%1$tm-%1$td %1$tk:%1$tM:%1$tS"));
 
         table.addColumn("lastExecuteDuration", Long.class).setHeaderCaption("Duration").setWidth(120).setConverter(new DurationConverter());
 
