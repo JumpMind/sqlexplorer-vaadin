@@ -152,7 +152,7 @@ public class DatabaseInfoPanel extends VerticalLayout implements IInfoPanel {
 	
 	public AbstractLayout createTabData(Table table) {
 		VerticalLayout layout = new VerticalLayout();
-		layout.setMargin(true);
+		layout.setMargin(false);
 		layout.setSizeFull();
 		layout.addComponent(table);
 		layout.setExpandRatio(table, 1);

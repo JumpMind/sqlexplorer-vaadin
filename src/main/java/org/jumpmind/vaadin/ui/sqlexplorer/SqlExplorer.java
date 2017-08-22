@@ -123,6 +123,8 @@ public class SqlExplorer extends HorizontalSplitPanel {
         addStyleName("sqlexplorer");
 
         VerticalLayout leftLayout = new VerticalLayout();
+        leftLayout.setMargin(false);
+        leftLayout.setSpacing(false);
         leftLayout.setSizeFull();
         leftLayout.addStyleName(ValoTheme.MENU_ROOT);
 
@@ -138,9 +140,12 @@ public class SqlExplorer extends HorizontalSplitPanel {
         leftLayout.setExpandRatio(scrollable, 1);
 
         VerticalLayout rightLayout = new VerticalLayout();
+        rightLayout.setMargin(false);
+        rightLayout.setSpacing(false);
         rightLayout.setSizeFull();
 
         VerticalLayout rightMenuWrapper = new VerticalLayout();
+        rightMenuWrapper.setMargin(false);
         rightMenuWrapper.setWidth(100, Unit.PERCENTAGE);
         rightMenuWrapper.addStyleName(ValoTheme.MENU_ROOT);
         contentMenuBar = new MenuBar();

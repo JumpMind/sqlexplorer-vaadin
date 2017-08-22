@@ -174,7 +174,7 @@ public class TableInfoPanel extends VerticalLayout implements IInfoPanel {
                     public void finished(final FontAwesome icon, final List<Component> results,
                             long executionTimeInMs, boolean transactionStarted,
                             boolean transactionEnded) {
-                        VaadinSession.getCurrent().access(new Runnable() {
+                        TableInfoPanel.this.getUI().access(new Runnable() {
 
                             @Override
                             public void run() {
@@ -201,7 +201,7 @@ public class TableInfoPanel extends VerticalLayout implements IInfoPanel {
 
     protected AbstractLayout create(AbstractMetaDataTableCreator creator) {
         VerticalLayout layout = new VerticalLayout();
-        layout.setMargin(true);
+        layout.setMargin(false);
         layout.setSizeFull();
         layout.setData(creator);
         return layout;
@@ -209,7 +209,7 @@ public class TableInfoPanel extends VerticalLayout implements IInfoPanel {
     
     protected void populate(VerticalLayout layout) {
     	AbstractMetaDataTableCreator creator = (AbstractMetaDataTableCreator) layout.getData();
-    	Table table = creator.create();
+        Table table = creator.create();
     	layout.addComponent(table);
     	layout.setExpandRatio(table, 1);
     	layout.setData(null);

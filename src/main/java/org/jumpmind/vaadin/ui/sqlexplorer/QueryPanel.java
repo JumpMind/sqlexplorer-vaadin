@@ -142,17 +142,20 @@ public class QueryPanel extends VerticalSplitPanel implements IContentTab {
         this.shortCutListeners.add(createExecuteSqlScriptShortcutListener());
 
         VerticalLayout resultsLayout = new VerticalLayout();
+        resultsLayout.setMargin(false);
+        resultsLayout.setSpacing(false);
         resultsLayout.setSizeFull();
 
         resultsTabs = CommonUiUtils.createTabSheet();
         resultStatuses = new HashMap<Component, String>();
 
         HorizontalLayout statusBar = new HorizontalLayout();
+        statusBar.setMargin(false);
         statusBar.addStyleName(ValoTheme.PANEL_WELL);
-        statusBar.setMargin(new MarginInfo(true, true, true, true));
         statusBar.setWidth(100, Unit.PERCENTAGE);
 
         status = new Label("No Results");
+        status.setStyleName(ValoTheme.LABEL_SMALL);
         statusBar.addComponent(status);
 
         setSelectedTabChangeListener();

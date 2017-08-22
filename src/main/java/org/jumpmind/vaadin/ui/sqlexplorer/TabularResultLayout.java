@@ -110,9 +110,9 @@ public class TabularResultLayout extends VerticalLayout {
     final String ACTION_DELETE = "Delete";
 
     final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     SqlExplorer explorer;
-    
+
     QueryPanel queryPanel;
 
     String tableName;
@@ -132,30 +132,30 @@ public class TabularResultLayout extends VerticalLayout {
     IDb db;
 
     ISqlRunnerListener listener;
-    
+
     String user;
 
     Settings settings;
 
     boolean showSql = true;
-    
+
     boolean isInQueryGeneralResults;
-    
+
     MenuItem followToMenu;
-    
+
     MenuBar.MenuItem toggleKeepResultsButton;
-    
+
     Label resultLabel;
-    
+
     public TabularResultLayout(IDb db, String sql, ResultSet rs, ISqlRunnerListener listener, Settings settings, boolean showSql)
             throws SQLException {
-    	this(null, db, sql, rs, listener, null, settings, null, showSql, false);
+        this(null, db, sql, rs, listener, null, settings, null, showSql, false);
     }
 
-    public TabularResultLayout(SqlExplorer explorer, IDb db, String sql, ResultSet rs, ISqlRunnerListener listener, String user, Settings settings, QueryPanel queryPanel, boolean showSql, boolean isInQueryGeneralResults)
-            throws SQLException {
+    public TabularResultLayout(SqlExplorer explorer, IDb db, String sql, ResultSet rs, ISqlRunnerListener listener, String user,
+            Settings settings, QueryPanel queryPanel, boolean showSql, boolean isInQueryGeneralResults) throws SQLException {
         this.explorer = explorer;
-    	this.sql = sql;
+        this.sql = sql;
         this.showSql = showSql;
         this.db = db;
         this.rs = rs;
@@ -178,7 +178,7 @@ public class TabularResultLayout extends VerticalLayout {
     protected void createTabularResultLayout() {
         this.setSizeFull();
         this.setSpacing(false);
-
+        this.setMargin(false);
         createMenuBar();
 
         try {
@@ -186,21 +186,21 @@ public class TabularResultLayout extends VerticalLayout {
             grid.setSizeFull();
 
             initGridEditing();
-            
-            grid.setCellStyleGenerator(new CellStyleGenerator() {
-				private static final long serialVersionUID = 1L;
 
-				@Override
-				public String getStyle(CellReference cell) {
-					if (cell.getPropertyId().equals("#") && !grid.getSelectedRows().contains(cell.getItemId())) {
-						return "rowheader";
-					}
-					if (cell.getValue() == null) {
-						return "italics";
-					}
-					return null;
-				}
-	    	});
+            grid.setCellStyleGenerator(new CellStyleGenerator() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public String getStyle(CellReference cell) {
+                    if (cell.getPropertyId().equals("#") && !grid.getSelectedRows().contains(cell.getItemId())) {
+                        return "rowheader";
+                    }
+                    if (cell.getValue() == null) {
+                        return "italics";
+                    }
+                    return null;
+                }
+            });
 
             ContextMenu menu = new ContextMenu(grid, true);
             menu.addItem(ACTION_SELECT, new ContextMenu.Command() {
@@ -239,23 +239,23 @@ public class TabularResultLayout extends VerticalLayout {
                     handleAction(ACTION_DELETE);
                 }
             });
-            
+
             if (resultTable != null && resultTable.getForeignKeyCount() > 0) {
-	            followToMenu = menu.addItem("Follow to", null);
-	            buildFollowToMenu();
+                followToMenu = menu.addItem("Follow to", null);
+                buildFollowToMenu();
             }
-            
+
             grid.addItemClickListener(new ItemClickListener() {
 
                 private static final long serialVersionUID = 1L;
 
-				@Override
+                @Override
                 public void itemClick(ItemClickEvent event) {
                     MouseButton button = event.getButton();
                     if (button == MouseButton.LEFT) {
                         Object object = event.getPropertyId();
                         if (object != null && !object.toString().equals("")) {
-                        	if (event.isDoubleClick() && !grid.isEditorEnabled()) {
+                            if (event.isDoubleClick() && !grid.isEditorEnabled()) {
                                 Object prop = event.getPropertyId();
                                 String header = grid.getColumn(prop).getHeaderCaption();
                                 Property<?> p = event.getItem().getItemProperty(prop);
@@ -281,7 +281,7 @@ public class TabularResultLayout extends VerticalLayout {
                     }
                 }
             });
-            
+
             this.addComponent(grid);
             this.setExpandRatio(grid, 1);
 
@@ -298,9 +298,9 @@ public class TabularResultLayout extends VerticalLayout {
         }
 
     }
-    
+
     private void createMenuBar() {
-    	HorizontalLayout resultBar = new HorizontalLayout();
+        HorizontalLayout resultBar = new HorizontalLayout();
         resultBar.setWidth(100, Unit.PERCENTAGE);
         resultBar.setMargin(new MarginInfo(false, true, false, true));
 
@@ -316,7 +316,7 @@ public class TabularResultLayout extends VerticalLayout {
         resultBar.addComponent(leftBar);
         resultBar.setComponentAlignment(leftBar, Alignment.MIDDLE_LEFT);
         resultBar.setExpandRatio(leftBar, 1);
-        
+
         MenuBar rightBar = new MenuBar();
         rightBar.addStyleName(ValoTheme.MENUBAR_BORDERLESS);
         rightBar.addStyleName(ValoTheme.MENUBAR_SMALL);
@@ -330,20 +330,20 @@ public class TabularResultLayout extends VerticalLayout {
             }
         });
         refreshButton.setIcon(FontAwesome.REFRESH);
-        
-        if (isInQueryGeneralResults) {
-        	MenuBar.MenuItem keepResultsButton = rightBar.addItem("", new Command() {
-				private static final long serialVersionUID = 1L;
 
-				@Override
-				public void menuSelected(com.vaadin.ui.MenuBar.MenuItem selectedItem) {
-					queryPanel.addResultsTab(refreshWithoutSaveButton(), StringUtils.abbreviate(sql, 20),
-							queryPanel.getGeneralResultsTab().getIcon());
-					queryPanel.resetGeneralResultsTab();
-				}
-			});
-        	keepResultsButton.setIcon(FontAwesome.CLONE);
-        	keepResultsButton.setDescription("Save these results to a new tab");
+        if (isInQueryGeneralResults) {
+            MenuBar.MenuItem keepResultsButton = rightBar.addItem("", new Command() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void menuSelected(com.vaadin.ui.MenuBar.MenuItem selectedItem) {
+                    queryPanel.addResultsTab(refreshWithoutSaveButton(), StringUtils.abbreviate(sql, 20),
+                            queryPanel.getGeneralResultsTab().getIcon());
+                    queryPanel.resetGeneralResultsTab();
+                }
+            });
+            keepResultsButton.setIcon(FontAwesome.CLONE);
+            keepResultsButton.setDescription("Save these results to a new tab");
         }
 
         if (showSql) {
@@ -355,12 +355,12 @@ public class TabularResultLayout extends VerticalLayout {
 
         this.addComponent(resultBar, 0);
     }
-    
+
     protected TabularResultLayout refreshWithoutSaveButton() {
-    	isInQueryGeneralResults = false;
-    	this.removeComponent(this.getComponent(0));
-    	createMenuBar();
-    	return this;
+        isInQueryGeneralResults = false;
+        this.removeComponent(this.getComponent(0));
+        createMenuBar();
+        return this;
     }
 
     protected void handleAction(String action) {
@@ -534,104 +534,103 @@ public class TabularResultLayout extends VerticalLayout {
         }
         return value;
     }
-    
+
     protected void buildFollowToMenu() {
-    	ForeignKey[] foreignKeys = resultTable.getForeignKeys();
-    	for (final ForeignKey foreignKey : foreignKeys) {
-	    	String optionTitle = foreignKey.getForeignTableName() + " (";
-	    	for (Reference ref : foreignKey.getReferences()) {
-	    		optionTitle += ref.getLocalColumnName() + ", ";
-	    	}
-	    	optionTitle = optionTitle.substring(0, optionTitle.length()-2) + ")";
-    		followToMenu.addItem(optionTitle, new ContextMenu.Command() {
-				
-				private static final long serialVersionUID = 1L;
-	
-				@Override
-				public void menuSelected(MenuItem selectedItem) {
-		    		followTo(foreignKey);
-				}
-			});
-    	}
+        ForeignKey[] foreignKeys = resultTable.getForeignKeys();
+        for (final ForeignKey foreignKey : foreignKeys) {
+            String optionTitle = foreignKey.getForeignTableName() + " (";
+            for (Reference ref : foreignKey.getReferences()) {
+                optionTitle += ref.getLocalColumnName() + ", ";
+            }
+            optionTitle = optionTitle.substring(0, optionTitle.length() - 2) + ")";
+            followToMenu.addItem(optionTitle, new ContextMenu.Command() {
+
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void menuSelected(MenuItem selectedItem) {
+                    followTo(foreignKey);
+                }
+            });
+        }
     }
-    
+
     protected void followTo(ForeignKey foreignKey) {
-    	Collection<Object> selectedRows = grid.getSelectedRows();
-    	if (selectedRows.size() > 0) {
-	    	log.info("Following foreign key to "+foreignKey.getForeignTableName());
-			
-	    	if (queryPanel == null) {
-				if (explorer != null) {
-					queryPanel = explorer.openQueryWindow(db);
-				} else {
-					log.error("Failed to find current or create new query tab");
-				}
-	    	}
-			
-	    	Table foreignTable = foreignKey.getForeignTable();
-			if (foreignTable == null) {
-				foreignTable = db.getPlatform().getTableFromCache(foreignKey.getForeignTableName(), false);
-			}
-			
-			Reference[] references = foreignKey.getReferences();
-			for (Reference ref : references) {
-				if (ref.getForeignColumn() == null) {
-					ref.setForeignColumn(foreignTable.getColumnWithName(ref.getForeignColumnName()));
-				}
-			}
-			
-			String sql = createFollowSql(foreignTable, references, selectedRows.size());
-			
-			try {
-				PreparedStatement ps = ((DataSource) db.getPlatform().getDataSource()).getConnection().prepareStatement(sql);
-				int i = 1;
-				for (Object row : selectedRows) {
-					for (Reference ref : references) {
-						Object targetObject = grid.getContainerDataSource().getItem(row).getItemProperty(ref.getLocalColumnName()).getValue();
-						int targetType = ref.getForeignColumn().getMappedTypeCode();
-						ps.setObject(i, targetObject, targetType);
-						i++;
-					}
-				}
-				sql = ps.toString().substring(ps.toString().indexOf("select "));
-				queryPanel.executeSql(sql, false);
-			} catch (SQLException e) {
-				log.error("Failed to follow foreign key", e);
-			}
-    	}
+        Collection<Object> selectedRows = grid.getSelectedRows();
+        if (selectedRows.size() > 0) {
+            log.info("Following foreign key to " + foreignKey.getForeignTableName());
+
+            if (queryPanel == null) {
+                if (explorer != null) {
+                    queryPanel = explorer.openQueryWindow(db);
+                } else {
+                    log.error("Failed to find current or create new query tab");
+                }
+            }
+
+            Table foreignTable = foreignKey.getForeignTable();
+            if (foreignTable == null) {
+                foreignTable = db.getPlatform().getTableFromCache(foreignKey.getForeignTableName(), false);
+            }
+
+            Reference[] references = foreignKey.getReferences();
+            for (Reference ref : references) {
+                if (ref.getForeignColumn() == null) {
+                    ref.setForeignColumn(foreignTable.getColumnWithName(ref.getForeignColumnName()));
+                }
+            }
+
+            String sql = createFollowSql(foreignTable, references, selectedRows.size());
+
+            try {
+                PreparedStatement ps = ((DataSource) db.getPlatform().getDataSource()).getConnection().prepareStatement(sql);
+                int i = 1;
+                for (Object row : selectedRows) {
+                    for (Reference ref : references) {
+                        Object targetObject = grid.getContainerDataSource().getItem(row).getItemProperty(ref.getLocalColumnName()).getValue();
+                        int targetType = ref.getForeignColumn().getMappedTypeCode();
+                        ps.setObject(i, targetObject, targetType);
+                        i++;
+                    }
+                }
+                sql = ps.toString().substring(ps.toString().indexOf("select "));
+                queryPanel.executeSql(sql, false);
+            } catch (SQLException e) {
+                log.error("Failed to follow foreign key", e);
+            }
+        }
     }
-    
+
     protected String createFollowSql(Table foreignTable, Reference[] references, int selectedRowCount) {
-		DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
-		String quote = db.getPlatform().getDdlBuilder().isDelimitedIdentifierModeOn() ? dbInfo.getDelimiterToken() : "";
-    	
-    	StringBuilder sql = new StringBuilder("select ");
-		for (Column col : foreignTable.getColumns()) {
-			sql.append(quote);
-			sql.append(col.getName());
-			sql.append(quote);
-			sql.append(", ");
-		}
-		sql.delete(sql.length()-2, sql.length());
-		sql.append(" from ");
-		sql.append(foreignTable.getQualifiedTableName(quote, dbInfo.getCatalogSeparator(), 
-                dbInfo.getSchemaSeparator()));
-		sql.append(" where ");
-		
-		StringBuilder whereClause = new StringBuilder("(");
-		for (Reference ref : references) {
-			whereClause.append(ref.getForeignColumnName());
-			whereClause.append("=? and ");
-		}
-		whereClause.delete(whereClause.length()-5, whereClause.length());
-		whereClause.append(") or ");
-		
-		for (int i=0; i<selectedRowCount; i++) {
-			sql.append(whereClause.toString());
-		}
-		sql.delete(sql.length()-4, sql.length());
-		
-		return sql.toString();
+        DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
+        String quote = db.getPlatform().getDdlBuilder().isDelimitedIdentifierModeOn() ? dbInfo.getDelimiterToken() : "";
+
+        StringBuilder sql = new StringBuilder("select ");
+        for (Column col : foreignTable.getColumns()) {
+            sql.append(quote);
+            sql.append(col.getName());
+            sql.append(quote);
+            sql.append(", ");
+        }
+        sql.delete(sql.length() - 2, sql.length());
+        sql.append(" from ");
+        sql.append(foreignTable.getQualifiedTableName(quote, dbInfo.getCatalogSeparator(), dbInfo.getSchemaSeparator()));
+        sql.append(" where ");
+
+        StringBuilder whereClause = new StringBuilder("(");
+        for (Reference ref : references) {
+            whereClause.append(ref.getForeignColumnName());
+            whereClause.append("=? and ");
+        }
+        whereClause.delete(whereClause.length() - 5, whereClause.length());
+        whereClause.append(") or ");
+
+        for (int i = 0; i < selectedRowCount; i++) {
+            sql.append(whereClause.toString());
+        }
+        sql.delete(sql.length() - 4, sql.length());
+
+        return sql.toString();
     }
 
     protected Grid putResultsInGrid(int maxResultSize) throws SQLException {
@@ -726,10 +725,10 @@ public class TabularResultLayout extends VerticalLayout {
                 log.debug("Failed to lookup table: " + tableName, e);
             }
         }
-        
+
         TypedProperties properties = settings.getProperties();
-        return CommonUiUtils.putResultsInGrid(rs, resultTable, properties.getInt(SQL_EXPLORER_MAX_RESULTS), properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS),
-                getColumnsToExclude());
+        return CommonUiUtils.putResultsInGrid(rs, resultTable, properties.getInt(SQL_EXPLORER_MAX_RESULTS),
+                properties.is(SQL_EXPLORER_SHOW_ROW_NUMBERS), getColumnsToExclude());
 
     }
 
@@ -738,155 +737,157 @@ public class TabularResultLayout extends VerticalLayout {
     }
 
     private void initGridEditing() {
-	    if (resultTable != null) {
-    		grid.setEditorEnabled(true);
-	    	List<com.vaadin.v7.ui.Grid.Column> columns = grid.getColumns();
-	    	List<TextField> primaryKeyEditors = new ArrayList<TextField>();
-	    	for (com.vaadin.v7.ui.Grid.Column gridColumn : columns) {
-	    		String header = gridColumn.getHeaderCaption();
-	    		Column tableColumn = resultTable.getColumnWithName(header);
-	    		if (columns.get(0).equals(gridColumn) || (tableColumn != null && tableColumn.isAutoIncrement()
-	    				&& !db.getPlatform().getDatabaseInfo().isAutoIncrementUpdateAllowed())) {
-	    			gridColumn.setEditable(false);
-	    		}
-	    		else if (tableColumn != null && db.getPlatform().isLob(tableColumn.getMappedTypeCode())) {
-	    			gridColumn.setEditorField(new LobEditorField(header));
-	    		}
-	    		else if (tableColumn != null) {
-	    			setEditor(gridColumn, tableColumn, primaryKeyEditors);
-	    		}
-	    	}
-	    	
-	    	for (TextField editor : primaryKeyEditors) {
-	    		editor.addValidator(new PrimaryKeyValidator(primaryKeyEditors));
-	    	}
-	    	
-	    	initCommit();
-	    } else {
-	    	log.info("Table editing disabled.");
-	    }
+        if (resultTable != null) {
+            grid.setEditorEnabled(true);
+            List<com.vaadin.v7.ui.Grid.Column> columns = grid.getColumns();
+            List<TextField> primaryKeyEditors = new ArrayList<TextField>();
+            for (com.vaadin.v7.ui.Grid.Column gridColumn : columns) {
+                String header = gridColumn.getHeaderCaption();
+                Column tableColumn = resultTable.getColumnWithName(header);
+                if (columns.get(0).equals(gridColumn) || (tableColumn != null && tableColumn.isAutoIncrement()
+                        && !db.getPlatform().getDatabaseInfo().isAutoIncrementUpdateAllowed())) {
+                    gridColumn.setEditable(false);
+                } else if (tableColumn != null && db.getPlatform().isLob(tableColumn.getMappedTypeCode())) {
+                    gridColumn.setEditorField(new LobEditorField(header));
+                } else if (tableColumn != null) {
+                    setEditor(gridColumn, tableColumn, primaryKeyEditors);
+                }
+            }
+
+            for (TextField editor : primaryKeyEditors) {
+                editor.addValidator(new PrimaryKeyValidator(primaryKeyEditors));
+            }
+
+            initCommit();
+        } else {
+            log.info("Table editing disabled.");
+        }
     }
-    
+
     private void setEditor(Grid.Column gridColumn, Column tableColumn, List<TextField> primaryKeyEditors) {
-    	TextField editor = new TextField();
-		int typeCode = tableColumn.getMappedTypeCode();
-		
-		switch (typeCode) {
-		case Types.DATE:
-			editor.setConverter(new ObjectConverter(Date.class, typeCode));
-			break;
-		case Types.TIME:
-			editor.setConverter(new ObjectConverter(Time.class, typeCode));
-			break;
-		case Types.TIMESTAMP:
-			editor.setConverter(new ObjectConverter(Timestamp.class, typeCode));
-			break;
-		case Types.BIT:
-			editor.setConverter(new StringToBooleanConverter());
-			break;
-		case Types.TINYINT:
-        case Types.SMALLINT:
-        case Types.BIGINT:
-        case Types.INTEGER:
-        	editor.setConverter(new StringToLongConverter() {
-				private static final long serialVersionUID = 1L;
-        		public NumberFormat getFormat(Locale locale) {
-        			NumberFormat format = super.getFormat(locale);
-        			format.setGroupingUsed(false);
-        			return format;
-        		}
-        	});
-        	break;
-        case Types.FLOAT:
-        case Types.DOUBLE:
-        case Types.REAL:
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-        	editor.setConverter(new StringToBigDecimalConverter() {
-				private static final long serialVersionUID = 1L;
-        		public NumberFormat getFormat(Locale locale) {
-        			NumberFormat format = super.getFormat(locale);
-        			format.setGroupingUsed(false);
-        			return format;
-        		}
-        	});
-        	break;
-		default:
-			break;
-		}
+        TextField editor = new TextField();
+        int typeCode = tableColumn.getMappedTypeCode();
 
-		editor.addValidator(new TableChangeValidator(editor, tableColumn));
-		
-		editor.setNullRepresentation("");
-		if (!tableColumn.isRequired()) {
-			editor.setNullSettingAllowed(true);
-		}
-		
-		if (tableColumn.isPrimaryKey()) {
-			primaryKeyEditors.add(editor);
-		}
-		
-    	gridColumn.setEditorField(editor);
+        switch (typeCode) {
+            case Types.DATE:
+                editor.setConverter(new ObjectConverter(Date.class, typeCode));
+                break;
+            case Types.TIME:
+                editor.setConverter(new ObjectConverter(Time.class, typeCode));
+                break;
+            case Types.TIMESTAMP:
+                editor.setConverter(new ObjectConverter(Timestamp.class, typeCode));
+                break;
+            case Types.BIT:
+                editor.setConverter(new StringToBooleanConverter());
+                break;
+            case Types.TINYINT:
+            case Types.SMALLINT:
+            case Types.BIGINT:
+            case Types.INTEGER:
+                editor.setConverter(new StringToLongConverter() {
+                    private static final long serialVersionUID = 1L;
+
+                    public NumberFormat getFormat(Locale locale) {
+                        NumberFormat format = super.getFormat(locale);
+                        format.setGroupingUsed(false);
+                        return format;
+                    }
+                });
+                break;
+            case Types.FLOAT:
+            case Types.DOUBLE:
+            case Types.REAL:
+            case Types.NUMERIC:
+            case Types.DECIMAL:
+                editor.setConverter(new StringToBigDecimalConverter() {
+                    private static final long serialVersionUID = 1L;
+
+                    public NumberFormat getFormat(Locale locale) {
+                        NumberFormat format = super.getFormat(locale);
+                        format.setGroupingUsed(false);
+                        return format;
+                    }
+                });
+                break;
+            default:
+                break;
+        }
+
+        editor.addValidator(new TableChangeValidator(editor, tableColumn));
+
+        editor.setNullRepresentation("");
+        if (!tableColumn.isRequired()) {
+            editor.setNullSettingAllowed(true);
+        }
+
+        if (tableColumn.isPrimaryKey()) {
+            primaryKeyEditors.add(editor);
+        }
+
+        gridColumn.setEditorField(editor);
     }
-    
+
     private void initCommit() {
-    	grid.getEditorFieldGroup().addCommitHandler(new CommitHandler() {
-			
-			private static final long serialVersionUID = 1L;
-			
-			Map<Object, Object> unchangedValues;
-			Object[] params;
-			int[] types;
+        grid.getEditorFieldGroup().addCommitHandler(new CommitHandler() {
 
-			@Override
-			public void preCommit(CommitEvent commitEvent) throws CommitException {
-				Item row = commitEvent.getFieldBinder().getItemDataSource();
-				unchangedValues = new HashMap<Object, Object>();
-				params = new Object[resultTable.getPrimaryKeyColumnCount()+1];
-				types = new int[params.length];
-				int paramCount = 1;
-				for (Object id : row.getItemPropertyIds()) {
-					unchangedValues.put(id, row.getItemProperty(id).getValue());
-					if (resultTable.getPrimaryKeyColumnIndex(id.toString()) >= 0) {
-						params[paramCount] = commitEvent.getFieldBinder().getItemDataSource().getItemProperty(id).getValue();
-						types[paramCount] = resultTable.getColumnWithName(id.toString()).getMappedTypeCode();
-						paramCount++;
-					}
-				}
-			}
-			
-			@Override
-			public void postCommit(CommitEvent commitEvent) throws CommitException {
-				Item row = commitEvent.getFieldBinder().getItemDataSource();
-				for (Object id : row.getItemPropertyIds()) {
-					if (grid.getColumn(id).isEditable() &&
-							!db.getPlatform().isLob(resultTable.getColumnWithName(id.toString()).getMappedTypeCode())) {
-						String sql = buildUpdate(resultTable, id.toString(), resultTable.getPrimaryKeyColumnNames());
-						params[0] = row.getItemProperty(id).getValue();
-						if ((params[0] == null && unchangedValues.get(id) == null) ||
-								(params[0] != null && params[0].equals(unchangedValues.get(id)))) {
-							continue;
-						}
-						types[0] = resultTable.getColumnWithName(id.toString()).getMappedTypeCode();
-						for (int i=0; i<types.length; i++) {
-							if (types[i] == Types.DATE && db.getPlatform().getDdlBuilder().getDatabaseInfo().isDateOverridesToTimestamp()) {
-								types[i] = Types.TIMESTAMP;
-							}
-						}
-						try {
-							db.getPlatform().getSqlTemplate().update(sql, params, types);
-						} catch (SqlException e) {
-							NotifyDialog.show("Error", "<b>The table could not be updated.</b><br>" +
-									"Cause: the sql update statement failed to execute.<br><br>" +
-									"To view the <b>Stack Trace</b>, click <b>\"Details\"</b>.", e, Type.ERROR_MESSAGE);
-						}
-					}
-				}
-				listener.reExecute(sql);
-			}
-    	});
+            private static final long serialVersionUID = 1L;
+
+            Map<Object, Object> unchangedValues;
+            Object[] params;
+            int[] types;
+
+            @Override
+            public void preCommit(CommitEvent commitEvent) throws CommitException {
+                Item row = commitEvent.getFieldBinder().getItemDataSource();
+                unchangedValues = new HashMap<Object, Object>();
+                params = new Object[resultTable.getPrimaryKeyColumnCount() + 1];
+                types = new int[params.length];
+                int paramCount = 1;
+                for (Object id : row.getItemPropertyIds()) {
+                    unchangedValues.put(id, row.getItemProperty(id).getValue());
+                    if (resultTable.getPrimaryKeyColumnIndex(id.toString()) >= 0) {
+                        params[paramCount] = commitEvent.getFieldBinder().getItemDataSource().getItemProperty(id).getValue();
+                        types[paramCount] = resultTable.getColumnWithName(id.toString()).getMappedTypeCode();
+                        paramCount++;
+                    }
+                }
+            }
+
+            @Override
+            public void postCommit(CommitEvent commitEvent) throws CommitException {
+                Item row = commitEvent.getFieldBinder().getItemDataSource();
+                for (Object id : row.getItemPropertyIds()) {
+                    if (grid.getColumn(id).isEditable()
+                            && !db.getPlatform().isLob(resultTable.getColumnWithName(id.toString()).getMappedTypeCode())) {
+                        String sql = buildUpdate(resultTable, id.toString(), resultTable.getPrimaryKeyColumnNames());
+                        params[0] = row.getItemProperty(id).getValue();
+                        if ((params[0] == null && unchangedValues.get(id) == null)
+                                || (params[0] != null && params[0].equals(unchangedValues.get(id)))) {
+                            continue;
+                        }
+                        types[0] = resultTable.getColumnWithName(id.toString()).getMappedTypeCode();
+                        for (int i = 0; i < types.length; i++) {
+                            if (types[i] == Types.DATE && db.getPlatform().getDdlBuilder().getDatabaseInfo().isDateOverridesToTimestamp()) {
+                                types[i] = Types.TIMESTAMP;
+                            }
+                        }
+                        try {
+                            db.getPlatform().getSqlTemplate().update(sql, params, types);
+                        } catch (SqlException e) {
+                            NotifyDialog.show("Error",
+                                    "<b>The table could not be updated.</b><br>"
+                                            + "Cause: the sql update statement failed to execute.<br><br>"
+                                            + "To view the <b>Stack Trace</b>, click <b>\"Details\"</b>.",
+                                    e, Type.ERROR_MESSAGE);
+                        }
+                    }
+                }
+                listener.reExecute(sql);
+            }
+        });
     }
-    
+
     protected Object[] getPrimaryKeys() {
         String[] columnNames = resultTable.getPrimaryKeyColumnNames();
         Object[] pks = new Object[columnNames.length];
@@ -902,193 +903,191 @@ public class TabularResultLayout extends VerticalLayout {
         }
         return pks;
     }
-    
+
     protected String buildUpdate(Table table, String columnName, String[] pkColumnNames) {
-    	StringBuilder sql = new StringBuilder("update ");
-    	DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
-    	String quote = db.getPlatform().getDdlBuilder().isDelimitedIdentifierModeOn() ? dbInfo.getDelimiterToken() : "";
-    	sql.append(table.getQualifiedTableName(quote, dbInfo.getCatalogSeparator(), 
-                dbInfo.getSchemaSeparator()));
-    	sql.append(" set ");
-    	sql.append(quote);
-    	sql.append(columnName);
-    	sql.append(quote);
-    	sql.append("=? where ");
-    	for (String col : pkColumnNames) {
-    		sql.append(quote);
-    		sql.append(col);
-    		sql.append(quote);
-    		sql.append("=? and ");
-    	}
-    	sql.delete(sql.length() - 5, sql.length());
-    	return sql.toString();
+        StringBuilder sql = new StringBuilder("update ");
+        DatabaseInfo dbInfo = db.getPlatform().getDatabaseInfo();
+        String quote = db.getPlatform().getDdlBuilder().isDelimitedIdentifierModeOn() ? dbInfo.getDelimiterToken() : "";
+        sql.append(table.getQualifiedTableName(quote, dbInfo.getCatalogSeparator(), dbInfo.getSchemaSeparator()));
+        sql.append(" set ");
+        sql.append(quote);
+        sql.append(columnName);
+        sql.append(quote);
+        sql.append("=? where ");
+        for (String col : pkColumnNames) {
+            sql.append(quote);
+            sql.append(col);
+            sql.append(quote);
+            sql.append("=? and ");
+        }
+        sql.delete(sql.length() - 5, sql.length());
+        return sql.toString();
     }
-    
+
     class LobEditorField extends CustomField<String> {
 
-		private static final long serialVersionUID = 1L;
-		
-		String header;
-    	
-    	LobEditorField(String header) {
-    		super();
-    		this.header = header;
-    	}
-    	
-		@Override
-		protected Component initContent() {
-			final Button button = new Button("...");
-			button.addClickListener(new ClickListener() {
-				
-				private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 1L;
 
-				public void buttonClick(ClickEvent event) {
-					Property<?> p = grid.getContainerDataSource().getItem(grid.getEditedItemId()).getItemProperty(header);
-					if (p != null) {
-						String data = p.getValue() == null ? null : String.valueOf(p.getValue());
-	                    boolean binary = resultTable != null ? resultTable.getColumnWithName(header).isOfBinaryType() : false;
-	                    if (binary) {
-	                        ReadOnlyTextAreaDialog.show(header, data == null ? null : data.toUpperCase(), resultTable, getPrimaryKeys(), db.getPlatform(), binary, true);
-	                    } else {
-	                        ReadOnlyTextAreaDialog.show(header, data, resultTable, getPrimaryKeys(), db.getPlatform(), binary, true);
-	                    }
-					}
-				}
-			});
-			return button;
-		}
+        String header;
 
-		@Override
-		public Class<? extends String> getType() {
-			return String.class;
-		}
-		
-	}
-    
+        LobEditorField(String header) {
+            super();
+            this.header = header;
+        }
+
+        @Override
+        protected Component initContent() {
+            final Button button = new Button("...");
+            button.addClickListener(new ClickListener() {
+
+                private static final long serialVersionUID = 1L;
+
+                public void buttonClick(ClickEvent event) {
+                    Property<?> p = grid.getContainerDataSource().getItem(grid.getEditedItemId()).getItemProperty(header);
+                    if (p != null) {
+                        String data = p.getValue() == null ? null : String.valueOf(p.getValue());
+                        boolean binary = resultTable != null ? resultTable.getColumnWithName(header).isOfBinaryType() : false;
+                        if (binary) {
+                            ReadOnlyTextAreaDialog.show(header, data == null ? null : data.toUpperCase(), resultTable, getPrimaryKeys(),
+                                    db.getPlatform(), binary, true);
+                        } else {
+                            ReadOnlyTextAreaDialog.show(header, data, resultTable, getPrimaryKeys(), db.getPlatform(), binary, true);
+                        }
+                    }
+                }
+            });
+            return button;
+        }
+
+        @Override
+        public Class<? extends String> getType() {
+            return String.class;
+        }
+
+    }
+
     class ObjectConverter implements Converter<String, Object> {
-		
-    	private static final long serialVersionUID = 1L;
-    	
-    	Class<?> modelType;
-    	int typeCode;
-    	
-    	ObjectConverter(Class<?> modelType, int typeCode) {
-    		super();
-    		this.modelType = modelType;
-    		this.typeCode = typeCode;
-    	}
-		
-		@Override
-		public Object convertToModel(String value, Class<? extends Object> targetType, Locale locale)
-				throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
-			if (value == null || value.isEmpty() || value.equals("<null>")) {
-				return null;
-			}
-			
-			if (java.util.Date.class.isAssignableFrom(modelType)) {
-				try {
-					return modelType.cast(db.getPlatform().parseDate(typeCode, value, false));
-				} catch (Exception e) {
-					return value;
-				}
-			}
-			
-			return value.toString();
-		}
-		
-		@Override
-		public String convertToPresentation(Object value, Class<? extends String> targetType,
-				Locale locale) throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
-			if (value == null || value.equals("") || value.equals("<null>"))
-				return "";
-			return String.valueOf(value);
-		}
-		
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		@Override
-		public Class getModelType() {
-			if (typeCode == Types.DATE &&
-					db.getPlatform().getDdlBuilder().getDatabaseInfo().isDateOverridesToTimestamp()) {
-				modelType = Timestamp.class;
-			}
-			return modelType;
-		}
-		
-		@Override
-		public Class<String> getPresentationType() {
-			return String.class;
-		}
-	}
-    
+
+        private static final long serialVersionUID = 1L;
+
+        Class<?> modelType;
+        int typeCode;
+
+        ObjectConverter(Class<?> modelType, int typeCode) {
+            super();
+            this.modelType = modelType;
+            this.typeCode = typeCode;
+        }
+
+        @Override
+        public Object convertToModel(String value, Class<? extends Object> targetType, Locale locale)
+                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
+            if (value == null || value.isEmpty() || value.equals("<null>")) {
+                return null;
+            }
+
+            if (java.util.Date.class.isAssignableFrom(modelType)) {
+                try {
+                    return modelType.cast(db.getPlatform().parseDate(typeCode, value, false));
+                } catch (Exception e) {
+                    return value;
+                }
+            }
+
+            return value.toString();
+        }
+
+        @Override
+        public String convertToPresentation(Object value, Class<? extends String> targetType, Locale locale)
+                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
+            if (value == null || value.equals("") || value.equals("<null>"))
+                return "";
+            return String.valueOf(value);
+        }
+
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        @Override
+        public Class getModelType() {
+            if (typeCode == Types.DATE && db.getPlatform().getDdlBuilder().getDatabaseInfo().isDateOverridesToTimestamp()) {
+                modelType = Timestamp.class;
+            }
+            return modelType;
+        }
+
+        @Override
+        public Class<String> getPresentationType() {
+            return String.class;
+        }
+    }
+
     class TableChangeValidator implements Validator {
 
-		private static final long serialVersionUID = 1L;
-		
-		TextField editor;
-		Column col;
+        private static final long serialVersionUID = 1L;
 
-		TableChangeValidator(TextField editor, Column col) {
-			super();
-			this.editor = editor;
-			this.col = col;
-		}
-		
-		@Override
-		public void validate(Object value) throws InvalidValueException {
-			if (value == null || value.toString().isEmpty()) {
-				if (col.isRequired()) {
-					throw new EmptyValueException("Value cannot be null");
-				}
-			} else if (editor.getConverter() instanceof ObjectConverter) {
-				int typeCode = col.getMappedTypeCode();
-				if (typeCode == Types.DATE || typeCode == Types.TIME || typeCode == Types.TIMESTAMP) {
-					try {
-						db.getPlatform().parseDate(typeCode, String.valueOf(value), false);
-					} catch (Exception e) {
-						throw new InvalidValueException(col.getMappedType()+" format not valid");
-					}
-				}
-			}
-		}
-	}
-    
+        TextField editor;
+        Column col;
+
+        TableChangeValidator(TextField editor, Column col) {
+            super();
+            this.editor = editor;
+            this.col = col;
+        }
+
+        @Override
+        public void validate(Object value) throws InvalidValueException {
+            if (value == null || value.toString().isEmpty()) {
+                if (col.isRequired()) {
+                    throw new EmptyValueException("Value cannot be null");
+                }
+            } else if (editor.getConverter() instanceof ObjectConverter) {
+                int typeCode = col.getMappedTypeCode();
+                if (typeCode == Types.DATE || typeCode == Types.TIME || typeCode == Types.TIMESTAMP) {
+                    try {
+                        db.getPlatform().parseDate(typeCode, String.valueOf(value), false);
+                    } catch (Exception e) {
+                        throw new InvalidValueException(col.getMappedType() + " format not valid");
+                    }
+                }
+            }
+        }
+    }
+
     class PrimaryKeyValidator implements Validator {
-    	
-		private static final long serialVersionUID = 1L;
-		
-		List<TextField> editors;
 
-		PrimaryKeyValidator(List<TextField> editors) {
-    		super();
-    		this.editors = editors;
-    	}
-    	
-    	public void validate(Object value) throws InvalidValueException {
-    		String[] pkColumns = resultTable.getPrimaryKeyColumnNames();
-    		if (editors.size() != pkColumns.length) {
-    			throw new IllegalArgumentException();
-    		}
-    		Object[] newValues = new Object[pkColumns.length];
-    		for (int i=0; i<editors.size(); i++) {
-    			TextField editor = editors.get(i);
-    			if (editor.getConverter() != null) {
-	    			newValues[i] = editor.getConverter().convertToModel(editor.getValue(),
-	    					editor.getConverter().getModelType(), editor.getLocale());
-    			} else {
-    				newValues[i] = editor.getValue();
-    			}
-    		}
-    		allColumns: for (Object row : grid.getContainerDataSource().getItemIds()) {
-    			if (!row.equals(grid.getEditedItemId())) {
-	    			for (int i=0; i<pkColumns.length; i++) {
-	    				if (!grid.getContainerDataSource().getItem(row).getItemProperty(pkColumns[i]).getValue()
-	    						.equals(newValues[i])) {
-	    					continue allColumns;
-	    				}
-	    			}
-	    			throw new InvalidValueException("Cannot use repeated primary keys");
-    			}
-    		}
-    	}
+        private static final long serialVersionUID = 1L;
+
+        List<TextField> editors;
+
+        PrimaryKeyValidator(List<TextField> editors) {
+            super();
+            this.editors = editors;
+        }
+
+        public void validate(Object value) throws InvalidValueException {
+            String[] pkColumns = resultTable.getPrimaryKeyColumnNames();
+            if (editors.size() != pkColumns.length) {
+                throw new IllegalArgumentException();
+            }
+            Object[] newValues = new Object[pkColumns.length];
+            for (int i = 0; i < editors.size(); i++) {
+                TextField editor = editors.get(i);
+                if (editor.getConverter() != null) {
+                    newValues[i] = editor.getConverter().convertToModel(editor.getValue(), editor.getConverter().getModelType(),
+                            editor.getLocale());
+                } else {
+                    newValues[i] = editor.getValue();
+                }
+            }
+            allColumns: for (Object row : grid.getContainerDataSource().getItemIds()) {
+                if (!row.equals(grid.getEditedItemId())) {
+                    for (int i = 0; i < pkColumns.length; i++) {
+                        if (!grid.getContainerDataSource().getItem(row).getItemProperty(pkColumns[i]).getValue().equals(newValues[i])) {
+                            continue allColumns;
+                        }
+                    }
+                    throw new InvalidValueException("Cannot use repeated primary keys");
+                }
+            }
+        }
     }
 }
