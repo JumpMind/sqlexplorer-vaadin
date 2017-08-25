@@ -43,35 +43,33 @@ import org.jumpmind.vaadin.ui.common.ResizableWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.v7.data.Property;
-import com.vaadin.v7.data.Property.ValueChangeEvent;
-import com.vaadin.v7.data.Property.ValueChangeListener;
-import com.vaadin.v7.event.FieldEvents.TextChangeEvent;
-import com.vaadin.v7.event.FieldEvents.TextChangeListener;
-import com.vaadin.v7.ui.AbstractSelect;
-import com.vaadin.v7.ui.AbstractTextField.TextChangeEventMode;
+import com.vaadin.ui.AbstractLayout;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.v7.ui.CheckBox;
-import com.vaadin.v7.ui.ComboBox;
+import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
-import com.vaadin.v7.ui.TextField;
+import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Upload;
-import com.vaadin.ui.Upload.ChangeEvent;
-import com.vaadin.ui.Upload.ChangeListener;
 import com.vaadin.ui.Upload.Receiver;
 import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.ValoTheme;
 
 public class DbImportDialog extends ResizableWindow {
 
     private static final long serialVersionUID = 1L;
 
     final Logger log = LoggerFactory.getLogger(getClass());
+    
+    enum DbImportFormat {
+        SQL, XML, CSV, SYM_XML;
+    }
 
     private Set<Table> selectedTablesSet;
 
@@ -79,7 +77,7 @@ public class DbImportDialog extends ResizableWindow {
 
     private VerticalLayout importLayout;
 
-    private AbstractSelect formatSelect;
+    private ComboBox<DbImportFormat> formatSelect;
 
     private CheckBox force;
 
@@ -87,11 +85,11 @@ public class DbImportDialog extends ResizableWindow {
 
     private CheckBox replace;
 
-    private AbstractSelect schemaSelect;
+    private ComboBox<String> schemaSelect;
 
-    private AbstractSelect catalogSelect;
+    private ComboBox<String> catalogSelect;
 
-    private AbstractSelect listOfTablesSelect;
+    private ComboBox<String> listOfTablesSelect;
 
     private TextField commitField;
 
@@ -101,15 +99,11 @@ public class DbImportDialog extends ResizableWindow {
 
     private Button cancelButton;
 
-    private Button importButton;
-
     private DbImport dbImport;
 
     private Upload upload;
 
     private Format format;
-
-    private boolean fileSelected = false;
 
     private IDatabasePlatform databasePlatform;
 
@@ -144,18 +138,11 @@ public class DbImportDialog extends ResizableWindow {
         importLayout.addComponent(formLayout);
         importLayout.setExpandRatio(formLayout, 1);
 
-        formatSelect = new ComboBox("Format");
-        for (DbImportFormat format : DbImportFormat.values()) {
-            formatSelect.addItem(format);
-        }
-        formatSelect.setNullSelectionAllowed(false);
+        formatSelect = new ComboBox<>("Format");
+        formatSelect.setItems( DbImportFormat.values());
+        formatSelect.setEmptySelectionAllowed(false);
         formatSelect.setValue(DbImportFormat.SQL);
-        formatSelect.addValueChangeListener(new Property.ValueChangeListener() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void valueChange(ValueChangeEvent event) {
+        formatSelect.addValueChangeListener((e) -> {
                 DbImportFormat format = (DbImportFormat) formatSelect.getValue();
 
                 switch (format) {
@@ -173,7 +160,6 @@ public class DbImportDialog extends ResizableWindow {
                         listOfTablesSelect.setEnabled(true);
                         alter.setEnabled(false);
                         alterCase.setEnabled(false);
-                        importButton.setEnabled(importButtonEnable());
                         break;
                     case SYM_XML:
                         listOfTablesSelect.setEnabled(false);
@@ -181,50 +167,40 @@ public class DbImportDialog extends ResizableWindow {
                         alterCase.setEnabled(false);
                         break;
                 }
-            }
         });
         formLayout.addComponent(formatSelect);
 
-        catalogSelect = new ComboBox("Catalog");
-        catalogSelect.setImmediate(true);
-        CommonUiUtils.addItems(getCatalogs(), catalogSelect);
-        catalogSelect.select(databasePlatform.getDefaultCatalog());
-        catalogSelect.setNullSelectionAllowed(false);
+        catalogSelect = new ComboBox<>("Catalog");
+        catalogSelect.setItems(getCatalogs());
+        catalogSelect.setValue(databasePlatform.getDefaultCatalog());
         formLayout.addComponent(catalogSelect);
 
-        schemaSelect = new ComboBox("Schema");
-        schemaSelect.setImmediate(true);
-        CommonUiUtils.addItems(getSchemas(), schemaSelect);
-        if (selectedTablesSet.iterator().hasNext()) {
-            schemaSelect.select(selectedTablesSet.iterator().next().getSchema());
+        schemaSelect = new ComboBox<>("Schema");
+        schemaSelect.setItems(getSchemas());
+        
+        if (selectedTablesSet.size() > 0) {
+            schemaSelect.setValue(selectedTablesSet.iterator().next().getSchema());
         } else {
-            schemaSelect.select(databasePlatform.getDefaultSchema());
+            schemaSelect.setValue(databasePlatform.getDefaultSchema());
         }
-        schemaSelect.setNullSelectionAllowed(false);
-        schemaSelect.addValueChangeListener(new ValueChangeListener() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void valueChange(ValueChangeEvent event) {
+        schemaSelect.addValueChangeListener((e) -> {
                 populateListOfTablesSelect();
-            }
+            
         });
         formLayout.addComponent(schemaSelect);
 
-        listOfTablesSelect = new ComboBox("Tables");
+        listOfTablesSelect = new ComboBox<>("Tables");
         populateListOfTablesSelect();
         listOfTablesSelect.setEnabled(false);
-        listOfTablesSelect.setNullSelectionAllowed(false);
 
         if (!this.selectedTablesSet.isEmpty()) {
             if (this.selectedTablesSet.size() == 1) {
                 this.selectedTable = this.selectedTablesSet.iterator().next();
-                listOfTablesSelect.select(this.selectedTable.getName());
+                listOfTablesSelect.setValue(this.selectedTable.getName());
                 this.selectedTablesSet.clear();
             } else {
                 List<Table> list = new ArrayList<Table>(this.selectedTablesSet);
-                listOfTablesSelect.select(list.get(0).getName());
+                listOfTablesSelect.setValue(list.get(0).getName());
                 this.selectedTable = list.get(0);
                 this.selectedTablesSet.clear();
             }
@@ -232,20 +208,10 @@ public class DbImportDialog extends ResizableWindow {
         formLayout.addComponent(listOfTablesSelect);
 
         commitField = new TextField("Rows to Commit");
-        commitField.addTextChangeListener(new TextChangeListener() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void textChange(TextChangeEvent event) {
-                commitField.setValue(event.getText());
-                if (fileSelected) {
-                    importButton.setEnabled(importButtonEnable());
-                }
-            }
+        commitField.addValueChangeListener((event) -> {
+                commitField.setValue(event.getValue());
         });
-        commitField.setImmediate(true);
-        commitField.setTextChangeEventMode(TextChangeEventMode.EAGER);
+        commitField.setValueChangeTimeout(200);
         commitField.setValue("10000");
         formLayout.addComponent(commitField);
 
@@ -266,7 +232,7 @@ public class DbImportDialog extends ResizableWindow {
         alterCase.setEnabled(false);
         formLayout.addComponent(alterCase);
 
-        upload = new Upload("File", new Receiver() {
+        upload = new Upload(null, new Receiver() {
 
             private static final long serialVersionUID = 1L;
 
@@ -292,24 +258,18 @@ public class DbImportDialog extends ResizableWindow {
                 createDbImport();
                 try {
                     doDbImport();
-                } catch (FileNotFoundException e) {
+                    close();
+                    Notification.show("Successful Import", Type.HUMANIZED_MESSAGE);
+                } catch (Exception e) {
                     log.warn(e.getMessage(), e);
-                    Notification.show(e.getMessage());
+                    Notification.show(e.getMessage(), Type.ERROR_MESSAGE);
+                } finally {
+                    deleteFileAndResource();
                 }
-                deleteFileAndResource();
-                close();
             }
-        });
-        upload.addChangeListener(new ChangeListener() {
-
-            private static final long serialVersionUID = 1L;
-
-            public void filenameChanged(ChangeEvent event) {
-                fileSelected = true;
-                importButton.setEnabled(importButtonEnable());
-            }
-        });
-        upload.setButtonCaption(null);
+        });        
+        upload.setButtonCaption("Import");
+        upload.setStyleName(ValoTheme.BUTTON_PRIMARY);
         formLayout.addComponent(upload);
 
         cancelButton = new Button("Cancel", new Button.ClickListener() {
@@ -319,18 +279,10 @@ public class DbImportDialog extends ResizableWindow {
                 UI.getCurrent().removeWindow(DbImportDialog.this);
             }
         });
-
-        importButton = CommonUiUtils.createPrimaryButton("Import", new Button.ClickListener() {
-            private static final long serialVersionUID = 1L;
-
-            public void buttonClick(ClickEvent event) {
-                upload.submitUpload();
-            }
-        });
-        importButton.setEnabled(false);
-
         addComponent(importLayout, 1);
-        addComponent(buildButtonFooter(cancelButton, importButton));
+        AbstractLayout buttonLayout = buildButtonFooter(cancelButton);
+        buttonLayout.addComponent(upload);
+        addComponent(buttonLayout);
     }
 
     protected void deleteFileAndResource() {
@@ -384,12 +336,8 @@ public class DbImportDialog extends ResizableWindow {
     }
 
     protected void populateListOfTablesSelect() {
-        listOfTablesSelect.removeAllItems();
-        List<String> tables = getTables();
-
-        for (String table : tables) {
-            listOfTablesSelect.addItem(table);
-        }
+        listOfTablesSelect.clear();
+        listOfTablesSelect.setItems(getTables());
     }
 
     public String getSelectedSchema() {
@@ -421,9 +369,4 @@ public class DbImportDialog extends ResizableWindow {
                 (String) schemaSelect.getValue(), new String[] { "TABLE" });
     }
 
-    enum DbImportFormat {
-
-        SQL, XML, CSV, SYM_XML;
-
-    }
 }
