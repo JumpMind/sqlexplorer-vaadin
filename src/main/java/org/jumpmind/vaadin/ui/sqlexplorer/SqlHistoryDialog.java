@@ -68,7 +68,7 @@ public class SqlHistoryDialog extends ResizableWindow {
 
         VerticalLayout mainLayout = new VerticalLayout();
         mainLayout.setSizeFull();
-        mainLayout.setMargin(true);
+        mainLayout.setMargin(false);
         mainLayout.setSpacing(true);
         addComponent(mainLayout, 1);
 

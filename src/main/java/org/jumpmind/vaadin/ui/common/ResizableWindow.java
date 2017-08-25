@@ -58,6 +58,8 @@ public class ResizableWindow extends Window {
         
         content = new VerticalLayout();
         content.setSizeFull();
+        content.setMargin(false);
+        content.setSpacing(false);
         setContent(content);
         
         addShortcutListener(new ShortcutListener("Maximize", KeyCode.M,
