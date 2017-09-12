@@ -30,6 +30,7 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.TextArea;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -43,8 +44,8 @@ public class ConfirmDialog extends Window {
         setCaption(caption);
         setModal(true);
         setResizable(true);
-        setWidth(300, Unit.PIXELS);
-        setHeight(200, Unit.PIXELS);
+        setWidth(400, Unit.PIXELS);
+        setHeight(300, Unit.PIXELS);
         setClosable(false);
 
         VerticalLayout layout = new VerticalLayout();
@@ -54,7 +55,11 @@ public class ConfirmDialog extends Window {
         setContent(layout);
 
         if (isNotBlank(text)) {
-            Label textLabel = new Label(text);
+            TextArea textLabel = new TextArea();
+            textLabel.setSizeFull();
+            textLabel.setStyleName(ValoTheme.TEXTAREA_BORDERLESS);
+            textLabel.setValue(text);
+            textLabel.setReadOnly(true);
             layout.addComponent(textLabel);
             layout.setExpandRatio(textLabel, 1);
         }
