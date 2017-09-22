@@ -414,7 +414,7 @@ public final class CommonUiUtils {
                     default:
                         break;
                 }
-                Column column = grid.addColumn(columnName, typeClass).setHeaderCaption(columnName).setHidable(true).setHidden(i > 10);
+                Column column = grid.addColumn(columnName, typeClass).setHeaderCaption(columnName).setHidable(true);
                 if (typeClass.equals(Long.class)) {
                     column.setConverter(new StringToLongConverter() {
                         private static final long serialVersionUID = 1L;
