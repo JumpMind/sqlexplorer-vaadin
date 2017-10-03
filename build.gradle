@@ -138,9 +138,12 @@ dependencies {
     
     compile "org.springframework:spring-webmvc:$springVersion"
     
+    compile "org.apache.poi:poi-ooxml:3.17"
+    
     compile group: 'com.vaadin', name: 'vaadin-compatibility-server', version: "$vaadinVersion"
     compile group: 'com.vaadin', name: 'vaadin-compatibility-client-compiled', version: "$vaadinVersion"
     compile group: 'com.vaadin', name: 'vaadin-compatibility-client', version: "$vaadinVersion"
+    compile group: 'cglib', name: 'cglib', version: '3.2.5'
     
     //compile "com.vaadin:vaadin-server:$vaadinVersion"
     compile "com.vaadin:vaadin-push:$vaadinVersion"

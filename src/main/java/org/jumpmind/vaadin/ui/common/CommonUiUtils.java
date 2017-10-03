@@ -36,7 +36,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
@@ -45,33 +45,31 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.jumpmind.db.sql.JdbcSqlTemplate;
 import org.jumpmind.util.FormatUtils;
+import org.mockito.cglib.beans.BeanGenerator;
+import org.mockito.cglib.core.NamingPolicy;
+import org.mockito.cglib.core.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vaadin.aceeditor.AceEditor;
 
-import com.vaadin.v7.data.Container;
-import com.vaadin.v7.data.Property;
-import com.vaadin.v7.data.util.converter.Converter;
-import com.vaadin.v7.data.util.converter.StringToBigDecimalConverter;
-import com.vaadin.v7.data.util.converter.StringToLongConverter;
 import com.vaadin.server.Page;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.Position;
-import com.vaadin.v7.ui.AbstractSelect;
-import com.vaadin.v7.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Button;
-import com.vaadin.v7.ui.Grid;
-import com.vaadin.v7.ui.Grid.Column;
-import com.vaadin.v7.ui.Grid.SelectionMode;
+import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Label;
-import com.vaadin.v7.ui.NativeSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.themes.ValoTheme;
+import com.vaadin.v7.data.Container;
+import com.vaadin.v7.data.Property;
+import com.vaadin.v7.ui.AbstractSelect;
+import com.vaadin.v7.ui.NativeSelect;
 import com.vaadin.v7.ui.Table;
 import com.vaadin.v7.ui.Table.CellStyleGenerator;
-import com.vaadin.ui.themes.ValoTheme;
 
 public final class CommonUiUtils {
 
@@ -354,170 +352,143 @@ public final class CommonUiUtils {
         }
     }
 
-    public static String[] getHeaderCaptions(Grid grid) {
+    public static String[] getHeaderCaptions(Grid<Object> grid) {
         List<String> headers = new ArrayList<String>();
-        List<Column> columns = grid.getColumns();
-        for (Column column : columns) {
-            headers.add(column.getHeaderCaption());
+        List<Column<Object,?>> columns = grid.getColumns();
+        for (Column<Object,?> column : columns) {
+            headers.add(column.getCaption());
         }
         return headers.toArray(new String[headers.size()]);
     }
-
-	public static Grid putResultsInGrid(final ResultSet rs, org.jumpmind.db.model.Table resultTable, int maxResultSize, final boolean showRowNumbers, String... excludeValues)
+    
+	public static Grid<Object> putResultsInGrid(final ResultSet rs, org.jumpmind.db.model.Table resultTable, int maxResultSize, final boolean showRowNumbers, String... excludeValues)
             throws SQLException {
+	    final ResultSetMetaData meta = rs.getMetaData();
+	    int columnCount = meta.getColumnCount();
+	    String name = resultTable.getName();
+	    
+	    final BeanGenerator bean = new BeanGenerator();
+	    bean.setNamingPolicy(new NamingPolicy() {
 
-        final Grid grid = new Grid();
-        grid.setSelectionMode(SelectionMode.MULTI);
-        grid.setColumnReorderingAllowed(true);
-        grid.setData(new HashMap<Object, List<Object>>());
-
-        final ResultSetMetaData meta = rs.getMetaData();
-        int columnCount = meta.getColumnCount();
-        grid.addColumn("#", Integer.class).setHeaderCaption("#").setHidable(true);
-        Set<String> columnNames = new HashSet<String>();
-        Set<Integer> skipColumnIndexes = new HashSet<Integer>();
-        int[] types = new int[columnCount];
-        for (int i = 1; i <= columnCount; i++) {
-            String realColumnName = meta.getColumnName(i);
-            String columnName = realColumnName;
-            if (!Arrays.asList(excludeValues).contains(columnName)) {
-
-                int index = 1;
-                while (columnNames.contains(columnName)) {
-                    columnName = realColumnName + "_" + index++;
-                }
-                columnNames.add(columnName);
-
-                Class<?> typeClass = Object.class;
-                int type = meta.getColumnType(i);
-                types[i - 1] = type;
-                switch (type) {
-                    case Types.FLOAT:
-                    case Types.DOUBLE:
-                    case Types.NUMERIC:
-                    case Types.REAL:
-                    case Types.DECIMAL:
-                        typeClass = BigDecimal.class;
-                        break;
-                    case Types.TINYINT:
-                    case Types.SMALLINT:
-                    case Types.BIGINT:
-                    case Types.INTEGER:
-                        typeClass = Long.class;
-                        break;
-                    case Types.VARCHAR:
-                    case Types.CHAR:
-                    case Types.NVARCHAR:
-                    case Types.NCHAR:
-                    case Types.CLOB:
-                        typeClass = String.class;
-                    default:
-                        break;
-                }
-                Column column = grid.addColumn(columnName, typeClass).setHeaderCaption(columnName).setHidable(true);
-                if (typeClass.equals(Long.class)) {
-                    column.setConverter(new StringToLongConverter() {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        public String convertToPresentation(Long value, Class<? extends String> targetType, Locale locale)
-                                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
-                            if (value == null) {
-                                return NULL_TEXT;
-                            } else {
-                                return value.toString();
-                            }
-                        }
-                    });
-                } else if (typeClass.equals(BigDecimal.class)) {
-                    column.setConverter(new StringToBigDecimalConverter() {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        public String convertToPresentation(BigDecimal value, Class<? extends String> targetType, Locale locale)
-                                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
-                            if (value == null) {
-                                return NULL_TEXT;
-                            } else {
-                                return value.toString();
-                            }
-                        }
-                    });
-                } else {
-                	column.setConverter(new Converter<String, Object>() {
-						private static final long serialVersionUID = 1L;
-
-						@Override
-						public Object convertToModel(String value, Class<? extends Object> targetType, Locale locale)
-								throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
-							return null;
-						}
-
-						@Override
-						public String convertToPresentation(Object value, Class<? extends String> targetType, Locale locale)
-								throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
-							if (value == null) {
-								return NULL_TEXT;
-							} else {
-								return value.toString();
-							}
-						}
-
-						@Override
-						public Class<Object> getModelType() {
-							return Object.class;
-						}
-
-						@Override
-						public Class<String> getPresentationType() {
-							return String.class;
-						}
-                		
-                	});
-                }
-            } else {
-                skipColumnIndexes.add(i - 1);
+            @Override
+            public String getClassName(final String prefix, String source, final Object key, final Predicate names) {
+                return name+"Results";
             }
-
-        }
-        int rowNumber = 1;
+	    });
+	    Map<String, Class<?>> properties = new HashMap<>();
+	    properties.put("#", Integer.class);
+	    
+	    Set<String> columnNames = new HashSet<String>();
+	    Set<Integer> skipColumnIndexes = new HashSet<Integer>();
+	    int[] types = new int[columnCount];
+	    
+	    for(int i = 1; i<= columnCount; i++) {
+	        String realColumnName = meta.getColumnName(i);
+	        String columnName = realColumnName;
+	        
+	        if(!Arrays.asList(excludeValues).contains(columnName)) {
+	            int index = 1;
+	            while(columnNames.contains(columnName)) {
+	                columnName = realColumnName + "_" + index++;
+	            }
+	            columnNames.add(columnName);
+	            
+	            Class<?> typeClass = Object.class;
+	            int type = meta.getColumnType(i);
+	            types[i - 1] = type;
+	            switch (type) {
+                  case Types.FLOAT:
+                  case Types.DOUBLE:
+                  case Types.NUMERIC:
+                  case Types.REAL:
+                  case Types.DECIMAL:
+                      typeClass = BigDecimal.class;
+                      break;
+                  case Types.TINYINT:
+                  case Types.SMALLINT:
+                  case Types.BIGINT:
+                  case Types.INTEGER:
+                      typeClass = Long.class;
+                      break;
+                  case Types.VARCHAR:
+                  case Types.CHAR:
+                  case Types.NVARCHAR:
+                  case Types.NCHAR:
+                  case Types.CLOB:
+                      typeClass = String.class;
+                  default:
+                      break;
+	            }
+	            
+	            properties.put(columnName, typeClass);
+	        } else {
+	            skipColumnIndexes.add(i - 1);
+	        }
+	    }
+	    
+	    BeanGenerator.addProperties(bean, properties);
+	    Class<?> clazz = (Class<?>) bean.createClass();
+	    
+	    List<String> columns = new ArrayList<String>(columnNames);
+	    List<Object> data = new ArrayList<Object>();
+	    int rowNumber = 1;
         while (rs.next() && rowNumber <= maxResultSize) {
-            Object[] row = new Object[columnNames.size() + 1];
-            row[0] = new Integer(rowNumber);
-            int rowIndex = 1;
-            for (int i = 0; i < columnCount; i++) {
-                if (!skipColumnIndexes.contains(i)) {
-                    Object o = getObject(rs, i + 1);
-                    int type = types[i];
-                    switch (type) {
-                        case Types.FLOAT:
-                        case Types.DOUBLE:
-                        case Types.REAL:
-                        case Types.NUMERIC:
-                        case Types.DECIMAL:
-                            if (o != null && !(o instanceof BigDecimal)) {
-                                o = new BigDecimal(castToNumber(o.toString()));
-                            }
-                            break;
-                        case Types.TINYINT:
-                        case Types.SMALLINT:
-                        case Types.BIGINT:
-                        case Types.INTEGER:
-                            if (o != null && !(o instanceof Long)) {
-                                o = new Long(castToNumber(o.toString()));
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    row[rowIndex] = o;
-                    rowIndex++;
-                }
-            }
-            grid.addRow(row);
-            rowNumber++;
-        }
+            try {
+                Object row = clazz.newInstance();
+                clazz.getMethod("set#", Integer.class).invoke(row, rowNumber);
 
+                int rowIndex = 1;
+                for (int i = 0; i < columnCount; i++) {
+                    if (!skipColumnIndexes.contains(i)) {
+                        Object o = getObject(rs, i + 1);
+                        int type = types[i];
+                        Class<?> typeClass = Object.class;
+                        switch (type) {
+                            case Types.FLOAT:
+                            case Types.DOUBLE:
+                            case Types.REAL:
+                            case Types.NUMERIC:
+                            case Types.DECIMAL:
+                                typeClass = BigDecimal.class;
+                                if (o != null && !(o instanceof BigDecimal)) {
+                                    o = new BigDecimal(castToNumber(o.toString()));
+                                }
+                                break;
+                            case Types.TINYINT:
+                            case Types.SMALLINT:
+                            case Types.BIGINT:
+                            case Types.INTEGER:
+                                typeClass = Long.class;
+                                if (o != null && !(o instanceof Long)) {
+                                    o = new Long(castToNumber(o.toString()));
+                                }
+                                break;
+                            case Types.VARCHAR:
+                            case Types.CHAR:
+                            case Types.NVARCHAR:
+                            case Types.NCHAR:
+                            case Types.CLOB:
+                                typeClass = String.class;
+                            default:
+                                break;
+                        }
+                        String column = columns.get(rowIndex - 1);
+                        String methodName = "set" + column.substring(0, 1).toUpperCase() + column.substring(1).toLowerCase();
+                        clazz.getMethod(methodName, typeClass).invoke(row, o);
+                        rowIndex++;
+
+                    }
+                }
+                data.add(row);
+                rowNumber++;
+            } catch (Exception e) {
+                log.error("", e);
+            }
+        }
+	    
+	    final Grid<Object> grid = (Grid<Object>) new Grid<>(clazz);
+	    grid.setItems(data);
+	    
         if (rowNumber < 100) {
             grid.getColumn("#").setWidth(75);
         } else if (rowNumber < 1000) {
@@ -532,10 +503,327 @@ public final class CommonUiUtils {
             grid.setFrozenColumnCount(1);
         }
 
-        
-        
         return grid;
+//	    final Grid grid = new Grid();
+//        grid.setSelectionMode(SelectionMode.MULTI);
+//        grid.setColumnReorderingAllowed(true);
+//        grid.setData(new HashMap<Object, List<Object>>());
+//
+//        final ResultSetMetaData meta = rs.getMetaData();
+//        int columnCount = meta.getColumnCount();
+//        grid.addColumn("#", Integer.class).setHeaderCaption("#").setHidable(true);
+//        Set<String> columnNames = new HashSet<String>();
+//        Set<Integer> skipColumnIndexes = new HashSet<Integer>();
+//        int[] types = new int[columnCount];
+//        for (int i = 1; i <= columnCount; i++) {
+//            String realColumnName = meta.getColumnName(i);
+//            String columnName = realColumnName;
+//            if (!Arrays.asList(excludeValues).contains(columnName)) {
+//
+//                int index = 1;
+//                while (columnNames.contains(columnName)) {
+//                    columnName = realColumnName + "_" + index++;
+//                }
+//                columnNames.add(columnName);
+//
+//                Class<?> typeClass = Object.class;
+//                int type = meta.getColumnType(i);
+//                types[i - 1] = type;
+//                switch (type) {
+//                    case Types.FLOAT:
+//                    case Types.DOUBLE:
+//                    case Types.NUMERIC:
+//                    case Types.REAL:
+//                    case Types.DECIMAL:
+//                        typeClass = BigDecimal.class;
+//                        break;
+//                    case Types.TINYINT:
+//                    case Types.SMALLINT:
+//                    case Types.BIGINT:
+//                    case Types.INTEGER:
+//                        typeClass = Long.class;
+//                        break;
+//                    case Types.VARCHAR:
+//                    case Types.CHAR:
+//                    case Types.NVARCHAR:
+//                    case Types.NCHAR:
+//                    case Types.CLOB:
+//                        typeClass = String.class;
+//                    default:
+//                        break;
+//                }
+//                Column column = grid.addColumn(columnName, typeClass).setHeaderCaption(columnName).setHidable(true);
+//                if (typeClass.equals(Long.class)) {
+//                    column.setConverter(new StringToLongConverter() {
+//                        private static final long serialVersionUID = 1L;
+//
+//                        @Override
+//                        public String convertToPresentation(Long value, Class<? extends String> targetType, Locale locale)
+//                                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
+//                            if (value == null) {
+//                                return NULL_TEXT;
+//                            } else {
+//                                return value.toString();
+//                            }
+//                        }
+//                    });
+//                } else if (typeClass.equals(BigDecimal.class)) {
+//                    column.setConverter(new StringToBigDecimalConverter() {
+//                        private static final long serialVersionUID = 1L;
+//
+//                        @Override
+//                        public String convertToPresentation(BigDecimal value, Class<? extends String> targetType, Locale locale)
+//                                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
+//                            if (value == null) {
+//                                return NULL_TEXT;
+//                            } else {
+//                                return value.toString();
+//                            }
+//                        }
+//                    });
+//                } else {
+//                    column.setConverter(new Converter<String, Object>() {
+//                        private static final long serialVersionUID = 1L;
+//
+//                        @Override
+//                        public Object convertToModel(String value, Class<? extends Object> targetType, Locale locale)
+//                                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
+//                            return null;
+//                        }
+//
+//                        @Override
+//                        public String convertToPresentation(Object value, Class<? extends String> targetType, Locale locale)
+//                                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
+//                            if (value == null) {
+//                                return NULL_TEXT;
+//                            } else {
+//                                return value.toString();
+//                            }
+//                        }
+//
+//                        @Override
+//                        public Class<Object> getModelType() {
+//                            return Object.class;
+//                        }
+//
+//                        @Override
+//                        public Class<String> getPresentationType() {
+//                            return String.class;
+//                        }
+//                        
+//                    });
+//                }
+//            } else {
+//                skipColumnIndexes.add(i - 1);
+//            }
+//
+//        }
+//        int rowNumber = 1;
+//        while (rs.next() && rowNumber <= maxResultSize) {
+//            Object[] row = new Object[columnNames.size() + 1];
+//            row[0] = new Integer(rowNumber);
+//            int rowIndex = 1;
+//            for (int i = 0; i < columnCount; i++) {
+//                if (!skipColumnIndexes.contains(i)) {
+//                    Object o = getObject(rs, i + 1);
+//                    int type = types[i];
+//                    switch (type) {
+//                        case Types.FLOAT:
+//                        case Types.DOUBLE:
+//                        case Types.REAL:
+//                        case Types.NUMERIC:
+//                        case Types.DECIMAL:
+//                            if (o != null && !(o instanceof BigDecimal)) {
+//                                o = new BigDecimal(castToNumber(o.toString()));
+//                            }
+//                            break;
+//                        case Types.TINYINT:
+//                        case Types.SMALLINT:
+//                        case Types.BIGINT:
+//                        case Types.INTEGER:
+//                            if (o != null && !(o instanceof Long)) {
+//                                o = new Long(castToNumber(o.toString()));
+//                            }
+//                            break;
+//                        default:
+//                            break;
+//                    }
+//                    row[rowIndex] = o;
+//                    rowIndex++;
+//                }
+//            }
+//            grid.addRow(row);
+//            rowNumber++;
+//        }
+//
+//        if (rowNumber < 100) {
+//            grid.getColumn("#").setWidth(75);
+//        } else if (rowNumber < 1000) {
+//            grid.getColumn("#").setWidth(95);
+//        } else {
+//            grid.getColumn("#").setWidth(115);
+//        }
+//
+//        if (!showRowNumbers) {
+//            grid.getColumn("#").setHidden(true);
+//        } else {
+//            grid.setFrozenColumnCount(1);
+//        }
+//
+//        
+//        
+//        return grid;
+
+//        final Grid<ResultRow> grid = new Grid<>(ResultRow.class);
+//        List<ResultRow> data = getListResults(rs,maxResultSize,excludeValues);
+//        
+//        grid.setSelectionMode(SelectionMode.MULTI);
+//        
+//        grid.setColumnReorderingAllowed(true);
+//        
+//        grid.setItems(data);
+//        int columnCount = data.get(0).getColumnSize();
+//        
+//        for (int i = 0; i < columnCount; i++) {
+//            String columnName = data.get(0).getColumnName(i);
+//            int type = data.get(0).getType(columnName);
+//
+//            Class<?> typeClass = Object.class;
+//            switch (type) {
+//                case Types.FLOAT:
+//                case Types.DOUBLE:
+//                case Types.NUMERIC:
+//                case Types.REAL:
+//                case Types.DECIMAL:
+//                    typeClass = BigDecimal.class;
+//                    break;
+//                case Types.TINYINT:
+//                case Types.SMALLINT:
+//                case Types.BIGINT:
+//                case Types.INTEGER:
+//                    typeClass = Long.class;
+//                    break;
+//                case Types.VARCHAR:
+//                case Types.CHAR:
+//                case Types.NVARCHAR:
+//                case Types.NCHAR:
+//                case Types.CLOB:
+//                    typeClass = String.class;
+//                default:
+//                    break;
+//            }
+//            
+//            if (typeClass.equals(Long.class)) {
+//                Column<ResultRow, String> column = grid.addColumn(result -> {
+//                    Long val = (Long) result.getValue(columnName);
+//                    return (val == null ? NULL_TEXT : val.toString());
+//                }, new NumberRenderer());
+//                column.setId(columnName).setCaption(columnName).setHidable(true);
+//            } else if (typeClass.equals(BigDecimal.class)) {
+//                Column<ResultRow, String> column = grid.addColumn(result -> {
+//                    BigDecimal val = (BigDecimal) result.getValue(columnName);
+//                    return (val == null ? NULL_TEXT : val.toString());
+//                }, new NumberRenderer());
+//                column.setId(columnName).setCaption(columnName).setHidable(true);
+//            } else {
+//                Column<ResultRow, String> column = grid.addColumn(result -> {
+//                    Object val = (Object) result.getValue(columnName);
+//                    return (val == null ? NULL_TEXT : val.toString());
+//                });
+//                column.setId(columnName).setCaption(columnName).setHidable(true);
+//            }
+//        }
+//
+//
+//        if (data.size()< 100) {
+//            grid.getColumn("#").setWidth(75);
+//        } else if (data.size() < 1000) {
+//            grid.getColumn("#").setWidth(95);
+//        } else {
+//            grid.getColumn("#").setWidth(115);
+//        }
+//
+//        if (!showRowNumbers) {
+//            grid.getColumn("#").setHidden(true);
+//        } else {
+//            grid.setFrozenColumnCount(1);
+//        }
+
+        
+        
+//        return grid;
     }
+	
+	
+//	protected static List<ResultRow> getListResults(final ResultSet rs, int maxResultSize, String... excludeValues) throws SQLException {
+//	    final ResultSetMetaData meta = rs.getMetaData();
+//        int columnCount = meta.getColumnCount();
+//	    Set<String> columns = new HashSet<String>();
+//        Set<Integer> skipColumnIndexes = new HashSet<Integer>();
+//        
+//        int[] types = new int[columnCount];
+//        for (int i = 1; i <= columnCount; i++) {
+//            String realColumnName = meta.getColumnName(i);
+//            String columnName = realColumnName;
+//            if (!Arrays.asList(excludeValues).contains(columnName)) {
+//
+//                int index = 1;
+//                while (columns.contains(columnName)) {
+//                    columnName = realColumnName + "_" + index++;
+//                }
+//                columns.add(columnName);
+//                
+//            } else {
+//                skipColumnIndexes.add(i - 1);
+//            }
+//        }
+//	    
+//        List<String> columnNames = new ArrayList<String>(columns);
+//        int columnSize = columnNames.size();
+//        int rowNumber = 1;
+//	    List<ResultRow> rows = new ArrayList<ResultRow>();
+//        while (rs.next() && rowNumber <= maxResultSize) {
+//            
+//            ResultRow row = new ResultRow(columnSize + 1, rowNumber);
+//            row.setValue("#",rowNumber);
+//            
+//            int rowIndex = 1;
+//            for (int i = 0; i < columnCount; i++) {
+//                if (!skipColumnIndexes.contains(i)) {
+//                    Object o = getObject(rs, i + 1);
+//                    int type = types[i];
+//                    switch (type) {
+//                        case Types.FLOAT:
+//                        case Types.DOUBLE:
+//                        case Types.REAL:
+//                        case Types.NUMERIC:
+//                        case Types.DECIMAL:
+//                            if (o != null && !(o instanceof BigDecimal)) {
+//                                o = new BigDecimal(castToNumber(o.toString()));
+//                            }
+//                            break;
+//                        case Types.TINYINT:
+//                        case Types.SMALLINT:
+//                        case Types.BIGINT:
+//                        case Types.INTEGER:
+//                            if (o != null && !(o instanceof Long)) {
+//                                o = new Long(castToNumber(o.toString()));
+//                            }
+//                            break;
+//                        default:
+//                            break;
+//                    }
+//                    String column = columnNames.get(rowIndex -1);
+//                    row.setType(column, type);
+//                    row.setValue(column, o);
+//                    rowIndex++;
+//                }
+//            }
+//            rows.add(row);
+//            rowNumber++;
+//        }
+//        return rows;
+//	}
 
     protected static String castToNumber(String value) {
         if ("NO".equalsIgnoreCase(value) || "FALSE".equalsIgnoreCase(value)) {
@@ -665,4 +953,61 @@ public final class CommonUiUtils {
         cb.setNullSelectionAllowed(false);
         return cb;
     }
+    
+//    protected static class Rows {
+//        private Set<ResultRow> rows;
+//        
+//        public Set<ResultRow> getRows() {
+//            return rows;
+//        }
+//        
+//        public void setRows(Set<ResultRow> rows) {
+//            this.rows = rows;
+//        }
+//    }
+//  protected class ResultRow {
+//
+//      private String[] columnNames;
+//      private Object[] values;
+//      private Integer[] types;
+//      private int size;
+//
+//      public ResultRow(int size) {
+//          this.columnNames = new String[size];
+//          this.values = new Object[size];
+//          this.types = new Integer[size];
+//          this.size = size;
+//      }
+//
+//      public void setColumnName(int index, String name) {
+//          columnNames[index] = name;
+//      }
+//
+//      public void setValue(int index, Object obj) {
+//          values[index] = obj;
+//      }
+//
+//      public void setType(int index, int type) {
+//          this.types[index] = type;
+//      }
+//
+//      public String getColumnName(int index) {
+//          return columnNames[index];
+//      }
+//
+//      public Object getValue(int index) {
+//          return values[index];
+//      }
+//
+//      public int getType(int index) {
+//          return types[index];
+//      }
+//
+//      public int getColumnSize() {
+//          return this.size;
+//      }
+//
+//  }
+    
+   
 }

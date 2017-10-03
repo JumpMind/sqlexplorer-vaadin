@@ -25,6 +25,8 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_MAX_RESULTS;
 import static org.jumpmind.vaadin.ui.sqlexplorer.Settings.SQL_EXPLORER_SHOW_ROW_NUMBERS;
 
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -40,6 +42,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -54,48 +57,59 @@ import org.jumpmind.db.sql.SqlException;
 import org.jumpmind.properties.TypedProperties;
 import org.jumpmind.util.FormatUtils;
 import org.jumpmind.vaadin.ui.common.CommonUiUtils;
+import org.jumpmind.vaadin.ui.common.ExportDialog;
 import org.jumpmind.vaadin.ui.common.NotifyDialog;
 import org.jumpmind.vaadin.ui.common.ReadOnlyTextAreaDialog;
+import org.jumpmind.vaadin.ui.common.ResultRow;
 import org.jumpmind.vaadin.ui.sqlexplorer.SqlRunner.ISqlRunnerListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.contextmenu.MenuItem;
+import com.vaadin.data.Binder;
+import com.vaadin.data.Converter;
+import com.vaadin.data.Result;
+import com.vaadin.data.ValidationResult;
+import com.vaadin.data.Validator;
+import com.vaadin.data.ValueContext;
+import com.vaadin.data.ValueProvider;
+import com.vaadin.data.converter.StringToBigDecimalConverter;
+import com.vaadin.data.converter.StringToBooleanConverter;
+import com.vaadin.data.converter.StringToLongConverter;
+import com.vaadin.data.provider.Query;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Setter;
 import com.vaadin.shared.MouseEventDetails.MouseButton;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
+//import com.vaadin.v7.ui.Grid;
+import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.components.grid.ItemClickListener;
 import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.v7.data.Item;
 import com.vaadin.v7.data.Property;
-import com.vaadin.v7.data.Validator;
 import com.vaadin.v7.data.fieldgroup.FieldGroup.CommitEvent;
 import com.vaadin.v7.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.v7.data.fieldgroup.FieldGroup.CommitHandler;
-import com.vaadin.v7.data.util.converter.Converter;
-import com.vaadin.v7.data.util.converter.StringToBigDecimalConverter;
-import com.vaadin.v7.data.util.converter.StringToBooleanConverter;
-import com.vaadin.v7.data.util.converter.StringToLongConverter;
-import com.vaadin.v7.event.ItemClickEvent;
-import com.vaadin.v7.event.ItemClickEvent.ItemClickListener;
-import com.vaadin.v7.shared.ui.label.ContentMode;
-import com.vaadin.v7.ui.CustomField;
-import com.vaadin.v7.ui.Grid;
-import com.vaadin.v7.ui.Grid.CellReference;
-import com.vaadin.v7.ui.Grid.CellStyleGenerator;
-import com.vaadin.v7.ui.Label;
-import com.vaadin.v7.ui.TextField;
+
+//import com.vaadin.v7.event.ItemClickEvent;
+//import com.vaadin.v7.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.ui.CustomField;
 
 public class TabularResultLayout extends VerticalLayout {
 
@@ -121,7 +135,7 @@ public class TabularResultLayout extends VerticalLayout {
 
     String schemaName;
 
-    Grid grid;
+    Grid<Object> grid;
 
     org.jumpmind.db.model.Table resultTable;
 
@@ -187,20 +201,44 @@ public class TabularResultLayout extends VerticalLayout {
 
             initGridEditing();
 
-            grid.setCellStyleGenerator(new CellStyleGenerator() {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public String getStyle(CellReference cell) {
-                    if (cell.getPropertyId().equals("#") && !grid.getSelectedRows().contains(cell.getItemId())) {
-                        return "rowheader";
-                    }
-                    if (cell.getValue() == null) {
-                        return "italics";
+            grid.getColumn("#").setStyleGenerator(item -> {
+                if(!grid.getSelectedItems().contains(item)){
+                    return "rowheader";
+                }
+                return null;
+            });
+            
+            int size = grid.getColumns().size();
+            for(int i = 0; i<size; i++) {
+                final int index = i;
+                grid.setStyleGenerator(item -> {
+                    String columnName = grid.getColumns().get(index).getCaption();
+                    String methodName = "get"+columnName.substring(0,1).toUpperCase() + columnName.substring(1).toLowerCase();
+                    try {
+                        if(item.getClass().getMethod(methodName).invoke(item) == null){
+                            return "italics";
+                        }
+                    } catch (Exception e) {
+                        log.error("",e);
                     }
                     return null;
-                }
-            });
+                });
+            }
+            
+//               new CellStyleGenerator() {
+//                private static final long serialVersionUID = 1L;
+//
+//                @Override
+//                public String getStyle(CellReference cell) {
+//                    if (cell.getPropertyId().equals("#") && !grid.getSelectedItems().contains(cell.getItemId())) {
+//                        return "rowheader";
+//                    }
+//                    if (cell.getValue() == null) {
+//                        return "italics";
+//                    }
+//                    return null;
+//                }
+//            });
 
             ContextMenu menu = new ContextMenu(grid, true);
             menu.addItem(ACTION_SELECT, new ContextMenu.Command() {
@@ -245,22 +283,59 @@ public class TabularResultLayout extends VerticalLayout {
                 buildFollowToMenu();
             }
 
-            grid.addItemClickListener(new ItemClickListener() {
+            grid.addItemClickListener(new ItemClickListener<Object>() {
 
                 private static final long serialVersionUID = 1L;
 
+//                @Override
+//                public void itemClick(ItemClickEvent event) {
+//                    MouseButton button = event.getButton();
+//                    if (button == MouseButton.LEFT) {
+//                        Object object = event.getPropertyId();
+//                        if (object != null && !object.toString().equals("")) {
+//                            if (event.isDoubleClick() && !grid.isEditorEnabled()) {
+//                                Object prop = event.getPropertyId();
+//                                String header = grid.getColumn(prop).getHeaderCaption();
+//                                Property<?> p = event.getItem().getItemProperty(prop);
+//                                if (p != null) {
+//                                    String data = String.valueOf(p.getValue());
+//                                    boolean binary = resultTable != null ? resultTable.getColumnWithName(header).isOfBinaryType() : false;
+//                                    if (binary) {
+//                                        ReadOnlyTextAreaDialog.show(header, data.toUpperCase(), binary);
+//                                    } else {
+//                                        ReadOnlyTextAreaDialog.show(header, data, binary);
+//                                    }
+//                                }
+//                            } else {
+//                                Object row = event.getItemId();
+//                                if (!grid.getSelectedItems().contains(row)) {
+//                                    grid.deselectAll();
+//                                    grid.select(row);
+//                                } else {
+//                                    grid.deselect(row);
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+
                 @Override
-                public void itemClick(ItemClickEvent event) {
-                    MouseButton button = event.getButton();
+                public void itemClick(ItemClick<Object> event) {
+                    MouseButton button = event.getMouseEventDetails().getButton();
                     if (button == MouseButton.LEFT) {
-                        Object object = event.getPropertyId();
-                        if (object != null && !object.toString().equals("")) {
-                            if (event.isDoubleClick() && !grid.isEditorEnabled()) {
-                                Object prop = event.getPropertyId();
-                                String header = grid.getColumn(prop).getHeaderCaption();
-                                Property<?> p = event.getItem().getItemProperty(prop);
-                                if (p != null) {
-                                    String data = String.valueOf(p.getValue());
+                        if (event != null && !event.getColumn().getId().equals("")) {
+                            if (event.getMouseEventDetails().isDoubleClick() && !grid.getEditor().isEnabled()) {
+                                String header = event.getColumn().getCaption();
+                                String methodName = "get" + header.substring(0, 1).toUpperCase() + header.substring(1).toLowerCase();
+                                Object row = event.getItem();
+                                Object obj = null;
+                                try {
+                                    obj = row.getClass().getMethod(methodName).invoke(row);
+                                } catch (Exception e) {
+                                    log.error("", e);
+                                }
+                                if (obj != null) {
+                                    String data = String.valueOf(obj);
                                     boolean binary = resultTable != null ? resultTable.getColumnWithName(header).isOfBinaryType() : false;
                                     if (binary) {
                                         ReadOnlyTextAreaDialog.show(header, data.toUpperCase(), binary);
@@ -269,8 +344,8 @@ public class TabularResultLayout extends VerticalLayout {
                                     }
                                 }
                             } else {
-                                Object row = event.getItemId();
-                                if (!grid.getSelectedRows().contains(row)) {
+                                Object row = event.getItem();
+                                if (!grid.getSelectedItems().contains(row)) {
                                     grid.deselectAll();
                                     grid.select(row);
                                 } else {
@@ -285,7 +360,7 @@ public class TabularResultLayout extends VerticalLayout {
             this.addComponent(grid);
             this.setExpandRatio(grid, 1);
 
-            int count = (grid.getContainerDataSource().getItemIds().size());
+            int count = grid.getDataProvider().size(new Query<>());//(grid.getContainerDataSource().getItemIds().size());
             int maxResultsSize = settings.getProperties().getInt(SQL_EXPLORER_MAX_RESULTS);
             if (count >= maxResultsSize) {
                 resultLabel.setValue("Limited to <span style='color: red'>" + maxResultsSize + "</span> rows;");
@@ -330,6 +405,18 @@ public class TabularResultLayout extends VerticalLayout {
             }
         });
         refreshButton.setIcon(FontAwesome.REFRESH);
+        refreshButton.setDescription("Refresh");
+        
+        MenuBar.MenuItem exportButton = rightBar.addItem("", new Command() {
+            private static final long serialVersionUID = 1L;
+            
+            @Override
+            public void menuSelected(MenuBar.MenuItem selectedItem) {
+                new ExportDialog(grid,db.getName(),sql).show();
+            }
+        });
+        exportButton.setDescription("Export Results");
+        exportButton.setIcon(FontAwesome.UPLOAD);
 
         if (isInQueryGeneralResults) {
             MenuBar.MenuItem keepResultsButton = rightBar.addItem("", new Command() {
@@ -371,17 +458,18 @@ public class TabularResultLayout extends VerticalLayout {
             final String schemaSeparator = dbInfo.getSchemaSeparator();
 
             String[] columnHeaders = CommonUiUtils.getHeaderCaptions(grid);
-            Collection<Object> selectedRowsSet = grid.getSelectedRows();
+            Set<Object> selectedRowsSet = grid.getSelectedItems();
             Iterator<Object> setIterator = selectedRowsSet.iterator();
             while (setIterator.hasNext()) {
                 List<Object> typeValueList = new ArrayList<Object>();
-                int row = (Integer) setIterator.next();
-                Item item = grid.getContainerDataSource().getItem(row);
-                Iterator<?> iterator = item.getItemPropertyIds().iterator();
-                iterator.next();
+//                int row = (Integer) setIterator.next().getRowNumber();
+                Object item = setIterator.next();
+//                Iterator<?> iterator = item.getItemPropertyIds().iterator();
+//                iterator.next();
 
                 for (int i = 1; i < columnHeaders.length; i++) {
-                    Object typeValue = item.getItemProperty(iterator.next()).getValue();
+                    String methodName = "get"+columnHeaders[i].substring(0, 1).toUpperCase() + columnHeaders[i].substring(1).toLowerCase();
+                    Object typeValue = item.getClass().getMethod(methodName).invoke(item);
                     if (typeValue instanceof String) {
                         if ("<null>".equals(typeValue) || "".equals(typeValue)) {
                             typeValue = "null";
@@ -556,7 +644,7 @@ public class TabularResultLayout extends VerticalLayout {
     }
 
     protected void followTo(ForeignKey foreignKey) {
-        Collection<Object> selectedRows = grid.getSelectedRows();
+        Collection<Object> selectedRows = grid.getSelectedItems();
         if (selectedRows.size() > 0) {
             log.info("Following foreign key to " + foreignKey.getForeignTableName());
 
@@ -587,7 +675,8 @@ public class TabularResultLayout extends VerticalLayout {
                 int i = 1;
                 for (Object row : selectedRows) {
                     for (Reference ref : references) {
-                        Object targetObject = grid.getContainerDataSource().getItem(row).getItemProperty(ref.getLocalColumnName()).getValue();
+                        String methodName = "get"+ref.getLocalColumnName().substring(0,1).toUpperCase() + ref.getLocalColumnName().substring(1).toLowerCase();
+                        Object targetObject = row.getClass().getMethod(methodName).invoke(row);//getValue(ref.getLocalColumnName());//grid.getDataProvider().getItem(row).getItemProperty(ref.getLocalColumnName()).getValue();
                         int targetType = ref.getForeignColumn().getMappedTypeCode();
                         ps.setObject(i, targetObject, targetType);
                         i++;
@@ -597,7 +686,9 @@ public class TabularResultLayout extends VerticalLayout {
                 queryPanel.executeSql(sql, false);
             } catch (SQLException e) {
                 log.error("Failed to follow foreign key", e);
-            }
+            } catch (Exception e) {
+                log.error("",e);
+            } 
         }
     }
 
@@ -633,7 +724,7 @@ public class TabularResultLayout extends VerticalLayout {
         return sql.toString();
     }
 
-    protected Grid putResultsInGrid(int maxResultSize) throws SQLException {
+    protected Grid<Object> putResultsInGrid(int maxResultSize) throws SQLException {
         String parsedSql = sql;
         String first = "";
         String second = "";
@@ -738,54 +829,119 @@ public class TabularResultLayout extends VerticalLayout {
 
     private void initGridEditing() {
         if (resultTable != null) {
-            grid.setEditorEnabled(true);
-            List<com.vaadin.v7.ui.Grid.Column> columns = grid.getColumns();
+            grid.getEditor().setEnabled(true);
+            List<com.vaadin.ui.Grid.Column<Object, ?>> columns = grid.getColumns();
             List<TextField> primaryKeyEditors = new ArrayList<TextField>();
-            for (com.vaadin.v7.ui.Grid.Column gridColumn : columns) {
-                String header = gridColumn.getHeaderCaption();
+            for (com.vaadin.ui.Grid.Column<Object, ?> gridColumn : columns) {
+                String header = gridColumn.getCaption();
                 Column tableColumn = resultTable.getColumnWithName(header);
                 if (columns.get(0).equals(gridColumn) || (tableColumn != null && tableColumn.isAutoIncrement()
                         && !db.getPlatform().getDatabaseInfo().isAutoIncrementUpdateAllowed())) {
                     gridColumn.setEditable(false);
                 } else if (tableColumn != null && db.getPlatform().isLob(tableColumn.getMappedTypeCode())) {
-                    gridColumn.setEditorField(new LobEditorField(header));
+                    LobEditorField field = new LobEditorField(header);
+                    grid.getColumn(header).setEditorComponent(field);
                 } else if (tableColumn != null) {
-                    setEditor(gridColumn, tableColumn, primaryKeyEditors);
+                    setEditor(header, tableColumn, primaryKeyEditors);
                 }
             }
-
+            
+            Binder<Object> binder = grid.getEditor().getBinder();
             for (TextField editor : primaryKeyEditors) {
-                editor.addValidator(new PrimaryKeyValidator(primaryKeyEditors));
+                binder.forField(editor).withValidator(new PrimaryKeyValidator(primaryKeyEditors));
+//                editor.addValidator(new PrimaryKeyValidator(primaryKeyEditors));
             }
-
+          
             initCommit();
         } else {
             log.info("Table editing disabled.");
         }
     }
 
-    private void setEditor(Grid.Column gridColumn, Column tableColumn, List<TextField> primaryKeyEditors) {
+    private void setEditor(String header, Column tableColumn, List<TextField> primaryKeyEditors) {
         TextField editor = new TextField();
         int typeCode = tableColumn.getMappedTypeCode();
-
+        Binder<Object> binder = grid.getEditor().getBinder();
+        String getter = "get"+header.substring(0,1).toUpperCase()+header.substring(1).toLowerCase();
+        String setter = "set"+header.substring(0,1).toUpperCase()+header.substring(1).toLowerCase();
         switch (typeCode) {
             case Types.DATE:
-                editor.setConverter(new ObjectConverter(Date.class, typeCode));
+                binder.forField(editor).withConverter(new ObjectConverter(Date.class, typeCode))
+                        .withValidator(new TableChangeValidator(editor, tableColumn)).bind(data -> {
+                            try {
+                                return String.valueOf(data.getClass().getMethod(getter).invoke(data));
+                            } catch (Exception e) {
+                                log.error("", e);
+                                return null;
+                            }
+                        }, (data, value) -> {
+                            try {
+                                data.getClass().getMethod(setter).invoke(data, value);
+                            } catch (Exception e) {
+                                log.error("", e);
+                            }
+                        });
+//                editor.setConverter(new ObjectConverter(Date.class, typeCode));
                 break;
             case Types.TIME:
-                editor.setConverter(new ObjectConverter(Time.class, typeCode));
+                binder.forField(editor).withConverter(new ObjectConverter(Time.class, typeCode))
+                        .withValidator(new TableChangeValidator(editor, tableColumn)).bind(data -> {
+                            try {
+                                return String.valueOf(data.getClass().getMethod(getter).invoke(data));
+                            } catch (Exception e) {
+                                log.error("", e);
+                                return null;
+                            }
+                        }, (data, value) -> {
+                            try {
+                                data.getClass().getMethod(setter).invoke(data, value);
+                            } catch (Exception e) {
+                                log.error("", e);
+                            }
+                        });
+//                editor.setConverter(new ObjectConverter(Time.class, typeCode));
                 break;
             case Types.TIMESTAMP:
-                editor.setConverter(new ObjectConverter(Timestamp.class, typeCode));
+                binder.forField(editor).withConverter(new ObjectConverter(Timestamp.class, typeCode))
+                        .withValidator(new TableChangeValidator(editor, tableColumn)).bind(data -> {
+                            try {
+                                return String.valueOf(data.getClass().getMethod(getter).invoke(data));
+                            } catch (Exception e) {
+                                log.error("", e);
+                                return null;
+                            }
+                        }, (data, value) -> {
+                            try {
+                                data.getClass().getMethod(setter).invoke(data, value);
+                            } catch (Exception e) {
+                                log.error("", e);
+                            }
+                        });
+//                editor.setConverter(new ObjectConverter(Timestamp.class, typeCode));
                 break;
             case Types.BIT:
-                editor.setConverter(new StringToBooleanConverter());
+                binder.forField(editor).withConverter(new StringToBooleanConverter(setter))
+                        .withValidator(new TableChangeValidator(editor, tableColumn)).bind(data -> {
+                            try {
+                                return (Boolean) data.getClass().getMethod(getter).invoke(data);
+                            } catch (Exception e) {
+                                log.error("", e);
+                                return null;
+                            }
+                        }, (data, value) -> {
+                            try {
+                                data.getClass().getMethod(setter).invoke(data, value);
+                            } catch (Exception e) {
+                                log.error("", e);
+                            }
+                        });
+//                editor.setConverter(new StringToBooleanConverter());
                 break;
             case Types.TINYINT:
             case Types.SMALLINT:
             case Types.BIGINT:
             case Types.INTEGER:
-                editor.setConverter(new StringToLongConverter() {
+                binder.forField(editor).withConverter(new StringToLongConverter("Must Enter a Number") {
                     private static final long serialVersionUID = 1L;
 
                     public NumberFormat getFormat(Locale locale) {
@@ -793,14 +949,38 @@ public class TabularResultLayout extends VerticalLayout {
                         format.setGroupingUsed(false);
                         return format;
                     }
-                });
+                }).withValidator(new TableChangeValidator(editor, tableColumn)).bind(
+                        data -> {
+                            try {
+                                return (Long) data.getClass().getMethod(getter).invoke(data);
+                            } catch (Exception e) {
+                                log.error("",e);
+                                return null;
+                            }
+                        },
+                        (data, value) -> {
+                            try {
+                                data.getClass().getMethod(setter).invoke(data, value);
+                            } catch (Exception e) {
+                                log.error("",e);
+                            }
+                        });
+//                editor.setConverter(new StringToLongConverter() {
+//                    private static final long serialVersionUID = 1L;
+//
+//                    public NumberFormat getFormat(Locale locale) {
+//                        NumberFormat format = super.getFormat(locale);
+//                        format.setGroupingUsed(false);
+//                        return format;
+//                    }
+//                });
                 break;
             case Types.FLOAT:
             case Types.DOUBLE:
             case Types.REAL:
             case Types.NUMERIC:
             case Types.DECIMAL:
-                editor.setConverter(new StringToBigDecimalConverter() {
+                binder.forField(editor).withConverter(new StringToBigDecimalConverter("Must Enter a Number") {
                     private static final long serialVersionUID = 1L;
 
                     public NumberFormat getFormat(Locale locale) {
@@ -808,27 +988,51 @@ public class TabularResultLayout extends VerticalLayout {
                         format.setGroupingUsed(false);
                         return format;
                     }
-                });
+                }).withValidator(new TableChangeValidator(editor, tableColumn)).bind(
+                        data -> {
+                            try {
+                                return (BigDecimal) data.getClass().getMethod(getter).invoke(data);
+                            } catch (Exception e) {
+                                log.error("",e);
+                                return null;
+                            }
+                        }, (data, value) -> {
+                            try {
+                                data.getClass().getMethod(setter).invoke(data, value);
+                            } catch (Exception e) {
+                                log.error("",e);
+                            } 
+                        });
+//                editor.setConverter(new StringToBigDecimalConverter() {
+//                    private static final long serialVersionUID = 1L;
+//
+//                    public NumberFormat getFormat(Locale locale) {
+//                        NumberFormat format = super.getFormat(locale);
+//                        format.setGroupingUsed(false);
+//                        return format;
+//                    }
+//                });
                 break;
             default:
                 break;
         }
 
-        editor.addValidator(new TableChangeValidator(editor, tableColumn));
+//        editor.addValidator(new TableChangeValidator(editor, tableColumn));
 
-        editor.setNullRepresentation("");
-        if (!tableColumn.isRequired()) {
-            editor.setNullSettingAllowed(true);
-        }
+//        editor.setNullRepresentation("");
+//        if (!tableColumn.isRequired()) {
+//            editor.setNullSettingAllowed(true);
+//        }
 
         if (tableColumn.isPrimaryKey()) {
             primaryKeyEditors.add(editor);
         }
-
-        gridColumn.setEditorField(editor);
+        grid.getColumn(header).setEditorComponent(editor);
+//        gridColumn.setEditorField(editor);
     }
 
     private void initCommit() {
+//        grid.getEditor().
         grid.getEditorFieldGroup().addCommitHandler(new CommitHandler() {
 
             private static final long serialVersionUID = 1L;
@@ -959,9 +1163,20 @@ public class TabularResultLayout extends VerticalLayout {
             return button;
         }
 
-        @Override
         public Class<? extends String> getType() {
             return String.class;
+        }
+
+        @Override
+        public String getValue() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        protected void doSetValue(String value) {
+            // TODO Auto-generated method stub
+            
         }
 
     }
@@ -979,48 +1194,71 @@ public class TabularResultLayout extends VerticalLayout {
             this.typeCode = typeCode;
         }
 
+//        @Override
+//        public Object convertToModel(String value, Class<? extends Object> targetType, Locale locale)
+//                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
+//            if (value == null || value.isEmpty() || value.equals("<null>")) {
+//                return null;
+//            }
+//
+//            if (java.util.Date.class.isAssignableFrom(modelType)) {
+//                try {
+//                    return modelType.cast(db.getPlatform().parseDate(typeCode, value, false));
+//                } catch (Exception e) {
+//                    return value;
+//                }
+//            }
+//
+//            return value.toString();
+//        }
+
+//        @Override
+//        public String convertToPresentation(Object value, Class<? extends String> targetType, Locale locale)
+//                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
+//            if (value == null || value.equals("") || value.equals("<null>"))
+//                return "";
+//            return String.valueOf(value);
+//        }
+
+//        @SuppressWarnings({ "unchecked", "rawtypes" })
+//        @Override
+//        public Class getModelType() {
+//            if (typeCode == Types.DATE && db.getPlatform().getDdlBuilder().getDatabaseInfo().isDateOverridesToTimestamp()) {
+//                modelType = Timestamp.class;
+//            }
+//            return modelType;
+//        }
+//
+//        @Override
+//        public Class<String> getPresentationType() {
+//            return String.class;
+//        }
+
         @Override
-        public Object convertToModel(String value, Class<? extends Object> targetType, Locale locale)
-                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
+        public Result<Object> convertToModel(String value, ValueContext context) {
             if (value == null || value.isEmpty() || value.equals("<null>")) {
                 return null;
             }
 
             if (java.util.Date.class.isAssignableFrom(modelType)) {
                 try {
-                    return modelType.cast(db.getPlatform().parseDate(typeCode, value, false));
+                    return Result.ok(modelType.cast(db.getPlatform().parseDate(typeCode, value, false)));
                 } catch (Exception e) {
-                    return value;
+                    return Result.error(value);
                 }
             }
-
-            return value.toString();
+            return Result.ok(value.toString());
         }
 
         @Override
-        public String convertToPresentation(Object value, Class<? extends String> targetType, Locale locale)
-                throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
+        public String convertToPresentation(Object value, ValueContext context) {
             if (value == null || value.equals("") || value.equals("<null>"))
                 return "";
             return String.valueOf(value);
         }
-
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        @Override
-        public Class getModelType() {
-            if (typeCode == Types.DATE && db.getPlatform().getDdlBuilder().getDatabaseInfo().isDateOverridesToTimestamp()) {
-                modelType = Timestamp.class;
-            }
-            return modelType;
-        }
-
-        @Override
-        public Class<String> getPresentationType() {
-            return String.class;
-        }
     }
 
-    class TableChangeValidator implements Validator {
+    class TableChangeValidator implements Validator<Object> {
 
         private static final long serialVersionUID = 1L;
 
@@ -1033,26 +1271,48 @@ public class TabularResultLayout extends VerticalLayout {
             this.col = col;
         }
 
+//        @Override
+//        public void validate(Object value) throws InvalidValueException {
+//            if (value == null || value.toString().isEmpty()) {
+//                if (col.isRequired()) {
+//                    throw new EmptyValueException("Value cannot be null");
+//                }
+//            } else if (editor.getConverter() instanceof ObjectConverter) {
+//                int typeCode = col.getMappedTypeCode();
+//                if (typeCode == Types.DATE || typeCode == Types.TIME || typeCode == Types.TIMESTAMP) {
+//                    try {
+//                        db.getPlatform().parseDate(typeCode, String.valueOf(value), false);
+//                    } catch (Exception e) {
+//                        throw new InvalidValueException(col.getMappedType() + " format not valid");
+//                    }
+//                }
+//            }
+//        }
+
+
         @Override
-        public void validate(Object value) throws InvalidValueException {
-            if (value == null || value.toString().isEmpty()) {
-                if (col.isRequired()) {
-                    throw new EmptyValueException("Value cannot be null");
+        public ValidationResult apply(Object value, ValueContext context) {
+            if(value == null || value.toString().isEmpty()) {
+                if(col.isRequired()) {
+                    return ValidationResult.error("Value cannot be null");
                 }
-            } else if (editor.getConverter() instanceof ObjectConverter) {
+                return ValidationResult.ok();
+            } else {
                 int typeCode = col.getMappedTypeCode();
-                if (typeCode == Types.DATE || typeCode == Types.TIME || typeCode == Types.TIMESTAMP) {
+                if(typeCode == Types.DATE || typeCode == Types.TIME || typeCode == Types.TIMESTAMP) {
                     try {
                         db.getPlatform().parseDate(typeCode, String.valueOf(value), false);
                     } catch (Exception e) {
-                        throw new InvalidValueException(col.getMappedType() + " format not valid");
+                        return ValidationResult.error(col.getMappedType() + " format not valid");
                     }
+                    return ValidationResult.ok();
                 }
             }
+            return null;
         }
     }
 
-    class PrimaryKeyValidator implements Validator {
+    class PrimaryKeyValidator implements Validator<Object> {
 
         private static final long serialVersionUID = 1L;
 
@@ -1089,5 +1349,34 @@ public class TabularResultLayout extends VerticalLayout {
                 }
             }
         }
+
+        @Override
+        public ValidationResult apply(Object value, ValueContext context) {
+            String[] pkColumns = resultTable.getPrimaryKeyColumnNames();
+            if(editors.size() != pkColumns.length) {
+                return ValidationResult.error("Illegal Argument");
+            }
+            Object[] newValues = new Object[pkColumns.length];
+            for (int i = 0; i<editors.size(); i++) {
+                TextField editor = editors.get(i);
+                
+            }
+            Iterator<Object> gridIterator = grid.getDataProvider().fetch(new Query<>()).iterator();
+            allColumns: while (gridIterator.hasNext()) {
+                Object row = gridIterator.next();
+                context.
+                if(!row.equals()) {
+                    for(int i = 0; i< pkColumns.length; i++) {
+                        String getterMethod = "get" + pkColumns[i].substring(0, 1).toUpperCase() + pkColumns[i].substring(1).toLowerCase();
+                        if(!row.getClass().getMethod(getterMethod).invoke(row).equals(newValues[i])) {
+                            continue allColumns;
+                        }
+                    }
+                    return ValidationResult.error("Cannot use repeated primary keys");
+                }
+            }
+            return null;
+        }
     }
+    
 }
