@@ -170,9 +170,7 @@ public class ExcelExport {
         final HSSFFont font = workbook.createFont();
         font.setBold(true);
         style.setFont(font);
-        style.setBorderLeft(BorderStyle.THIN);
         style.setBorderBottom(BorderStyle.THIN);
-        style.setBorderRight(BorderStyle.THIN);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         style.setVerticalAlignment(VerticalAlignment.CENTER);
         style.setAlignment(HorizontalAlignment.CENTER);
