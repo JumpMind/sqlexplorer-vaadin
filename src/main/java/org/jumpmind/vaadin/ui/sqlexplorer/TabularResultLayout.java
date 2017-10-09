@@ -54,6 +54,8 @@ import org.jumpmind.db.sql.SqlException;
 import org.jumpmind.properties.TypedProperties;
 import org.jumpmind.util.FormatUtils;
 import org.jumpmind.vaadin.ui.common.CommonUiUtils;
+import org.jumpmind.vaadin.ui.common.ExportDialog;
+import org.jumpmind.vaadin.ui.common.Grid7DataProvider;
 import org.jumpmind.vaadin.ui.common.NotifyDialog;
 import org.jumpmind.vaadin.ui.common.ReadOnlyTextAreaDialog;
 import org.jumpmind.vaadin.ui.sqlexplorer.SqlRunner.ISqlRunnerListener;
@@ -281,7 +283,7 @@ public class TabularResultLayout extends VerticalLayout {
                     }
                 }
             });
-
+            
             this.addComponent(grid);
             this.setExpandRatio(grid, 1);
 
@@ -330,6 +332,18 @@ public class TabularResultLayout extends VerticalLayout {
             }
         });
         refreshButton.setIcon(FontAwesome.REFRESH);
+        refreshButton.setDescription("Refresh");
+        
+        MenuBar.MenuItem exportButton = rightBar.addItem("", new Command() {
+            private static final long serialVersionUID = 1L;
+            
+            @Override
+            public void menuSelected(MenuBar.MenuItem selectedItem) {
+                new ExportDialog(new Grid7DataProvider(grid), db.getName(), sql).show();
+            }
+        });
+        exportButton.setIcon(FontAwesome.UPLOAD);
+        exportButton.setDescription("Export Results");
 
         if (isInQueryGeneralResults) {
             MenuBar.MenuItem keepResultsButton = rightBar.addItem("", new Command() {
