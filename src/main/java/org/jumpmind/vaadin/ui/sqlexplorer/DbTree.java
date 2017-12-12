@@ -51,8 +51,8 @@ public class DbTree extends Tree {
 
 	final Logger log = LoggerFactory.getLogger(getClass());
 
-	public final static String[] TABLE_TYPES = new String[] { "TABLE",
-			"SYSTEM TABLE", "SYSTEM VIEW" };
+/*	public final static String[] TABLE_TYPES = new String[] { "TABLE",
+			"SYSTEM TABLE", "SYSTEM VIEW" };*/
 
 	public static final String NODE_TYPE_DATABASE = "Database";
 	public static final String NODE_TYPE_CATALOG = "Catalog";
@@ -249,7 +249,8 @@ public class DbTree extends Tree {
 	protected List<DbTreeNode> getTableTreeNodes(IDdlReader reader,
 			DbTreeNode parent, String catalogName, String schemaName) {
 		List<DbTreeNode> list = new ArrayList<DbTreeNode>();
-		List<String> tables = reader.getTableNames(catalogName, schemaName, TABLE_TYPES);		
+		List<String> table_types = reader.getTableTypes();
+		List<String> tables = reader.getTableNames(catalogName, schemaName, table_types);		
 		Collections.sort(tables, new Comparator<String>() {
 			@Override
 			public int compare(String o1, String o2) {
